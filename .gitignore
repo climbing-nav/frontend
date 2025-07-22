@@ -32,6 +32,7 @@ coverage/
 .env.*.local
 config.local.js
 config.local.json
+settings.local.json
 
 # ===================================
 # Logs
