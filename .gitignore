@@ -197,3 +197,8 @@ storybook-static/
 Dockerfile.local
 docker-compose.override.yml
 .docker/
+
+# ===================================
+# MCP
+# ===================================
+.mcp.json
