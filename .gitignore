@@ -203,3 +203,4 @@ docker-compose.override.yml
 # MCP
 # ===================================
 .mcp.json
+.taskmaster/tasks/tasks.json

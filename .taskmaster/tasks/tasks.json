@@ -39,7 +39,7 @@
               2
             ],
             "details": "Import and connect Redux auth slice actions and selectors, implement form submission handler to dispatch login action, add loading state management with spinner or skeleton UI, implement error handling for authentication failures, add success handling with navigation redirect, ensure proper state cleanup on component unmount, integrate with existing auth middleware if present",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Integration tests for Redux connection, test authentication flow with mock API responses, verify loading states display correctly, test error handling scenarios, validate state cleanup"
           },
           {
@@ -50,7 +50,7 @@
               3
             ],
             "details": "Install Google OAuth library and Kakao SDK, create social login buttons with consistent Material-UI styling, implement Google OAuth flow with proper scopes and error handling, add Kakao login integration with Korean language support, create unified social login handler, add loading states for social authentication, ensure proper error handling for OAuth failures, implement consistent button styling with icons",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Integration tests for social login flows, test Google OAuth integration, verify Kakao login functionality, test error handling for OAuth failures, validate button styling and accessibility"
           },
           {
@@ -174,7 +174,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-07-16T14:10:18.932Z",
+      "updated": "2025-07-22T15:03:39.664Z",
       "description": "Tasks for master context"
     }
   }
