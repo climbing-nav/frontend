@@ -1,0 +1,199 @@
+# ===================================
+# Node.js Dependencies
+# ===================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+
+# ===================================
+# Build Artifacts & Distribution
+# ===================================
+dist-ssr/
+build/
+.vite/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# ===================================
+# Environment & Configuration Files
+# ===================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+.env.*.local
+config.local.js
+config.local.json
+
+# ===================================
+# Logs
+# ===================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dev-debug.log
+
+# ===================================
+# Cache Directories
+# ===================================
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.nyc_output/
+
+# ===================================
+# Testing
+# ===================================
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+playwright-report/
+
+# ===================================
+# IDE & Editor Files
+# ===================================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ===================================
+# OS Generated Files
+# ===================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===================================
+# Temporary Files
+# ===================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*.local
+*~
+
+# ===================================
+# Runtime & Process Files
+# ===================================
+*.pid
+*.seed
+*.pid.lock
+.grunt
+lib-cov
+pids/
+.pids
+
+# ===================================
+# Security & Sensitive Files
+# ===================================
+*.pem
+*.p12
+*.key
+*.crt
+*.csr
+.aws/
+.ssh/
+secrets/
+.secrets
+
+# ===================================
+# Task Master AI Files (Project Specific)
+# ===================================
+.taskmaster/state.json
+.taskmaster/reports/
+# Keep config and tasks for collaboration
+# .taskmaster/config.json
+# .taskmaster/tasks/
+
+# ===================================
+# Miscellaneous
+# ===================================
+*.tgz
+*.tar.gz
+*.zip
+*.rar
+*.7z
+.vercel
+.turbo
+.next/
+.nuxt/
+.output/
+.netlify/
+.firebase/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ===================================
+# TypeScript
+# ===================================
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ===================================
+# Storybook
+# ===================================
+storybook-static/
+.storybook/build/
+
+# ===================================
+# Linting & Formatting
+# ===================================
+.eslintcache
+.stylelintcache
+.prettier-cache
+
+# ===================================
+# Docker
+# ===================================
+.dockerignore
+Dockerfile.local
+docker-compose.override.yml
+.docker/

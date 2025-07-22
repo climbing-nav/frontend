@@ -1,0 +1,181 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implement Login Form Component",
+        "description": "Create a comprehensive login form component with email/password authentication, social login integration, and form validation",
+        "details": "Build LoginForm component with Material-UI form elements, integrate with Redux auth slice, implement form validation using Formik or react-hook-form, add Google and Kakao social login buttons, handle loading states and error messages, ensure responsive design for 393px mobile viewport, implement proper accessibility features with ARIA labels",
+        "testStrategy": "Unit tests for form validation, integration tests for authentication flow, mock API responses for login scenarios, test social login button functionality, verify error handling and loading states",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create LoginForm Component Structure and Basic Layout",
+            "description": "Set up the basic LoginForm component with Material-UI form elements and responsive layout structure",
+            "dependencies": [],
+            "details": "Create LoginForm.jsx component in components/auth/ directory, implement basic form structure with email and password TextField components using Material-UI, add form container with proper spacing and mobile-first responsive design for 393px viewport, implement basic styling with theme integration, add form submission handler structure, ensure proper component export and basic prop handling",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering, verify form elements are present, test responsive layout on different screen sizes, validate Material-UI theme integration"
+          },
+          {
+            "id": 2,
+            "title": "Implement Form Validation with React Hook Form",
+            "description": "Add comprehensive form validation using react-hook-form with email format validation, password requirements, and error display",
+            "dependencies": [
+              1
+            ],
+            "details": "Install and configure react-hook-form, implement email validation with regex pattern matching, add password validation with minimum length and complexity requirements, create error message display components with proper styling, implement real-time validation feedback, add form state management for touched/dirty fields, ensure validation messages are accessible with ARIA labels",
+            "status": "done",
+            "testStrategy": "Unit tests for validation logic, test email format validation, verify password strength requirements, test error message display, validate ARIA accessibility features"
+          },
+          {
+            "id": 3,
+            "title": "Integrate Redux Auth Slice and Authentication Flow",
+            "description": "Connect the login form to Redux store and implement authentication API integration with loading states",
+            "dependencies": [
+              2
+            ],
+            "details": "Import and connect Redux auth slice actions and selectors, implement form submission handler to dispatch login action, add loading state management with spinner or skeleton UI, implement error handling for authentication failures, add success handling with navigation redirect, ensure proper state cleanup on component unmount, integrate with existing auth middleware if present",
+            "status": "in-progress",
+            "testStrategy": "Integration tests for Redux connection, test authentication flow with mock API responses, verify loading states display correctly, test error handling scenarios, validate state cleanup"
+          },
+          {
+            "id": 4,
+            "title": "Add Social Login Integration (Google and Kakao)",
+            "description": "Implement Google and Kakao social login buttons with OAuth integration and consistent styling",
+            "dependencies": [
+              3
+            ],
+            "details": "Install Google OAuth library and Kakao SDK, create social login buttons with consistent Material-UI styling, implement Google OAuth flow with proper scopes and error handling, add Kakao login integration with Korean language support, create unified social login handler, add loading states for social authentication, ensure proper error handling for OAuth failures, implement consistent button styling with icons",
+            "status": "pending",
+            "testStrategy": "Integration tests for social login flows, test Google OAuth integration, verify Kakao login functionality, test error handling for OAuth failures, validate button styling and accessibility"
+          },
+          {
+            "id": 5,
+            "title": "Implement Accessibility Features and Final Polish",
+            "description": "Add comprehensive accessibility features, loading states, and final UI polish with animations",
+            "dependencies": [
+              4
+            ],
+            "details": "Add ARIA labels and descriptions to all form elements, implement keyboard navigation support, add focus management for form fields, create loading spinner with proper ARIA live regions, implement form submission feedback with success/error animations, add proper semantic HTML structure, ensure screen reader compatibility, implement proper tab order, add final styling polish with hover states and transitions",
+            "status": "pending",
+            "testStrategy": "Accessibility testing with screen readers, test keyboard navigation, verify ARIA labels and descriptions, test focus management, validate loading states accessibility, test with accessibility audit tools"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Register Form Component",
+        "description": "Create user registration form with comprehensive validation, email verification flow, and terms acceptance",
+        "details": "Build RegisterForm component with fields for email, password, nickname, climbing level selection, implement email verification UI flow, add terms and conditions checkbox with modal, integrate with Redux auth slice, implement form validation with password strength checking, handle registration success/error states, ensure mobile-first responsive design",
+        "testStrategy": "Unit tests for form validation logic, integration tests for registration flow, test email verification UI, verify terms acceptance functionality, test password strength validation, mock API responses for registration scenarios",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement Social Login Component",
+        "description": "Create reusable social login component supporting Google and Kakao OAuth authentication",
+        "details": "Build SocialLogin component with Google and Kakao login buttons, integrate Google Login API and Kakao Login API, implement OAuth flow handling, manage authentication tokens, handle authentication errors and edge cases, ensure proper error messaging, integrate with Redux auth state management, implement loading states during OAuth process",
+        "testStrategy": "Integration tests for OAuth flows, mock OAuth responses, test error handling scenarios, verify token management, test authentication state persistence, validate redirect handling after successful login",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Kakao Map Component",
+        "description": "Create interactive map component using Kakao Maps API with gym markers and user location features",
+        "details": "Build KakaoMap component integrating Kakao Maps API, implement current location detection using Geolocation API, add gym markers with clustering functionality, handle map click events, implement zoom controls and map centering, ensure responsive map sizing for mobile viewport, add loading states for map initialization, integrate with Redux map slice for state management",
+        "testStrategy": "Integration tests for Kakao Maps API, mock geolocation responses, test marker clustering functionality, verify map event handling, test responsive behavior across different screen sizes, validate map loading states",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Gym Marker Component",
+        "description": "Create interactive gym markers for map display with congestion status and click handling",
+        "details": "Build GymMarker component for map markers, implement congestion status display with color coding (green/yellow/red), add click event handling to show gym info popup, implement marker clustering for dense areas, ensure proper marker positioning and scaling, integrate with gym data from Redux store, add hover effects and animations using Framer Motion",
+        "testStrategy": "Unit tests for marker rendering, integration tests with map component, test congestion status display, verify click event handling, test marker clustering behavior, validate marker positioning accuracy",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Congestion Badge Component",
+        "description": "Create visual congestion status indicator component with color coding and animations",
+        "details": "Build CongestionBadge component with three states (쾌적/보통/혼잡), implement color coding system (green/yellow/red), add subtle animations using Framer Motion, ensure accessibility with proper ARIA labels, make component reusable for different contexts (map markers, gym cards, gym details), implement responsive sizing for different use cases",
+        "testStrategy": "Unit tests for different congestion states, test color coding accuracy, verify animation performance, test accessibility features, validate responsive behavior across different contexts",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Gym Detail Component",
+        "description": "Create comprehensive gym detail page with information display, image gallery, and user actions",
+        "details": "Build GymDetail component with gym information display, implement image gallery with swipe functionality, add review section with rating display, implement favorite/bookmark functionality, add directions button with map integration, display operating hours and contact information, integrate with Redux gym slice, ensure mobile-optimized layout with proper spacing and typography",
+        "testStrategy": "Unit tests for component rendering, integration tests for favorite functionality, test image gallery interactions, verify review section display, test directions button functionality, validate responsive layout on mobile devices",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Gym List Component",
+        "description": "Create filterable and sortable gym list with infinite scroll and search functionality",
+        "details": "Build GymList component with gym cards display, implement filtering by location, type, and congestion status, add sorting functionality (distance, rating), implement infinite scroll for performance, add search functionality with debouncing, integrate with Redux gym slice for state management, ensure smooth scrolling performance on mobile devices, add loading states and error handling",
+        "testStrategy": "Unit tests for filtering and sorting logic, integration tests for infinite scroll, test search functionality with various inputs, verify performance with large datasets, test loading states and error scenarios",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Post Form Component",
+        "description": "Create comprehensive post creation and editing form with media upload and categorization",
+        "details": "Build PostForm component for creating and editing posts, implement category selection with dropdown, add image upload functionality with preview, implement tag input system, add draft save functionality to localStorage, integrate with Redux community slice, implement form validation and error handling, ensure mobile-optimized input experience, add character count for text fields",
+        "testStrategy": "Unit tests for form validation, integration tests for image upload, test draft save functionality, verify category and tag selection, test form submission and error handling, validate mobile input experience",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Post List Component",
+        "description": "Create filterable post list with infinite scroll, search, and interaction features",
+        "details": "Build PostList component displaying posts with PostCard components, implement category filtering with tabs, add search functionality with real-time filtering, implement infinite scroll for performance, add like and bookmark functionality, integrate with Redux community slice, ensure smooth scrolling performance, add loading states and empty states, implement pull-to-refresh functionality",
+        "testStrategy": "Unit tests for filtering and search logic, integration tests for infinite scroll, test like and bookmark functionality, verify category filtering, test pull-to-refresh behavior, validate performance with large datasets",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-14T14:17:41.807Z",
+      "updated": "2025-07-16T14:10:18.932Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
