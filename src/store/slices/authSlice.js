@@ -40,6 +40,32 @@ export const getCurrentUserAsync = createAsyncThunk(
   }
 )
 
+// Async thunk for Google login
+export const googleLoginAsync = createAsyncThunk(
+  'auth/googleLoginAsync',
+  async (credential, { rejectWithValue }) => {
+    try {
+      const response = await authService.googleLogin(credential)
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message || '구글 로그인에 실패했습니다.')
+    }
+  }
+)
+
+// Async thunk for Kakao login
+export const kakaoLoginAsync = createAsyncThunk(
+  'auth/kakaoLoginAsync',
+  async (authObj, { rejectWithValue }) => {
+    try {
+      const response = await authService.kakaoLogin(authObj)
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message || '카카오 로그인에 실패했습니다.')
+    }
+  }
+)
+
 const initialState = {
   user: null,
   isAuthenticated: false,
@@ -133,6 +159,44 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(getCurrentUserAsync.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+      })
+      // Google login cases
+      .addCase(googleLoginAsync.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(googleLoginAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.error = null
+      })
+      .addCase(googleLoginAsync.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+      })
+      // Kakao login cases
+      .addCase(kakaoLoginAsync.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.error = null
+      })
+      .addCase(kakaoLoginAsync.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
         state.isAuthenticated = false

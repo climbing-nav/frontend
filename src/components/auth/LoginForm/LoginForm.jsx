@@ -25,12 +25,18 @@ import {
   selectAuthError, 
   selectIsAuthenticated 
 } from '../../../store/slices/authSlice'
+import { useGoogleAuth } from '../../../hooks/useGoogleAuth'
+import { useKakaoAuth } from '../../../hooks/useKakaoAuth'
 
 function LoginForm() {
   const dispatch = useDispatch()
   const loading = useSelector(selectAuthLoading)
   const authError = useSelector(selectAuthError)
   const isAuthenticated = useSelector(selectIsAuthenticated)
+  
+  // 소셜 로그인 Hooks
+  const { signInWithGoogle, isGoogleScriptLoaded } = useGoogleAuth()
+  const { signInWithKakao, isKakaoScriptLoaded } = useKakaoAuth()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -39,6 +45,10 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [touchedFields, setTouchedFields] = useState({})
+  const [socialLoading, setSocialLoading] = useState({
+    google: false,
+    kakao: false
+  })
 
   // 이메일 유효성 검사 정규식 패턴
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -185,21 +195,43 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     dispatch(clearError())
+    setSocialLoading(prev => ({ ...prev, google: true }))
+    
     try {
-      // Google 로그인 로직 구현 예정
-      console.log('Google 로그인 시도')
+      if (!isGoogleScriptLoaded) {
+        throw new Error('Google SDK가 아직 로드되지 않았습니다.')
+      }
+      
+      await signInWithGoogle()
     } catch (error) {
       console.error('Google 로그인 실패:', error)
+      setErrors(prev => ({ 
+        ...prev, 
+        general: error.message || 'Google 로그인에 실패했습니다.' 
+      }))
+    } finally {
+      setSocialLoading(prev => ({ ...prev, google: false }))
     }
   }
 
   const handleKakaoLogin = async () => {
     dispatch(clearError())
+    setSocialLoading(prev => ({ ...prev, kakao: true }))
+    
     try {
-      // Kakao 로그인 로직 구현 예정
-      console.log('Kakao 로그인 시도')
+      if (!isKakaoScriptLoaded) {
+        throw new Error('Kakao SDK가 아직 로드되지 않았습니다.')
+      }
+      
+      await signInWithKakao()
     } catch (error) {
       console.error('Kakao 로그인 실패:', error)
+      setErrors(prev => ({ 
+        ...prev, 
+        general: error.message || 'Kakao 로그인에 실패했습니다.' 
+      }))
+    } finally {
+      setSocialLoading(prev => ({ ...prev, kakao: false }))
     }
   }
 
@@ -383,7 +415,7 @@ function LoginForm() {
           onClick={handleGoogleLogin}
           variant="outlined"
           fullWidth
-          disabled={loading}
+          disabled={loading || socialLoading.google || !isGoogleScriptLoaded}
           sx={{
             py: 1.5,
             borderRadius: 2,
@@ -394,11 +426,15 @@ function LoginForm() {
             '&:hover': {
               borderColor: '#667eea',
               bgcolor: '#f8f9ff'
+            },
+            '&:disabled': {
+              borderColor: '#d1d5db',
+              color: '#9ca3af'
             }
           }}
-          startIcon={<Google />}
+          startIcon={socialLoading.google ? <CircularProgress size={20} /> : <Google />}
         >
-          Google로 로그인
+          {socialLoading.google ? '로그인 중...' : !isGoogleScriptLoaded ? 'Google SDK 로딩...' : 'Google로 로그인'}
         </Button>
 
         {/* Kakao Login */}
@@ -406,7 +442,7 @@ function LoginForm() {
           onClick={handleKakaoLogin}
           variant="contained"
           fullWidth
-          disabled={loading}
+          disabled={loading || socialLoading.kakao || !isKakaoScriptLoaded}
           sx={{
             py: 1.5,
             borderRadius: 2,
@@ -423,23 +459,27 @@ function LoginForm() {
             }
           }}
           startIcon={
-            <Box sx={{ 
-              width: 20, 
-              height: 20, 
-              borderRadius: '50%',
-              bgcolor: '#000000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-              fontWeight: 'bold',
-              color: '#FEE500'
-            }}>
-              K
-            </Box>
+            socialLoading.kakao ? (
+              <CircularProgress size={20} sx={{ color: '#000000' }} />
+            ) : (
+              <Box sx={{ 
+                width: 20, 
+                height: 20, 
+                borderRadius: '50%',
+                bgcolor: '#000000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                fontWeight: 'bold',
+                color: '#FEE500'
+              }}>
+                K
+              </Box>
+            )
           }
         >
-          Kakao로 로그인
+          {socialLoading.kakao ? '로그인 중...' : !isKakaoScriptLoaded ? 'Kakao SDK 로딩...' : 'Kakao로 로그인'}
         </Button>
       </Box>
     </Box>
