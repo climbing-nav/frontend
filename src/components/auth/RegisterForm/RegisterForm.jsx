@@ -26,6 +26,7 @@ import {
   Close
 } from '@mui/icons-material'
 import { useAuth } from '../../../hooks/useAuth'
+import TermsModal from '../../common/Modal/TermsModal'
 
 const CLIMBING_LEVELS = [
   { value: 'beginner', label: '초보자 (V0-V2)' },
@@ -48,6 +49,7 @@ function RegisterForm() {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] })
+  const [termsModalOpen, setTermsModalOpen] = useState(false)
   
   const { register } = useAuth()
 
@@ -462,11 +464,25 @@ function RegisterForm() {
         }
         label={
           <Typography variant="body2" sx={{ color: '#374151' }}>
-            <Typography component="span" sx={{ color: '#667eea', cursor: 'pointer' }}>
+            <Typography 
+              component="span" 
+              sx={{ color: '#667eea', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={(e) => {
+                e.preventDefault()
+                setTermsModalOpen(true)
+              }}
+            >
               이용약관
             </Typography>
             {' '}및{' '}
-            <Typography component="span" sx={{ color: '#667eea', cursor: 'pointer' }}>
+            <Typography 
+              component="span" 
+              sx={{ color: '#667eea', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={(e) => {
+                e.preventDefault()
+                setTermsModalOpen(true)
+              }}
+            >
               개인정보처리방침
             </Typography>
             에 동의합니다
@@ -506,6 +522,18 @@ function RegisterForm() {
       >
         {loading ? <CircularProgress size={24} color="inherit" /> : '회원가입'}
       </Button>
+
+      {/* Terms and Conditions Modal */}
+      <TermsModal
+        open={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        onAccept={() => {
+          setFormData(prev => ({ ...prev, agreeTerms: true }))
+          if (errors.agreeTerms) {
+            setErrors(prev => ({ ...prev, agreeTerms: '' }))
+          }
+        }}
+      />
     </Box>
   )
 }
