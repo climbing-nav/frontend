@@ -13,14 +13,17 @@ import {
   FormHelperText,
   Checkbox,
   FormControlLabel,
-  CircularProgress
+  CircularProgress,
+  LinearProgress
 } from '@mui/material'
 import { 
   Email, 
   Lock, 
   Person,
   Visibility, 
-  VisibilityOff
+  VisibilityOff,
+  Check,
+  Close
 } from '@mui/icons-material'
 import { useAuth } from '../../../hooks/useAuth'
 
@@ -44,6 +47,7 @@ function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] })
   
   const { register } = useAuth()
 
@@ -61,33 +65,78 @@ function RegisterForm() {
         [name]: ''
       }))
     }
+
+    // Update password strength in real-time
+    if (name === 'password') {
+      setPasswordStrength(checkPasswordStrength(value))
+    }
+  }
+
+  const checkPasswordStrength = (password) => {
+    const checks = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    }
+
+    const passedChecks = Object.values(checks).filter(Boolean).length
+    const score = (passedChecks / 5) * 100
+
+    const feedback = []
+    if (!checks.minLength) feedback.push('최소 8자 이상')
+    if (!checks.hasUpperCase) feedback.push('대문자 포함')
+    if (!checks.hasLowerCase) feedback.push('소문자 포함')
+    if (!checks.hasNumber) feedback.push('숫자 포함')
+    if (!checks.hasSpecialChar) feedback.push('특수문자 포함')
+
+    return { score, feedback, checks }
+  }
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validateNickname = (nickname) => {
+    // 2-20자, 한글, 영문, 숫자만 허용
+    const nicknameRegex = /^[가-힣a-zA-Z0-9]{2,20}$/
+    return nicknameRegex.test(nickname)
   }
 
   const validateForm = () => {
     const newErrors = {}
     
+    // Email validation
     if (!formData.email) {
       newErrors.email = '이메일을 입력해주세요'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식이 아닙니다'
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = '올바른 이메일 형식이 아닙니다 (예: user@example.com)'
     }
     
+    // Password validation
     if (!formData.password) {
       newErrors.password = '비밀번호를 입력해주세요'
-    } else if (formData.password.length < 6) {
-      newErrors.password = '비밀번호는 6자 이상이어야 합니다'
+    } else {
+      const strength = checkPasswordStrength(formData.password)
+      if (strength.score < 80) {
+        newErrors.password = '비밀번호가 너무 약합니다. 모든 조건을 만족해주세요'
+      }
     }
     
+    // Password confirmation validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = '비밀번호 확인을 입력해주세요'
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = '비밀번호가 일치하지 않습니다'
     }
     
+    // Nickname validation
     if (!formData.nickname) {
       newErrors.nickname = '닉네임을 입력해주세요'
-    } else if (formData.nickname.length < 2) {
-      newErrors.nickname = '닉네임은 2자 이상이어야 합니다'
+    } else if (!validateNickname(formData.nickname)) {
+      newErrors.nickname = '닉네임은 2-20자의 한글, 영문, 숫자만 사용 가능합니다'
     }
     
     if (!formData.climbingLevel) {
@@ -247,7 +296,7 @@ function RegisterForm() {
         helperText={errors.password}
         fullWidth
         sx={{
-          mb: 2,
+          mb: 1,
           '& .MuiOutlinedInput-root': {
             borderRadius: 2,
             bgcolor: '#f9fafb',
@@ -281,6 +330,74 @@ function RegisterForm() {
           )
         }}
       />
+      
+      {/* Password Strength Indicator */}
+      {formData.password && (
+        <Box sx={{ mb: 2, px: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography variant="caption" sx={{ color: '#6b7280', mr: 1 }}>
+              비밀번호 강도:
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: passwordStrength.score < 40 ? '#ef4444' : 
+                       passwordStrength.score < 80 ? '#f59e0b' : '#10b981',
+                fontWeight: 500
+              }}
+            >
+              {passwordStrength.score < 40 ? '약함' : 
+               passwordStrength.score < 80 ? '보통' : '강함'}
+            </Typography>
+          </Box>
+          <LinearProgress 
+            variant="determinate" 
+            value={passwordStrength.score}
+            sx={{
+              height: 4,
+              borderRadius: 2,
+              bgcolor: '#e5e7eb',
+              '& .MuiLinearProgress-bar': {
+                bgcolor: passwordStrength.score < 40 ? '#ef4444' : 
+                         passwordStrength.score < 80 ? '#f59e0b' : '#10b981',
+                borderRadius: 2
+              }
+            }}
+          />
+          {passwordStrength.feedback.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              {passwordStrength.feedback.map((item, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                  <Close sx={{ fontSize: 12, color: '#ef4444', mr: 0.5 }} />
+                  <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                    {item}
+                  </Typography>
+                </Box>
+              ))}
+              {passwordStrength.checks && Object.entries(passwordStrength.checks).map(([key, passed]) => {
+                if (passed) {
+                  const labels = {
+                    minLength: '최소 8자 이상',
+                    hasUpperCase: '대문자 포함',
+                    hasLowerCase: '소문자 포함',
+                    hasNumber: '숫자 포함',
+                    hasSpecialChar: '특수문자 포함'
+                  }
+                  return (
+                    <Box key={key} sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Check sx={{ fontSize: 12, color: '#10b981', mr: 0.5 }} />
+                      <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                        {labels[key]}
+                      </Typography>
+                    </Box>
+                  )
+                }
+                return null
+              })}
+            </Box>
+          )}
+        </Box>
+      )}
 
       {/* Confirm Password Field */}
       <TextField
