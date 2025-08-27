@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { 
   Box, 
@@ -49,6 +49,10 @@ function LoginForm() {
     google: false,
     kakao: false
   })
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const emailInputRef = useRef(null)
+  const passwordInputRef = useRef(null)
+  const submitButtonRef = useRef(null)
 
   // 이메일 유효성 검사 정규식 패턴
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -133,6 +137,7 @@ function LoginForm() {
   // 폼 제출 처리
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setSubmitAttempted(true)
     
     // 모든 필드 유효성 검사
     const emailError = validateEmail(formData.email)
@@ -149,7 +154,13 @@ function LoginForm() {
       password: true
     })
     
+    // 에러가 있으면 첫 번째 에러 필드에 포커스
     if (emailError || passwordError) {
+      if (emailError && emailInputRef.current) {
+        emailInputRef.current.focus()
+      } else if (passwordError && passwordInputRef.current) {
+        passwordInputRef.current.focus()
+      }
       return
     }
     
@@ -189,6 +200,22 @@ function LoginForm() {
       }
     }
   }, [dispatch, authError])
+
+  // 키보드 네비게이션 핸들러
+  const handleKeyDown = (e) => {
+    // Enter 키로 다음 필드로 이동
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.target.name === 'email' && passwordInputRef.current) {
+        e.preventDefault()
+        passwordInputRef.current.focus()
+      } else if (e.target.name === 'password' && submitButtonRef.current) {
+        e.preventDefault()
+        if (isFormValid) {
+          submitButtonRef.current.click()
+        }
+      }
+    }
+  }
 
   // 폼이 유효한지 확인
   const isFormValid = !errors.email && !errors.password && formData.email && formData.password
@@ -237,8 +264,7 @@ function LoginForm() {
 
   return (
     <Box 
-      component="form" 
-      onSubmit={handleSubmit} 
+      component="section"
       sx={{ 
         width: '100%',
         maxWidth: { xs: '100%', sm: '400px' },
@@ -246,9 +272,22 @@ function LoginForm() {
         px: { xs: 2, sm: 0 }
       }}
     >
+      <Box 
+        component="form" 
+        onSubmit={handleSubmit}
+        role="form"
+        aria-label="로그인 폼"
+        noValidate
+      >
       {/* 에러 알림 */}
       {(errors.general || authError) && (
-        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2, borderRadius: 2 }}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
           {errors.general || authError}
         </Alert>
       )}
@@ -257,16 +296,22 @@ function LoginForm() {
       <TextField
         name="email"
         type="email"
-        placeholder="이메일"
+        label="이메일"
+        placeholder="이메일을 입력하세요"
         value={formData.email}
         onChange={handleChange}
         error={!!errors.email}
         helperText={errors.email}
         fullWidth
+        required
+        autoComplete="email"
+        inputRef={emailInputRef}
+        onKeyDown={handleKeyDown}
         inputProps={{
-          'aria-label': '이메일 입력',
-          'aria-describedby': errors.email ? 'email-error' : undefined,
-          'aria-invalid': !!errors.email
+          'aria-label': '이메일 주소 입력',
+          'aria-describedby': errors.email ? 'email-error' : 'email-helper',
+          'aria-invalid': !!errors.email,
+          'aria-required': true
         }}
         sx={{
           mb: 2,
@@ -301,16 +346,22 @@ function LoginForm() {
       <TextField
         name="password"
         type={showPassword ? 'text' : 'password'}
-        placeholder="비밀번호"
+        label="비밀번호"
+        placeholder="비밀번호를 입력하세요"
         value={formData.password}
         onChange={handleChange}
         error={!!errors.password}
         helperText={errors.password}
         fullWidth
+        required
+        autoComplete="current-password"
+        inputRef={passwordInputRef}
+        onKeyDown={handleKeyDown}
         inputProps={{
           'aria-label': '비밀번호 입력',
-          'aria-describedby': errors.password ? 'password-error' : undefined,
-          'aria-invalid': !!errors.password
+          'aria-describedby': errors.password ? 'password-error' : 'password-helper',
+          'aria-invalid': !!errors.password,
+          'aria-required': true
         }}
         sx={{
           mb: 3,
@@ -345,6 +396,8 @@ function LoginForm() {
                 edge="end"
                 sx={{ color: '#6b7280' }}
                 aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                aria-pressed={showPassword}
+                tabIndex={0}
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </IconButton>
@@ -371,7 +424,12 @@ function LoginForm() {
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
             background: (loading || !isFormValid) ? '#d1d5db' : 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-            boxShadow: (loading || !isFormValid) ? 'none' : '0 6px 16px rgba(102, 126, 234, 0.6)'
+            boxShadow: (loading || !isFormValid) ? 'none' : '0 6px 16px rgba(102, 126, 234, 0.6)',
+            transform: 'translateY(-2px)'
+          },
+          '&:focus': {
+            outline: '2px solid #667eea',
+            outlineOffset: '2px'
           },
           '&:disabled': {
             background: '#d1d5db',
@@ -379,23 +437,44 @@ function LoginForm() {
             color: '#9ca3af'
           }
         }}
-        aria-label="로그인 버튼"
+        ref={submitButtonRef}
+        aria-label={loading ? '로그인 진행 중' : '로그인 버튼'}
+        aria-describedby={loading ? 'login-status' : undefined}
       >
-        {loading ? <CircularProgress size={24} color="inherit" /> : '로그인'}
+        {loading ? (
+          <>
+            <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+            <span aria-live="polite" id="login-status">로그인 중...</span>
+          </>
+        ) : (
+          '로그인'
+        )}
       </Button>
 
       {/* Forgot Password */}
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Typography
+          component="button"
+          type="button"
           variant="body2"
           sx={{
+            background: 'none',
+            border: 'none',
             color: '#667eea',
             cursor: 'pointer',
             fontWeight: 500,
+            textDecoration: 'none',
             '&:hover': {
               textDecoration: 'underline'
+            },
+            '&:focus': {
+              outline: '2px solid #667eea',
+              outlineOffset: '2px',
+              borderRadius: 1
             }
           }}
+          onClick={() => console.log('비밀번호 찾기')}
+          aria-label="비밀번호 찾기 페이지로 이동"
         >
           비밀번호를 잊으셨나요?
         </Typography>
@@ -423,9 +502,16 @@ function LoginForm() {
             color: '#374151',
             fontWeight: 600,
             textTransform: 'none',
+            transition: 'all 0.2s ease-in-out',
             '&:hover': {
               borderColor: '#667eea',
-              bgcolor: '#f8f9ff'
+              bgcolor: '#f8f9ff',
+              transform: 'translateY(-1px)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+            },
+            '&:focus': {
+              outline: '2px solid #667eea',
+              outlineOffset: '2px'
             },
             '&:disabled': {
               borderColor: '#d1d5db',
@@ -433,8 +519,16 @@ function LoginForm() {
             }
           }}
           startIcon={socialLoading.google ? <CircularProgress size={20} /> : <Google />}
+          aria-label={socialLoading.google ? 'Google 로그인 진행 중' : 'Google 계정으로 로그인'}
+          aria-describedby={socialLoading.google ? 'google-login-status' : undefined}
         >
-          {socialLoading.google ? '로그인 중...' : !isGoogleScriptLoaded ? 'Google SDK 로딩...' : 'Google로 로그인'}
+          {socialLoading.google ? (
+            <span aria-live="polite" id="google-login-status">Google 로그인 중...</span>
+          ) : !isGoogleScriptLoaded ? (
+            <span aria-live="polite">Google SDK 로딩 중...</span>
+          ) : (
+            'Google로 로그인'
+          )}
         </Button>
 
         {/* Kakao Login */}
@@ -450,14 +544,27 @@ function LoginForm() {
             color: '#000000',
             fontWeight: 600,
             textTransform: 'none',
+            transition: 'all 0.2s ease-in-out',
             '&:hover': {
-              bgcolor: '#FDD835'
+              bgcolor: '#FDD835',
+              transform: 'translateY(-1px)',
+              boxShadow: '0 2px 8px rgba(254, 229, 0, 0.3)'
+            },
+            '&:focus': {
+              outline: '2px solid #FEE500',
+              outlineOffset: '2px'
+            },
+            '&:active': {
+              transform: 'translateY(0px)',
+              boxShadow: '0 1px 4px rgba(254, 229, 0, 0.2)'
             },
             '&:disabled': {
               bgcolor: '#d1d5db',
               color: '#6b7280'
             }
           }}
+          aria-label={socialLoading.kakao ? 'Kakao 로그인 진행 중' : 'Kakao 계정으로 로그인'}
+          aria-describedby={socialLoading.kakao ? 'kakao-login-status' : undefined}
           startIcon={
             socialLoading.kakao ? (
               <CircularProgress size={20} sx={{ color: '#000000' }} />
@@ -479,8 +586,15 @@ function LoginForm() {
             )
           }
         >
-          {socialLoading.kakao ? '로그인 중...' : !isKakaoScriptLoaded ? 'Kakao SDK 로딩...' : 'Kakao로 로그인'}
+          {socialLoading.kakao ? (
+            <span aria-live="polite" id="kakao-login-status">Kakao 로그인 중...</span>
+          ) : !isKakaoScriptLoaded ? (
+            <span aria-live="polite">Kakao SDK 로딩 중...</span>
+          ) : (
+            'Kakao로 로그인'
+          )}
         </Button>
+      </Box>
       </Box>
     </Box>
   )
