@@ -9,7 +9,7 @@
         "testStrategy": "Unit tests for form validation, integration tests for authentication flow, mock API responses for login scenarios, test social login button functionality, verify error handling and loading states",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -75,7 +75,63 @@
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create RegisterForm Component Structure and Basic UI",
+            "description": "Build the basic RegisterForm component with Material-UI form elements including email, password, confirm password, nickname, and climbing level selection fields",
+            "dependencies": [],
+            "details": "Create RegisterForm.tsx component with Material-UI TextField components for email, password, confirm password, and nickname. Add Select component for climbing level (Beginner, Intermediate, Advanced, Expert). Implement basic component structure with proper TypeScript interfaces. Add responsive styling for mobile-first design at 393px viewport. Include proper accessibility attributes and ARIA labels.",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering, test form field existence and accessibility attributes, verify responsive design on mobile viewport, test climbing level selection options"
+          },
+          {
+            "id": 2,
+            "title": "Implement Form Validation and Password Strength Checking",
+            "description": "Add comprehensive form validation including email format, password strength requirements, password confirmation matching, and nickname validation",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement form validation using react-hook-form or Formik. Add email format validation with proper regex. Create password strength checker with requirements (min 8 chars, uppercase, lowercase, number, special character). Validate password confirmation matching. Add nickname length and character validation. Display real-time validation feedback with error messages and visual indicators.",
+            "status": "done",
+            "testStrategy": "Unit tests for validation functions, test password strength logic, verify email format validation, test password confirmation matching, validate error message display"
+          },
+          {
+            "id": 3,
+            "title": "Integrate Terms and Conditions Modal with Acceptance Checkbox",
+            "description": "Create terms and conditions modal component and integrate acceptance checkbox with registration form",
+            "dependencies": [
+              1
+            ],
+            "details": "Build TermsModal component with terms content display and scrollable text. Add terms acceptance checkbox to RegisterForm with link to open modal. Implement modal open/close functionality. Ensure terms must be accepted before form submission is enabled. Add proper styling for modal overlay and responsive design. Include accessibility features for modal navigation.",
+            "status": "in-progress",
+            "testStrategy": "Unit tests for modal component, test checkbox validation, verify modal open/close functionality, test terms acceptance requirement, validate accessibility features"
+          },
+          {
+            "id": 4,
+            "title": "Implement Email Verification UI Flow",
+            "description": "Create email verification interface components and integrate verification flow with registration process",
+            "dependencies": [
+              2
+            ],
+            "details": "Build EmailVerification component to display after registration. Add verification code input field with 6-digit format. Implement resend verification email functionality with countdown timer. Add verification success/error states with appropriate messaging. Create verification status checking and automatic redirect on success. Integrate with registration flow to show verification step after form submission.",
+            "status": "pending",
+            "testStrategy": "Unit tests for verification component, test code input functionality, verify resend timer logic, test success/error state handling, integration tests for verification flow"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Redux Auth State and Handle Registration Flow",
+            "description": "Connect RegisterForm with Redux auth slice, implement registration API integration, and handle success/error states",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Connect RegisterForm to Redux auth slice using useDispatch and useSelector. Implement registration action dispatch on form submission. Handle loading states during registration process with loading indicators. Implement error handling for registration failures with user-friendly error messages. Add success state handling with redirect to email verification. Ensure proper state cleanup on component unmount.",
+            "status": "pending",
+            "testStrategy": "Integration tests for Redux connection, mock registration API responses, test loading state display, verify error handling scenarios, test success flow and redirect functionality"
+          }
+        ]
       },
       {
         "id": 3,
@@ -174,7 +230,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-08-26T13:20:35.550Z",
+      "updated": "2025-08-27T13:47:34.878Z",
       "description": "Tasks for master context"
     }
   }
