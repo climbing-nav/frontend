@@ -104,7 +104,7 @@
               1
             ],
             "details": "Build TermsModal component with terms content display and scrollable text. Add terms acceptance checkbox to RegisterForm with link to open modal. Implement modal open/close functionality. Ensure terms must be accepted before form submission is enabled. Add proper styling for modal overlay and responsive design. Include accessibility features for modal navigation.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Unit tests for modal component, test checkbox validation, verify modal open/close functionality, test terms acceptance requirement, validate accessibility features"
           },
           {
@@ -230,7 +230,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-08-27T13:47:34.878Z",
+      "updated": "2025-08-27T14:01:51.657Z",
       "description": "Tasks for master context"
     }
   }
