@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../../../hooks/useAuth'
 import TermsModal from '../../common/Modal/TermsModal'
+import EmailVerification from '../EmailVerification/EmailVerification'
 
 const CLIMBING_LEVELS = [
   { value: 'beginner', label: '초보자 (V0-V2)' },
@@ -50,6 +51,8 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] })
   const [termsModalOpen, setTermsModalOpen] = useState(false)
+  const [showEmailVerification, setShowEmailVerification] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
   
   const { register } = useAuth()
 
@@ -160,14 +163,56 @@ function RegisterForm() {
     
     setLoading(true)
     try {
+      // 회원가입 API 호출
       await register(formData)
-      // 회원가입 성공 시 처리 (예: 로그인 탭으로 이동)
-      console.log('회원가입 성공')
+      
+      // 회원가입 성공 시 이메일 인증 단계로 이동
+      setRegisteredEmail(formData.email)
+      setShowEmailVerification(true)
+      console.log('회원가입 성공, 이메일 인증 단계로 이동')
     } catch (error) {
       setErrors({ general: '회원가입에 실패했습니다. 다시 시도해주세요.' })
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVerificationSuccess = () => {
+    // 이메일 인증 완료 후 로그인 탭으로 이동하거나 홈으로 리다이렉트
+    console.log('이메일 인증 완료')
+    // 여기서 AuthPage의 탭을 로그인으로 변경하거나 다른 페이지로 이동
+    // 임시로 폼을 초기 상태로 돌림
+    setShowEmailVerification(false)
+    setFormData({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      nickname: '',
+      climbingLevel: '',
+      agreeTerms: false
+    })
+  }
+
+  const handleResendCode = async (email) => {
+    // 인증코드 재전송 API 호출
+    console.log(`Resending verification code to: ${email}`)
+    
+    // TODO: 실제 API 연동
+    // await resendVerificationCode(email)
+    
+    // 임시: 시뮬레이션
+    return new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  // 이메일 인증 단계 표시
+  if (showEmailVerification) {
+    return (
+      <EmailVerification
+        email={registeredEmail}
+        onVerificationSuccess={handleVerificationSuccess}
+        onResendCode={handleResendCode}
+      />
+    )
   }
 
   return (
