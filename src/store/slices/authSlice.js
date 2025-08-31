@@ -66,6 +66,23 @@ export const kakaoLoginAsync = createAsyncThunk(
   }
 )
 
+// Async thunk for registration
+export const registerAsync = createAsyncThunk(
+  'auth/registerAsync',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await authService.register(userData)
+      // 회원가입 성공 후 토큰을 로컬 스토리지에 저장
+      if (response.token) {
+        localStorage.setItem('token', response.token)
+      }
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message || '회원가입에 실패했습니다.')
+    }
+  }
+)
+
 const initialState = {
   user: null,
   isAuthenticated: false,
@@ -197,6 +214,25 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(kakaoLoginAsync.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+      })
+      // Registration cases
+      .addCase(registerAsync.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(registerAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.error = null
+      })
+      .addCase(registerAsync.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
         state.isAuthenticated = false

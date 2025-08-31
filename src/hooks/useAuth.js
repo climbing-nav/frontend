@@ -1,6 +1,13 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { useCallback } from 'react'
-import { loginStart, loginSuccess, loginFailure, logout } from '../store/slices/authSlice'
+import { 
+  loginStart, 
+  loginSuccess, 
+  loginFailure, 
+  logout, 
+  clearError,
+  registerAsync 
+} from '../store/slices/authSlice'
 import { authService } from '../services/authService'
 
 export const useAuth = () => {
@@ -27,19 +34,10 @@ export const useAuth = () => {
 
   const register = useCallback(async (userData) => {
     try {
-      dispatch(loginStart())
-      const response = await authService.register(userData)
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token)
-      }
-      
-      dispatch(loginSuccess(response.user))
-      return { success: true, user: response.user }
+      const result = await dispatch(registerAsync(userData)).unwrap()
+      return { success: true, user: result.user }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || '회원가입에 실패했습니다.'
-      dispatch(loginFailure(errorMessage))
-      return { success: false, error: errorMessage }
+      return { success: false, error: error }
     }
   }, [dispatch])
 
@@ -64,6 +62,10 @@ export const useAuth = () => {
     }
   }, [dispatch])
 
+  const clearAuthError = useCallback(() => {
+    dispatch(clearError())
+  }, [dispatch])
+
   return {
     user,
     isAuthenticated,
@@ -72,6 +74,7 @@ export const useAuth = () => {
     login,
     register,
     logout: logoutUser,
-    getCurrentUser
+    getCurrentUser,
+    clearError: clearAuthError
   }
 }
