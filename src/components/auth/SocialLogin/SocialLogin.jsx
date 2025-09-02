@@ -40,7 +40,7 @@ function SocialLogin({
   
   // 소셜 로그인 Hooks
   const { signInWithGoogle, isGoogleScriptLoaded, scriptLoadError: googleError } = useGoogleAuth()
-  const { signInWithKakao, isKakaoScriptLoaded } = useKakaoAuth()
+  const { signInWithKakao, isKakaoScriptLoaded, scriptLoadError: kakaoError } = useKakaoAuth()
   
   const [socialLoading, setSocialLoading] = useState({
     google: false,
@@ -95,10 +95,16 @@ function SocialLogin({
     setSocialLoading(prev => ({ ...prev, kakao: true }))
     
     try {
+      // 스크립트 로드 에러 체크
+      if (kakaoError) {
+        throw new Error(kakaoError)
+      }
+
       if (!isKakaoScriptLoaded) {
         throw new Error('Kakao SDK가 아직 로드되지 않았습니다.')
       }
       
+      // Kakao 로그인 실행 (Promise 기반)
       await signInWithKakao()
       
       // Success callback
@@ -107,7 +113,18 @@ function SocialLogin({
       }
     } catch (error) {
       console.error('Kakao 로그인 실패:', error)
-      const errorMessage = error.message || 'Kakao 로그인에 실패했습니다.'
+      let errorMessage = 'Kakao 로그인에 실패했습니다.'
+      
+      // 에러 타입에 따른 메시지 커스터마이징
+      if (error.message.includes('SDK')) {
+        errorMessage = 'Kakao 서비스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (error.message.includes('취소') || error.message.includes('access_denied')) {
+        errorMessage = 'Kakao 로그인이 취소되었습니다.'
+      } else if (error.message.includes('server_error')) {
+        errorMessage = 'Kakao 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (error.message.includes('네트워크') || error.message.includes('network')) {
+        errorMessage = '네트워크 연결을 확인하고 다시 시도해주세요.'
+      }
       
       // Error callback
       if (onError) {
@@ -180,7 +197,7 @@ function SocialLogin({
           onClick={handleKakaoLogin}
           variant="contained"
           fullWidth
-          disabled={loading || socialLoading.kakao || !isKakaoScriptLoaded}
+          disabled={loading || socialLoading.kakao || !isKakaoScriptLoaded || !!kakaoError}
           sx={{
             py: 1.5,
             borderRadius: 2,
@@ -232,6 +249,8 @@ function SocialLogin({
         >
           {socialLoading.kakao ? (
             <span aria-live="polite" id="kakao-login-status">Kakao 로그인 중...</span>
+          ) : kakaoError ? (
+            <span aria-live="polite">Kakao 서비스 연결 실패</span>
           ) : !isKakaoScriptLoaded ? (
             <span aria-live="polite">Kakao SDK 로딩 중...</span>
           ) : (
