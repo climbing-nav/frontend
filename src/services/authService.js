@@ -23,8 +23,31 @@ export const authService = {
   },
 
   async refreshToken() {
-    const response = await api.post('/auth/refresh')
-    return response.data
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (!refreshToken) {
+      throw new Error('Refresh token이 없습니다.')
+    }
+
+    try {
+      const response = await api.post('/auth/refresh', {
+        refresh_token: refreshToken
+      })
+      
+      // 새로운 토큰 저장
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token)
+        if (response.data.refresh_token) {
+          localStorage.setItem('refresh_token', response.data.refresh_token)
+        }
+      }
+      
+      return response.data
+    } catch (error) {
+      // Refresh 실패시 토큰 정리
+      localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
+      throw error
+    }
   },
 
   // Google OAuth 로그인 - JWT credential 방식
