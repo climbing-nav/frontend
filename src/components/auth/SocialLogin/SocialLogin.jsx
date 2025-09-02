@@ -39,7 +39,7 @@ function SocialLogin({
   const authError = useSelector(selectAuthError)
   
   // 소셜 로그인 Hooks
-  const { signInWithGoogle, isGoogleScriptLoaded } = useGoogleAuth()
+  const { signInWithGoogle, isGoogleScriptLoaded, scriptLoadError: googleError } = useGoogleAuth()
   const { signInWithKakao, isKakaoScriptLoaded } = useKakaoAuth()
   
   const [socialLoading, setSocialLoading] = useState({
@@ -52,10 +52,16 @@ function SocialLogin({
     setSocialLoading(prev => ({ ...prev, google: true }))
     
     try {
+      // 스크립트 로드 에러 체크
+      if (googleError) {
+        throw new Error(googleError)
+      }
+
       if (!isGoogleScriptLoaded) {
         throw new Error('Google SDK가 아직 로드되지 않았습니다.')
       }
       
+      // Google 로그인 실행 (Promise 기반)
       await signInWithGoogle()
       
       // Success callback
@@ -64,7 +70,16 @@ function SocialLogin({
       }
     } catch (error) {
       console.error('Google 로그인 실패:', error)
-      const errorMessage = error.message || 'Google 로그인에 실패했습니다.'
+      let errorMessage = 'Google 로그인에 실패했습니다.'
+      
+      // 에러 타입에 따른 메시지 커스터마이징
+      if (error.message.includes('SDK')) {
+        errorMessage = 'Google 서비스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (error.message.includes('취소') || error.message.includes('cancel')) {
+        errorMessage = 'Google 로그인이 취소되었습니다.'
+      } else if (error.message.includes('네트워크') || error.message.includes('network')) {
+        errorMessage = '네트워크 연결을 확인하고 다시 시도해주세요.'
+      }
       
       // Error callback
       if (onError) {
@@ -121,7 +136,7 @@ function SocialLogin({
           onClick={handleGoogleLogin}
           variant="outlined"
           fullWidth
-          disabled={loading || socialLoading.google || !isGoogleScriptLoaded}
+          disabled={loading || socialLoading.google || !isGoogleScriptLoaded || !!googleError}
           sx={{
             py: 1.5,
             borderRadius: 2,
@@ -151,6 +166,8 @@ function SocialLogin({
         >
           {socialLoading.google ? (
             <span aria-live="polite" id="google-login-status">Google 로그인 중...</span>
+          ) : googleError ? (
+            <span aria-live="polite">Google 서비스 연결 실패</span>
           ) : !isGoogleScriptLoaded ? (
             <span aria-live="polite">Google SDK 로딩 중...</span>
           ) : (
