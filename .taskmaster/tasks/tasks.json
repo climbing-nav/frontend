@@ -141,7 +141,7 @@
         "testStrategy": "Integration tests for OAuth flows, mock OAuth responses, test error handling scenarios, verify token management, test authentication state persistence, validate redirect handling after successful login",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -208,7 +208,62 @@
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Kakao Maps API integration and basic map container",
+            "description": "Initialize Kakao Maps SDK, create basic KakaoMap component structure with map container and API key configuration",
+            "dependencies": [],
+            "details": "Install Kakao Maps SDK, configure API key in environment variables, create KakaoMap component with basic map container div, implement map initialization with default center coordinates (Seoul), set up proper error handling for API key validation, ensure map renders correctly in mobile viewport",
+            "status": "done",
+            "testStrategy": "Unit tests for component mounting, integration tests for Kakao Maps API initialization, mock API responses for invalid keys, verify map container rendering and basic map display"
+          },
+          {
+            "id": 2,
+            "title": "Implement geolocation API for current user location detection",
+            "description": "Add user location detection using browser Geolocation API with permission handling and error states",
+            "dependencies": [
+              1
+            ],
+            "details": "Integrate browser Geolocation API, implement getCurrentPosition with proper error handling, add location permission request flow, handle geolocation errors (denied, unavailable, timeout), add user location marker on map, implement location accuracy display, ensure proper loading states during location detection",
+            "status": "pending",
+            "testStrategy": "Unit tests for geolocation functions, mock geolocation API responses, test permission denied scenarios, verify location marker placement, test timeout and error handling"
+          },
+          {
+            "id": 3,
+            "title": "Add gym markers with clustering functionality",
+            "description": "Implement gym location markers on map with clustering for better performance and visual clarity",
+            "dependencies": [
+              1
+            ],
+            "details": "Create custom gym markers with proper icons, implement marker clustering using Kakao Maps clustering API, add marker click events to show gym information, customize cluster appearance and behavior, handle large numbers of gym markers efficiently, implement marker filtering based on zoom level, add hover effects for better user interaction",
+            "status": "pending",
+            "testStrategy": "Unit tests for marker creation and clustering logic, integration tests for marker click events, test clustering behavior with various gym datasets, verify marker visibility at different zoom levels, test marker filtering functionality"
+          },
+          {
+            "id": 4,
+            "title": "Implement map controls and interaction features",
+            "description": "Add zoom controls, map centering functionality, and interactive map events handling",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implement custom zoom in/out buttons, add center map to user location button, handle map click events for potential gym selection, implement map drag and zoom event handlers, add map bounds change detection, ensure smooth map interactions on mobile devices, implement double-tap zoom functionality",
+            "status": "pending",
+            "testStrategy": "Unit tests for control button functionality, integration tests for map event handling, test zoom and center operations, verify mobile touch interactions, test map bounds detection and event callbacks"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Redux state management and add loading states",
+            "description": "Connect KakaoMap component to Redux map slice and implement comprehensive loading states",
+            "dependencies": [
+              4
+            ],
+            "details": "Integrate with Redux map slice for state management, implement loading states for map initialization, location detection, and marker loading, add error handling with user-friendly error messages, ensure responsive map sizing for mobile viewport, implement map state persistence, add proper cleanup on component unmount, handle map re-rendering optimization",
+            "status": "pending",
+            "testStrategy": "Unit tests for Redux integration, test loading state transitions, integration tests for state persistence, verify error message display, test component cleanup and memory management, validate responsive behavior across screen sizes"
+          }
+        ]
       },
       {
         "id": 5,
@@ -285,7 +340,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-02T14:49:03.182Z",
+      "updated": "2025-09-03T14:28:33.646Z",
       "description": "Tasks for master context"
     }
   }
