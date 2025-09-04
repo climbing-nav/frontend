@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Box, Typography, Alert, IconButton, Fab } from '@mui/material'
-import { MyLocation, ZoomIn, ZoomOut } from '@mui/icons-material'
+import { Box, Typography, Alert, IconButton } from '@mui/material'
+import { ZoomIn, ZoomOut } from '@mui/icons-material'
 import KakaoMap from '../../components/map/KakaoMap'
 
 function MapPage() {
@@ -8,6 +8,7 @@ function MapPage() {
   const [error, setError] = useState(null)
   const [mapLevel, setMapLevel] = useState(3)
   const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.9780 }) // 서울시청
+  const [userLocation, setUserLocation] = useState(null)
 
   const handleMapReady = (map) => {
     console.log('Map is ready:', map)
@@ -18,6 +19,15 @@ function MapPage() {
   const handleMapError = (error) => {
     console.error('Map error:', error)
     setError('지도를 불러올 수 없습니다. 네트워크 연결을 확인해주세요.')
+  }
+
+  const handleLocationFound = (location) => {
+    console.log('User location found:', location)
+    setUserLocation(location)
+  }
+
+  const handleLocationError = (error) => {
+    console.error('Location error:', error)
   }
 
   const handleZoomIn = () => {
@@ -34,35 +44,6 @@ function MapPage() {
       setMapLevel(newLevel)
       mapInstance.setLevel(newLevel)
     }
-  }
-
-  const handleCenterToUserLocation = () => {
-    if (!navigator.geolocation) {
-      alert('위치 정보를 지원하지 않는 브라우저입니다.')
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        const newCenter = { lat: latitude, lng: longitude }
-        setMapCenter(newCenter)
-        
-        if (mapInstance) {
-          const kakaoLatLng = new window.kakao.maps.LatLng(latitude, longitude)
-          mapInstance.setCenter(kakaoLatLng)
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error)
-        alert('위치 정보를 가져올 수 없습니다. 위치 권한을 확인해주세요.')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    )
   }
 
   return (
@@ -125,7 +106,11 @@ function MapPage() {
           height="100%"
           center={mapCenter}
           level={mapLevel}
+          showUserLocation={true}
+          showLocationButton={true}
           onMapReady={handleMapReady}
+          onLocationFound={handleLocationFound}
+          onLocationError={handleLocationError}
           onError={handleMapError}
         />
       </Box>
@@ -176,24 +161,6 @@ function MapPage() {
           <ZoomOut />
         </IconButton>
       </Box>
-
-      {/* Current Location FAB */}
-      <Fab
-        onClick={handleCenterToUserLocation}
-        sx={{
-          position: 'absolute',
-          bottom: 20,
-          right: 16,
-          zIndex: 1000,
-          bgcolor: 'primary.main',
-          '&:hover': {
-            bgcolor: 'primary.dark'
-          }
-        }}
-        aria-label="내 위치로 이동"
-      >
-        <MyLocation />
-      </Fab>
 
       {/* Map Level Indicator */}
       <Box sx={{

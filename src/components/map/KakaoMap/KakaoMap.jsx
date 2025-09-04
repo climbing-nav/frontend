@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Box, CircularProgress, Alert, Typography } from '@mui/material'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { Box, CircularProgress, Alert, Typography, Fab } from '@mui/material'
+import { MyLocation, LocationOn } from '@mui/icons-material'
 
 /**
  * KakaoMap Component
@@ -10,7 +11,11 @@ import { Box, CircularProgress, Alert, Typography } from '@mui/material'
  * @param {number} props.height - Map height (default: 400)
  * @param {Object} props.center - Map center coordinates { lat, lng }
  * @param {number} props.level - Map zoom level (1-14, default: 3)
+ * @param {boolean} props.showUserLocation - Whether to show user location (default: true)
+ * @param {boolean} props.showLocationButton - Whether to show location button (default: true)
  * @param {Function} props.onMapReady - Callback when map is initialized
+ * @param {Function} props.onLocationFound - Callback when user location is found
+ * @param {Function} props.onLocationError - Callback for location errors
  * @param {Function} props.onError - Callback for error handling
  * @param {Object} props.sx - Additional styling
  */
@@ -19,16 +24,24 @@ function KakaoMap({
   height = 400,
   center = { lat: 37.5665, lng: 126.9780 }, // Default: Seoul City Hall
   level = 3,
+  showUserLocation = true,
+  showLocationButton = true,
   onMapReady,
+  onLocationFound,
+  onLocationError,
   onError,
   sx = {}
 }) {
   const mapContainer = useRef(null)
   const mapInstance = useRef(null)
+  const userLocationMarker = useRef(null)
   
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isKakaoLoaded, setIsKakaoLoaded] = useState(false)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locationLoading, setLocationLoading] = useState(false)
+  const [locationError, setLocationError] = useState(null)
 
 
   // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
@@ -182,6 +195,127 @@ function KakaoMap({
     }
   }, [level])
 
+  // Geolocation functions
+  const getCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      const error = new Error('이 브라우저는 위치 서비스를 지원하지 않습니다.')
+      setLocationError(error.message)
+      if (onLocationError) {
+        onLocationError(error)
+      }
+      return
+    }
+
+    setLocationLoading(true)
+    setLocationError(null)
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000 // Cache for 1 minute
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords
+        const location = { lat: latitude, lng: longitude, accuracy }
+        
+        setUserLocation(location)
+        setLocationLoading(false)
+        setLocationError(null)
+
+        if (onLocationFound) {
+          onLocationFound(location)
+        }
+
+        // Add/update user location marker on map
+        if (mapInstance.current && showUserLocation) {
+          updateUserLocationMarker(location)
+        }
+      },
+      (error) => {
+        setLocationLoading(false)
+        let errorMessage = '위치를 가져올 수 없습니다.'
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = '위치 정보를 사용할 수 없습니다.'
+            break
+          case error.TIMEOUT:
+            errorMessage = '위치 요청 시간이 초과되었습니다.'
+            break
+          default:
+            errorMessage = `위치 오류: ${error.message}`
+            break
+        }
+        
+        setLocationError(errorMessage)
+        if (onLocationError) {
+          onLocationError(error)
+        }
+      },
+      options
+    )
+  }, [showUserLocation, onLocationFound, onLocationError])
+
+  // Update user location marker
+  const updateUserLocationMarker = useCallback((location) => {
+    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
+
+    // Remove existing marker
+    if (userLocationMarker.current) {
+      userLocationMarker.current.setMap(null)
+    }
+
+    // Create marker position
+    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
+
+    // Create custom marker image for user location
+    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="white"/>
+      </svg>
+    `)
+    const imageSize = new window.kakao.maps.Size(24, 24)
+    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
+    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
+
+    // Create marker
+    const marker = new window.kakao.maps.Marker({
+      position: markerPosition,
+      image: markerImage,
+      title: '내 위치'
+    })
+
+    // Add marker to map
+    marker.setMap(mapInstance.current)
+    userLocationMarker.current = marker
+
+    // Center map on user location
+    mapInstance.current.setCenter(markerPosition)
+  }, [])
+
+  // Center map to user location
+  const centerToUserLocation = useCallback(() => {
+    if (userLocation && mapInstance.current) {
+      const position = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
+      mapInstance.current.setCenter(position)
+    } else {
+      getCurrentLocation()
+    }
+  }, [userLocation, getCurrentLocation])
+
+  // Get user location when map is ready and showUserLocation is true
+  useEffect(() => {
+    if (mapInstance.current && showUserLocation && !userLocation && !locationLoading) {
+      getCurrentLocation()
+    }
+  }, [mapInstance.current, showUserLocation, userLocation, locationLoading, getCurrentLocation])
+
   // Always render the map container, but show loading overlay
   return (
     <Box
@@ -265,6 +399,55 @@ function KakaoMap({
             </Typography>
           </Alert>
         </Box>
+      )}
+
+      {/* Location Error Alert */}
+      {locationError && (
+        <Alert 
+          severity="warning" 
+          onClose={() => setLocationError(null)}
+          sx={{ 
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            right: 10,
+            zIndex: 1000,
+            maxWidth: 400
+          }}
+        >
+          <Typography variant="body2">
+            {locationError}
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Location Button */}
+      {showLocationButton && !isLoading && !error && (
+        <Fab
+          size="small"
+          color="primary"
+          aria-label="내 위치 찾기"
+          onClick={centerToUserLocation}
+          disabled={locationLoading}
+          sx={{
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            zIndex: 1000,
+            bgcolor: 'white',
+            color: locationLoading ? 'text.disabled' : 'primary.main',
+            '&:hover': {
+              bgcolor: 'grey.50'
+            },
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }}
+        >
+          {locationLoading ? (
+            <CircularProgress size={20} />
+          ) : (
+            userLocation ? <LocationOn /> : <MyLocation />
+          )}
+        </Fab>
       )}
     </Box>
   )
