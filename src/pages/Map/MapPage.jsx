@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Box, Typography, Alert, IconButton } from '@mui/material'
 import { ZoomIn, ZoomOut } from '@mui/icons-material'
 import KakaoMap from '../../components/map/KakaoMap'
+import { mockGyms } from '../../data/mockGyms'
 
 function MapPage() {
   const [mapInstance, setMapInstance] = useState(null)
@@ -28,6 +29,12 @@ function MapPage() {
 
   const handleLocationError = (error) => {
     console.error('Location error:', error)
+  }
+
+  const handleGymClick = (gym) => {
+    console.log('Gym clicked:', gym)
+    // TODO: Show gym detail modal or navigate to gym detail page
+    alert(`${gym.name} 클릭됨!\n혼잡도: ${gym.congestion}\n평점: ${gym.rating}`)
   }
 
   const handleZoomIn = () => {
@@ -108,9 +115,11 @@ function MapPage() {
           level={mapLevel}
           showUserLocation={true}
           showLocationButton={true}
+          gyms={mockGyms}
           onMapReady={handleMapReady}
           onLocationFound={handleLocationFound}
           onLocationError={handleLocationError}
+          onGymClick={handleGymClick}
           onError={handleMapError}
         />
       </Box>
