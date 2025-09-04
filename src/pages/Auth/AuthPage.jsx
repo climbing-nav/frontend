@@ -1,13 +1,20 @@
 import { useState } from 'react'
-import { Box, Typography, Tabs, Tab, Paper } from '@mui/material'
+import { Box, Typography, Tabs, Tab, Paper, IconButton } from '@mui/material'
+import { ArrowBack } from '@mui/icons-material'
 import LoginForm from '../../components/auth/LoginForm/LoginForm'
 import RegisterForm from '../../components/auth/RegisterForm/RegisterForm'
 
-function AuthPage() {
+function AuthPage({ onNavigateToHome }) {
   const [tabValue, setTabValue] = useState(0)
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue)
+  }
+
+  const handleBackToHome = () => {
+    if (onNavigateToHome) {
+      onNavigateToHome()
+    }
   }
 
   return (
@@ -37,6 +44,25 @@ function AuthPage() {
         textAlign: 'center',
         position: 'relative'
       }}>
+        {/* Back Button */}
+        <IconButton
+          onClick={handleBackToHome}
+          sx={{
+            position: 'absolute',
+            left: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'white',
+            bgcolor: 'rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.2)'
+            }
+          }}
+          aria-label="홈으로 돌아가기"
+        >
+          <ArrowBack />
+        </IconButton>
+
         <Typography variant="h5" sx={{
           fontWeight: 700,
           mb: 1,

@@ -27,7 +27,7 @@ const theme = createTheme({
 
 function App() {
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('map') // 'home', 'map', 'community', 'mypage', 'auth'
+  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth'
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -73,7 +73,7 @@ function App() {
         position: 'relative',
       }}>
         {currentPage === 'auth' ? (
-          <AuthPage />
+          <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
             <Header onNavigateToAuth={handleNavigateToAuth} />
