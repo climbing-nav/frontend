@@ -13,9 +13,11 @@ import { MyLocation, LocationOn } from '@mui/icons-material'
  * @param {number} props.level - Map zoom level (1-14, default: 3)
  * @param {boolean} props.showUserLocation - Whether to show user location (default: true)
  * @param {boolean} props.showLocationButton - Whether to show location button (default: true)
+ * @param {Array} props.gyms - Array of gym data to display as markers
  * @param {Function} props.onMapReady - Callback when map is initialized
  * @param {Function} props.onLocationFound - Callback when user location is found
  * @param {Function} props.onLocationError - Callback for location errors
+ * @param {Function} props.onGymClick - Callback when gym marker is clicked
  * @param {Function} props.onError - Callback for error handling
  * @param {Object} props.sx - Additional styling
  */
@@ -26,15 +28,18 @@ function KakaoMap({
   level = 3,
   showUserLocation = true,
   showLocationButton = true,
+  gyms = [],
   onMapReady,
   onLocationFound,
   onLocationError,
+  onGymClick,
   onError,
   sx = {}
 }) {
   const mapContainer = useRef(null)
   const mapInstance = useRef(null)
   const userLocationMarker = useRef(null)
+  const gymMarkersRef = useRef([])
   
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -315,6 +320,93 @@ function KakaoMap({
       getCurrentLocation()
     }
   }, [mapInstance.current, showUserLocation, userLocation, locationLoading, getCurrentLocation])
+
+  // Helper function to get congestion color
+  const getCongestionColor = useCallback((congestion) => {
+    switch (congestion) {
+      case 'comfortable':
+        return '#4CAF50' // Green
+      case 'normal':
+        return '#FF9800' // Orange
+      case 'crowded':
+        return '#F44336' // Red
+      default:
+        return '#9E9E9E' // Grey
+    }
+  }, [])
+
+  // Create gym marker with custom icon
+  const createGymMarker = useCallback((gym) => {
+    if (!window.kakao || !window.kakao.maps) return null
+
+    const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
+    const congestionColor = getCongestionColor(gym.congestion)
+
+    // Create custom marker image with congestion color
+    const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="${congestionColor}"/>
+        <circle cx="16" cy="16" r="8" fill="white"/>
+        <path d="M12 12L20 12L20 20L12 20Z" fill="${congestionColor}"/>
+        <path d="M14 14L18 16L14 18Z" fill="white"/>
+      </svg>
+    `)
+
+    const imageSize = new window.kakao.maps.Size(32, 40)
+    const imageOption = { offset: new window.kakao.maps.Point(16, 40) }
+    const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
+
+    // Create marker
+    const marker = new window.kakao.maps.Marker({
+      position: position,
+      image: markerImage,
+      title: gym.name
+    })
+
+    // Add click event
+    if (onGymClick) {
+      window.kakao.maps.event.addListener(marker, 'click', () => {
+        onGymClick(gym)
+      })
+    }
+
+    // Store gym data in marker for reference
+    marker.gymData = gym
+
+    return marker
+  }, [getCongestionColor, onGymClick])
+
+  // Update gym markers
+  const updateGymMarkers = useCallback(() => {
+    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
+
+    // Clear existing markers
+    gymMarkersRef.current.forEach(marker => {
+      marker.setMap(null)
+    })
+    gymMarkersRef.current = []
+
+    // Create new markers for gyms
+    const markers = gyms.map(gym => createGymMarker(gym)).filter(Boolean)
+    gymMarkersRef.current = markers
+
+    if (markers.length === 0) return
+
+    // Add markers to map (without clustering for now)
+    markers.forEach(marker => {
+      marker.setMap(mapInstance.current)
+    })
+
+    // TODO: Implement clustering when MarkerClusterer library is properly loaded
+    // For now, we'll display individual markers
+  }, [gyms, createGymMarker])
+
+  // Update gym markers when gyms data changes or map is ready
+  useEffect(() => {
+    if (mapInstance.current) {
+      updateGymMarkers()
+    }
+  }, [mapInstance.current, gyms, updateGymMarkers])
 
   // Always render the map container, but show loading overlay
   return (
