@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Box, CircularProgress, Alert, Typography, Fab } from '@mui/material'
-import { MyLocation, LocationOn } from '@mui/icons-material'
+import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
+import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 
 /**
  * KakaoMap Component
@@ -13,11 +13,16 @@ import { MyLocation, LocationOn } from '@mui/icons-material'
  * @param {number} props.level - Map zoom level (1-14, default: 3)
  * @param {boolean} props.showUserLocation - Whether to show user location (default: true)
  * @param {boolean} props.showLocationButton - Whether to show location button (default: true)
+ * @param {boolean} props.showZoomControls - Whether to show zoom controls (default: true)
  * @param {Array} props.gyms - Array of gym data to display as markers
  * @param {Function} props.onMapReady - Callback when map is initialized
  * @param {Function} props.onLocationFound - Callback when user location is found
  * @param {Function} props.onLocationError - Callback for location errors
  * @param {Function} props.onGymClick - Callback when gym marker is clicked
+ * @param {Function} props.onMapClick - Callback when map is clicked
+ * @param {Function} props.onZoomChanged - Callback when zoom level changes
+ * @param {Function} props.onCenterChanged - Callback when map center changes
+ * @param {Function} props.onBoundsChanged - Callback when map bounds change
  * @param {Function} props.onError - Callback for error handling
  * @param {Object} props.sx - Additional styling
  */
@@ -28,11 +33,16 @@ function KakaoMap({
   level = 3,
   showUserLocation = true,
   showLocationButton = true,
+  showZoomControls = true,
   gyms = [],
   onMapReady,
   onLocationFound,
   onLocationError,
   onGymClick,
+  onMapClick,
+  onZoomChanged,
+  onCenterChanged,
+  onBoundsChanged,
   onError,
   sx = {}
 }) {
@@ -168,6 +178,9 @@ function KakaoMap({
 
       // Map is ready
       setIsLoading(false)
+      
+      // Set up map event listeners
+      setupMapEventListeners(map)
       
       if (onMapReady) {
         onMapReady(map)
@@ -314,12 +327,109 @@ function KakaoMap({
     }
   }, [userLocation, getCurrentLocation])
 
+  // Zoom control functions
+  const handleZoomIn = useCallback(() => {
+    if (mapInstance.current) {
+      const currentLevel = mapInstance.current.getLevel()
+      if (currentLevel > 1) {
+        mapInstance.current.setLevel(currentLevel - 1)
+      }
+    }
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    if (mapInstance.current) {
+      const currentLevel = mapInstance.current.getLevel()
+      if (currentLevel < 14) {
+        mapInstance.current.setLevel(currentLevel + 1)
+      }
+    }
+  }, [])
+
+  // Get current zoom level
+  const getCurrentZoomLevel = useCallback(() => {
+    if (mapInstance.current) {
+      return mapInstance.current.getLevel()
+    }
+    return level
+  }, [level])
+
   // Get user location when map is ready and showUserLocation is true
   useEffect(() => {
     if (mapInstance.current && showUserLocation && !userLocation && !locationLoading) {
       getCurrentLocation()
     }
   }, [mapInstance.current, showUserLocation, userLocation, locationLoading, getCurrentLocation])
+
+  // Setup map event listeners
+  const setupMapEventListeners = useCallback((map) => {
+    if (!window.kakao || !window.kakao.maps) return
+
+    // Map click event
+    if (onMapClick) {
+      window.kakao.maps.event.addListener(map, 'click', (mouseEvent) => {
+        const latlng = mouseEvent.latLng
+        onMapClick({
+          lat: latlng.getLat(),
+          lng: latlng.getLng()
+        })
+      })
+    }
+
+    // Zoom change event
+    if (onZoomChanged) {
+      window.kakao.maps.event.addListener(map, 'zoom_changed', () => {
+        const level = map.getLevel()
+        onZoomChanged(level)
+      })
+    }
+
+    // Center change event
+    if (onCenterChanged) {
+      window.kakao.maps.event.addListener(map, 'center_changed', () => {
+        const center = map.getCenter()
+        onCenterChanged({
+          lat: center.getLat(),
+          lng: center.getLng()
+        })
+      })
+    }
+
+    // Bounds change event
+    if (onBoundsChanged) {
+      window.kakao.maps.event.addListener(map, 'bounds_changed', () => {
+        const bounds = map.getBounds()
+        const sw = bounds.getSouthWest()
+        const ne = bounds.getNorthEast()
+        
+        onBoundsChanged({
+          southWest: {
+            lat: sw.getLat(),
+            lng: sw.getLng()
+          },
+          northEast: {
+            lat: ne.getLat(),
+            lng: ne.getLng()
+          }
+        })
+      })
+    }
+
+    // Drag start event
+    window.kakao.maps.event.addListener(map, 'dragstart', () => {
+      console.log('Map drag started')
+    })
+
+    // Drag end event
+    window.kakao.maps.event.addListener(map, 'dragend', () => {
+      console.log('Map drag ended')
+    })
+
+    // Idle event (when map stops moving/zooming)
+    window.kakao.maps.event.addListener(map, 'idle', () => {
+      console.log('Map idle')
+    })
+  }, [onMapClick, onZoomChanged, onCenterChanged, onBoundsChanged])
 
   // Helper function to get congestion color
   const getCongestionColor = useCallback((congestion) => {
@@ -511,6 +621,52 @@ function KakaoMap({
             {locationError}
           </Typography>
         </Alert>
+      )}
+
+      {/* Zoom Controls */}
+      {showZoomControls && !isLoading && !error && (
+        <Box sx={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1
+        }}>
+          <IconButton
+            onClick={handleZoomIn}
+            disabled={getCurrentZoomLevel() <= 1}
+            sx={{
+              bgcolor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              '&:hover': {
+                bgcolor: 'grey.50'
+              },
+              '&:disabled': {
+                bgcolor: 'grey.100'
+              }
+            }}
+          >
+            <ZoomIn />
+          </IconButton>
+          <IconButton
+            onClick={handleZoomOut}
+            disabled={getCurrentZoomLevel() >= 14}
+            sx={{
+              bgcolor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              '&:hover': {
+                bgcolor: 'grey.50'
+              },
+              '&:disabled': {
+                bgcolor: 'grey.100'
+              }
+            }}
+          >
+            <ZoomOut />
+          </IconButton>
+        </Box>
       )}
 
       {/* Location Button */}

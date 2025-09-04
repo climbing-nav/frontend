@@ -249,7 +249,7 @@
               3
             ],
             "details": "Implement custom zoom in/out buttons, add center map to user location button, handle map click events for potential gym selection, implement map drag and zoom event handlers, add map bounds change detection, ensure smooth map interactions on mobile devices, implement double-tap zoom functionality",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for control button functionality, integration tests for map event handling, test zoom and center operations, verify mobile touch interactions, test map bounds detection and event callbacks"
           },
           {
@@ -340,7 +340,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-04T14:48:30.850Z",
+      "updated": "2025-09-04T14:57:58.020Z",
       "description": "Tasks for master context"
     }
   }

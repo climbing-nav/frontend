@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Box, Typography, Alert, IconButton } from '@mui/material'
-import { ZoomIn, ZoomOut } from '@mui/icons-material'
+import { Box, Typography, Alert } from '@mui/material'
 import KakaoMap from '../../components/map/KakaoMap'
 import { mockGyms } from '../../data/mockGyms'
 
@@ -37,21 +36,24 @@ function MapPage() {
     alert(`${gym.name} 클릭됨!\n혼잡도: ${gym.congestion}\n평점: ${gym.rating}`)
   }
 
-  const handleZoomIn = () => {
-    if (mapInstance && mapLevel > 1) {
-      const newLevel = mapLevel - 1
-      setMapLevel(newLevel)
-      mapInstance.setLevel(newLevel)
-    }
+  const handleMapClick = (position) => {
+    console.log('Map clicked at:', position)
   }
 
-  const handleZoomOut = () => {
-    if (mapInstance && mapLevel < 14) {
-      const newLevel = mapLevel + 1
-      setMapLevel(newLevel)
-      mapInstance.setLevel(newLevel)
-    }
+  const handleZoomChanged = (level) => {
+    console.log('Zoom changed to:', level)
+    setMapLevel(level)
   }
+
+  const handleCenterChanged = (center) => {
+    console.log('Center changed to:', center)
+    setMapCenter(center)
+  }
+
+  const handleBoundsChanged = (bounds) => {
+    console.log('Bounds changed:', bounds)
+  }
+
 
   return (
     <Box sx={{ 
@@ -115,61 +117,20 @@ function MapPage() {
           level={mapLevel}
           showUserLocation={true}
           showLocationButton={true}
+          showZoomControls={true}
           gyms={mockGyms}
           onMapReady={handleMapReady}
           onLocationFound={handleLocationFound}
           onLocationError={handleLocationError}
           onGymClick={handleGymClick}
+          onMapClick={handleMapClick}
+          onZoomChanged={handleZoomChanged}
+          onCenterChanged={handleCenterChanged}
+          onBoundsChanged={handleBoundsChanged}
           onError={handleMapError}
         />
       </Box>
 
-      {/* Map Controls */}
-      <Box sx={{
-        position: 'absolute',
-        top: 100,
-        right: 16,
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1
-      }}>
-        {/* Zoom In */}
-        <IconButton
-          onClick={handleZoomIn}
-          disabled={mapLevel <= 1}
-          sx={{
-            bgcolor: 'white',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            '&:hover': {
-              bgcolor: 'grey.50'
-            },
-            '&:disabled': {
-              bgcolor: 'grey.100'
-            }
-          }}
-        >
-          <ZoomIn />
-        </IconButton>
-
-        {/* Zoom Out */}
-        <IconButton
-          onClick={handleZoomOut}
-          disabled={mapLevel >= 14}
-          sx={{
-            bgcolor: 'white',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            '&:hover': {
-              bgcolor: 'grey.50'
-            },
-            '&:disabled': {
-              bgcolor: 'grey.100'
-            }
-          }}
-        >
-          <ZoomOut />
-        </IconButton>
-      </Box>
 
       {/* Map Level Indicator */}
       <Box sx={{
