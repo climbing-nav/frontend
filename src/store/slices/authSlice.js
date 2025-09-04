@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
+import { authStorage } from '../../utils/authStorage'
 
 // Async thunk for login
 export const loginAsync = createAsyncThunk(
@@ -74,7 +75,12 @@ export const registerAsync = createAsyncThunk(
       const response = await authService.register(userData)
       // 회원가입 성공 후 토큰을 로컬 스토리지에 저장
       if (response.token) {
-        localStorage.setItem('token', response.token)
+        authStorage.setToken(response.token)
+        authStorage.setUserData(response.user)
+        authStorage.setAuthProvider('email')
+        if (response.refresh_token) {
+          authStorage.setRefreshToken(response.refresh_token)
+        }
       }
       return response
     } catch (error) {
@@ -83,12 +89,67 @@ export const registerAsync = createAsyncThunk(
   }
 )
 
+// Async thunk for initializing auth state from storage
+export const initializeAuthAsync = createAsyncThunk(
+  'auth/initializeAuthAsync',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = authStorage.getToken()
+      const userData = authStorage.getUserData()
+      const provider = authStorage.getAuthProvider()
+
+      if (!token || !userData) {
+        return { user: null, token: null, provider: null }
+      }
+
+      // 토큰이 만료되었는지 확인
+      if (authStorage.isTokenExpired(token)) {
+        const refreshToken = authStorage.getRefreshToken()
+        if (refreshToken) {
+          try {
+            // 토큰 갱신 시도
+            const refreshResponse = await authService.refreshToken()
+            authStorage.setToken(refreshResponse.token)
+            if (refreshResponse.refresh_token) {
+              authStorage.setRefreshToken(refreshResponse.refresh_token)
+            }
+            return {
+              user: userData,
+              token: refreshResponse.token,
+              provider
+            }
+          } catch (refreshError) {
+            // 토큰 갱신 실패시 로그아웃 처리
+            authStorage.clearAuthData()
+            return { user: null, token: null, provider: null }
+          }
+        } else {
+          // Refresh token이 없으면 로그아웃 처리
+          authStorage.clearAuthData()
+          return { user: null, token: null, provider: null }
+        }
+      }
+
+      return {
+        user: userData,
+        token,
+        provider
+      }
+    } catch (error) {
+      authStorage.clearAuthData()
+      return rejectWithValue('인증 상태 초기화에 실패했습니다.')
+    }
+  }
+)
+
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: authStorage.getUserData(),
+  isAuthenticated: authStorage.hasValidAuth(),
   loading: false,
   error: null,
-  token: localStorage.getItem('token'),
+  token: authStorage.getToken(),
+  authProvider: authStorage.getAuthProvider(),
+  isInitialized: false,
 }
 
 const authSlice = createSlice({
@@ -104,25 +165,42 @@ const authSlice = createSlice({
       state.isAuthenticated = true
       state.user = action.payload.user
       state.token = action.payload.token
+      state.authProvider = action.payload.provider || 'email'
       state.error = null
+      
+      // 로컬 스토리지에 저장
+      authStorage.setToken(action.payload.token)
+      authStorage.setUserData(action.payload.user)
+      authStorage.setAuthProvider(action.payload.provider || 'email')
     },
     loginFailure: (state, action) => {
       state.loading = false
       state.error = action.payload
       state.isAuthenticated = false
+      state.user = null
+      state.token = null
+      state.authProvider = null
     },
     logout: (state) => {
       state.user = null
       state.isAuthenticated = false
       state.error = null
       state.token = null
+      state.authProvider = null
       state.loading = false
+      
+      // 로컬 스토리지 정리
+      authStorage.clearAuthData()
     },
     clearError: (state) => {
       state.error = null
     },
     setLoading: (state, action) => {
       state.loading = action.payload
+    },
+    updateUserProfile: (state, action) => {
+      state.user = { ...state.user, ...action.payload }
+      authStorage.setUserData(state.user)
     },
   },
   extraReducers: (builder) => {
@@ -137,7 +215,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.user = action.payload.user
         state.token = action.payload.token
+        state.authProvider = 'email'
         state.error = null
+        
+        // 로컬 스토리지에 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('email')
+        if (action.payload.refresh_token) {
+          authStorage.setRefreshToken(action.payload.refresh_token)
+        }
       })
       .addCase(loginAsync.rejected, (state, action) => {
         state.loading = false
@@ -192,7 +279,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.user = action.payload.user
         state.token = action.payload.token
+        state.authProvider = 'google'
         state.error = null
+        
+        // 로컬 스토리지에 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('google')
+        if (action.payload.refresh_token) {
+          authStorage.setRefreshToken(action.payload.refresh_token)
+        }
       })
       .addCase(googleLoginAsync.rejected, (state, action) => {
         state.loading = false
@@ -211,7 +307,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.user = action.payload.user
         state.token = action.payload.token
+        state.authProvider = 'kakao'
         state.error = null
+        
+        // 로컬 스토리지에 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('kakao')
+        if (action.payload.refresh_token) {
+          authStorage.setRefreshToken(action.payload.refresh_token)
+        }
       })
       .addCase(kakaoLoginAsync.rejected, (state, action) => {
         state.loading = false
@@ -238,6 +343,37 @@ const authSlice = createSlice({
         state.isAuthenticated = false
         state.user = null
         state.token = null
+        state.authProvider = null
+      })
+      // Initialize auth cases
+      .addCase(initializeAuthAsync.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(initializeAuthAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isInitialized = true
+        
+        if (action.payload.user && action.payload.token) {
+          state.isAuthenticated = true
+          state.user = action.payload.user
+          state.token = action.payload.token
+          state.authProvider = action.payload.provider
+        } else {
+          state.isAuthenticated = false
+          state.user = null
+          state.token = null
+          state.authProvider = null
+        }
+        state.error = null
+      })
+      .addCase(initializeAuthAsync.rejected, (state, action) => {
+        state.loading = false
+        state.isInitialized = true
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+        state.authProvider = null
+        state.error = action.payload
       })
   },
 })
@@ -248,7 +384,8 @@ export const {
   loginFailure, 
   logout, 
   clearError, 
-  setLoading 
+  setLoading,
+  updateUserProfile
 } = authSlice.actions
 
 // Selectors
@@ -258,5 +395,16 @@ export const selectIsAuthenticated = (state) => state.auth.isAuthenticated
 export const selectAuthLoading = (state) => state.auth.loading
 export const selectAuthError = (state) => state.auth.error
 export const selectToken = (state) => state.auth.token
+export const selectAuthProvider = (state) => state.auth.authProvider
+export const selectIsAuthInitialized = (state) => state.auth.isInitialized
+
+// Combined selectors
+export const selectAuthStatus = (state) => ({
+  isAuthenticated: state.auth.isAuthenticated,
+  isInitialized: state.auth.isInitialized,
+  loading: state.auth.loading,
+  user: state.auth.user,
+  provider: state.auth.authProvider
+})
 
 export default authSlice.reducer
