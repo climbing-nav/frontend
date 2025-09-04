@@ -74,7 +74,7 @@
         "testStrategy": "Unit tests for form validation logic, integration tests for registration flow, test email verification UI, verify terms acceptance functionality, test password strength validation, mock API responses for registration scenarios",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -142,7 +142,62 @@
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create SocialLogin Component Structure",
+            "description": "Build the basic SocialLogin component with Google and Kakao login buttons using Material-UI components",
+            "dependencies": [],
+            "details": "Create SocialLogin.tsx component with proper TypeScript interfaces, implement Google and Kakao login buttons with appropriate styling, ensure responsive design for 393px mobile viewport, add proper accessibility attributes and ARIA labels for screen readers",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering, test button accessibility attributes, verify responsive design on different screen sizes, test component props and default states"
+          },
+          {
+            "id": 2,
+            "title": "Integrate Google OAuth API",
+            "description": "Implement Google Login API integration with OAuth flow handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up Google OAuth client configuration, implement Google Sign-In JavaScript API, handle OAuth callback and authorization code exchange, implement proper error handling for Google login failures, ensure secure token handling",
+            "status": "pending",
+            "testStrategy": "Integration tests for Google OAuth flow, mock Google API responses, test error scenarios including network failures and user cancellation, verify token extraction and validation"
+          },
+          {
+            "id": 3,
+            "title": "Integrate Kakao OAuth API",
+            "description": "Implement Kakao Login API integration with OAuth flow handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up Kakao OAuth client configuration, implement Kakao JavaScript SDK integration, handle Kakao OAuth callback and token exchange, implement proper error handling for Kakao login failures, ensure consistent error messaging with Google integration",
+            "status": "pending",
+            "testStrategy": "Integration tests for Kakao OAuth flow, mock Kakao API responses, test error scenarios including SDK initialization failures, verify token handling consistency with Google implementation"
+          },
+          {
+            "id": 4,
+            "title": "Implement Authentication State Management",
+            "description": "Integrate social login with Redux auth state and implement token management",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Connect SocialLogin component to Redux auth slice, implement authentication token storage and management, handle user profile data extraction from OAuth providers, implement proper logout functionality, ensure authentication state persistence across app sessions",
+            "status": "pending",
+            "testStrategy": "Integration tests for Redux state updates, test token persistence and retrieval, verify user profile data handling, test authentication state changes and logout scenarios"
+          },
+          {
+            "id": 5,
+            "title": "Implement Loading States and Error Handling",
+            "description": "Add comprehensive loading states and error handling for OAuth authentication processes",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement loading indicators during OAuth authentication, add comprehensive error handling for network failures, OAuth cancellations, and API errors, implement user-friendly error messages, add retry mechanisms for failed authentication attempts, ensure proper UX during loading states",
+            "status": "pending",
+            "testStrategy": "Unit tests for loading state management, integration tests for error handling scenarios, test user experience during authentication flow, verify error message display and retry functionality, test edge cases like network interruptions"
+          }
+        ]
       },
       {
         "id": 4,
@@ -230,7 +285,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-08-30T08:14:49.448Z",
+      "updated": "2025-09-02T14:24:19.243Z",
       "description": "Tasks for master context"
     }
   }
