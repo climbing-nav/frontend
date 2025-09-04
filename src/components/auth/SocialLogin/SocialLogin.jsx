@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { 
   Box, 
   Button, 
   Typography, 
   Divider,
-  CircularProgress
+  CircularProgress,
+  Alert,
+  Chip
 } from '@mui/material'
-import { Google } from '@mui/icons-material'
+import { Google, Refresh } from '@mui/icons-material'
 import { 
   clearError, 
   selectAuthLoading, 
@@ -47,10 +49,18 @@ function SocialLogin({
     kakao: false
   })
 
-  const handleGoogleLogin = async () => {
+  const [retryCount, setRetryCount] = useState({
+    google: 0,
+    kakao: 0
+  })
+
+  const [lastError, setLastError] = useState(null)
+
+  const handleGoogleLogin = useCallback(async (isRetry = false) => {
     dispatch(clearError())
+    setLastError(null)
     setSocialLoading(prev => ({ ...prev, google: true }))
-    
+
     try {
       // 스크립트 로드 에러 체크
       if (googleError) {
@@ -63,6 +73,9 @@ function SocialLogin({
       
       // Google 로그인 실행 (Promise 기반)
       await signInWithGoogle()
+      
+      // 성공 시 재시도 카운트 리셋
+      setRetryCount(prev => ({ ...prev, google: 0 }))
       
       // Success callback
       if (onSuccess) {
@@ -77,9 +90,22 @@ function SocialLogin({
         errorMessage = 'Google 서비스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'
       } else if (error.message.includes('취소') || error.message.includes('cancel')) {
         errorMessage = 'Google 로그인이 취소되었습니다.'
+        // 사용자가 취소한 경우는 재시도 카운트에 포함하지 않음
+        setSocialLoading(prev => ({ ...prev, google: false }))
+        if (onError) {
+          onError('google', errorMessage)
+        }
+        return
       } else if (error.message.includes('네트워크') || error.message.includes('network')) {
         errorMessage = '네트워크 연결을 확인하고 다시 시도해주세요.'
       }
+      
+      // 재시도가 아닌 경우에만 카운트 증가
+      if (!isRetry) {
+        setRetryCount(prev => ({ ...prev, google: prev.google + 1 }))
+      }
+      
+      setLastError({ provider: 'google', message: errorMessage, originalError: error })
       
       // Error callback
       if (onError) {
@@ -88,7 +114,7 @@ function SocialLogin({
     } finally {
       setSocialLoading(prev => ({ ...prev, google: false }))
     }
-  }
+  }, [dispatch, googleError, isGoogleScriptLoaded, signInWithGoogle, onSuccess, onError])
 
   const handleKakaoLogin = async () => {
     dispatch(clearError())
@@ -144,6 +170,41 @@ function SocialLogin({
             {dividerText}
           </Typography>
         </Divider>
+      )}
+
+      {/* Error Display with Retry */}
+      {lastError && (
+        <Alert 
+          severity="warning" 
+          sx={{ mb: 2 }}
+          action={
+            retryCount[lastError.provider] < 3 && (
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<Refresh />}
+                onClick={() => {
+                  if (lastError.provider === 'google') {
+                    handleGoogleLogin(true)
+                  } else if (lastError.provider === 'kakao') {
+                    handleKakaoLogin(true)
+                  }
+                }}
+              >
+                재시도
+              </Button>
+            )
+          }
+        >
+          {lastError.message}
+          {retryCount[lastError.provider] > 0 && (
+            <Chip 
+              label={`${retryCount[lastError.provider]}회 시도`} 
+              size="small" 
+              sx={{ ml: 1 }} 
+            />
+          )}
+        </Alert>
       )}
 
       {/* Social Login Buttons */}
