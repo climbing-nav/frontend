@@ -679,7 +679,7 @@ function KakaoMap({
           disabled={locationLoading}
           sx={{
             position: 'absolute',
-            bottom: 16,
+            bottom: 50,
             right: 16,
             zIndex: 1000,
             bgcolor: 'white',
