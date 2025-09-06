@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 
@@ -69,6 +69,12 @@ function KakaoMap({
   const [locationError, setLocationError] = useState(null)
   const [isCriticalError, setIsCriticalError] = useState(false)
   const [circuitBreakerOpen, setCircuitBreakerOpen] = useState(false)
+
+  // Memoize center object to prevent unnecessary re-renders
+  const memoizedCenter = useMemo(() => ({
+    lat: center.lat,
+    lng: center.lng
+  }), [center.lat, center.lng])
 
   // Error tracking and circuit breaker functions - moved before usage
   const trackError = useCallback((errorType = 'general') => {
@@ -196,7 +202,7 @@ function KakaoMap({
         const shouldStop = trackError('kakao-maps-load-failed')
         if (!shouldStop) {
           setError(errorMessage)
-          setIsLoading(false)
+          setIsLoading(prev => prev ? false : prev)
         }
         
         if (intervalId) clearInterval(intervalId)
@@ -255,8 +261,8 @@ function KakaoMap({
     })
 
     try {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(prev => !prev ? true : prev)
+      setError(prev => prev ? null : prev)
 
       // Ensure container has proper dimensions
       if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
@@ -273,14 +279,14 @@ function KakaoMap({
             try {
               const retryMap = new window.kakao.maps.Map(mapContainer.current, retryOptions)
               mapInstance.current = retryMap
-              setIsLoading(false)
+              setIsLoading(prev => prev ? false : prev)
               if (onMapReady) {
                 onMapReady(retryMap)
               }
             } catch (retryError) {
               console.error('❌ Retry failed:', retryError)
               setError(`지도 초기화 재시도 실패: ${retryError.message}`)
-              setIsLoading(false)
+              setIsLoading(prev => prev ? false : prev)
             }
           }
         }, 200)
@@ -289,7 +295,7 @@ function KakaoMap({
 
       // Map options
       const options = {
-        center: new window.kakao.maps.LatLng(center.lat, center.lng),
+        center: new window.kakao.maps.LatLng(memoizedCenter.lat, memoizedCenter.lng),
         level: level
       }
 
@@ -302,7 +308,7 @@ function KakaoMap({
       console.log('✅ Map created successfully!')
 
       // Map is ready
-      setIsLoading(false)
+      setIsLoading(prev => prev ? false : prev)
       
       // Set up map event listeners
       setupMapEventListeners(map)
@@ -319,22 +325,22 @@ function KakaoMap({
       const shouldStop = trackError('kakao-map-init-failed')
       if (!shouldStop) {
         setError(errorMessage)
-        setIsLoading(false)
+        setIsLoading(prev => prev ? false : prev)
         
         if (onError) {
           onError(error)
         }
       }
     }
-  }, [isKakaoLoaded, center.lat, center.lng, level, trackError, onError, isCriticalError]) // isCriticalError 추가
+  }, [isKakaoLoaded, memoizedCenter, level, trackError, onError, isCriticalError]) // isCriticalError 추가
 
   // Update map center when props change
   useEffect(() => {
     if (mapInstance.current) {
-      const newCenter = new window.kakao.maps.LatLng(center.lat, center.lng)
+      const newCenter = new window.kakao.maps.LatLng(memoizedCenter.lat, memoizedCenter.lng)
       mapInstance.current.setCenter(newCenter)
     }
-  }, [center.lat, center.lng])
+  }, [memoizedCenter])
 
   // Update map level when props change
   useEffect(() => {
@@ -366,8 +372,8 @@ function KakaoMap({
       return
     }
 
-    setLocationLoading(true)
-    setLocationError(null)
+    setLocationLoading(prev => !prev ? true : prev)
+    setLocationError(prev => prev ? null : prev)
 
     const options = {
       enableHighAccuracy: true,
@@ -384,7 +390,7 @@ function KakaoMap({
         resetErrorTracking()
         
         setUserLocation(location)
-        setLocationLoading(false)
+        setLocationLoading(prev => prev ? false : prev)
         setLocationError(null)
 
         if (onLocationFound) {
@@ -397,7 +403,7 @@ function KakaoMap({
         }
       },
       (error) => {
-        setLocationLoading(false)
+        setLocationLoading(prev => prev ? false : prev)
         
         // Track error and check circuit breaker
         const shouldStop = trackError('geolocation-error')
@@ -980,4 +986,4 @@ function KakaoMap({
   )
 }
 
-export default KakaoMap
+export default memo(KakaoMap)
