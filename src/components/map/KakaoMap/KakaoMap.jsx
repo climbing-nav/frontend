@@ -51,16 +51,87 @@ function KakaoMap({
   const userLocationMarker = useRef(null)
   const gymMarkersRef = useRef([])
   
+  // Error tracking for circuit breaker pattern
+  const errorCountRef = useRef(0)
+  const lastErrorTimeRef = useRef(null)
+  const errorTimeoutRef = useRef(null)
+  
+  // Circuit breaker constants
+  const MAX_ERRORS = 3
+  const ERROR_RESET_TIME = 30000 // 30 seconds
+  const CRITICAL_ERROR_THRESHOLD = 5
+  
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isKakaoLoaded, setIsKakaoLoaded] = useState(false)
   const [userLocation, setUserLocation] = useState(null)
   const [locationLoading, setLocationLoading] = useState(false)
   const [locationError, setLocationError] = useState(null)
+  const [isCriticalError, setIsCriticalError] = useState(false)
+  const [circuitBreakerOpen, setCircuitBreakerOpen] = useState(false)
 
+  // Error tracking and circuit breaker functions - moved before usage
+  const trackError = useCallback((errorType = 'general') => {
+    const now = Date.now()
+    errorCountRef.current += 1
+    lastErrorTimeRef.current = now
+    
+    console.warn(`[KakaoMap] Error tracked: ${errorType} (Count: ${errorCountRef.current})`)
+    
+    // Check for critical error threshold
+    if (errorCountRef.current >= CRITICAL_ERROR_THRESHOLD) {
+      console.error(`[KakaoMap] Critical error threshold reached (${errorCountRef.current} errors)`)
+      setIsCriticalError(true)
+      setCircuitBreakerOpen(true)
+      
+      // Show alert to user
+      if (!window.kakaoMapAlertShown) {
+        window.kakaoMapAlertShown = true
+        alert('지도 서비스에 문제가 발생했습니다.\n인터넷 연결 상태를 확인하고 페이지를 새로고침해주세요.')
+      }
+      return true // Critical error detected
+    }
+    
+    // Activate circuit breaker for repeated errors
+    if (errorCountRef.current >= MAX_ERRORS) {
+      setCircuitBreakerOpen(true)
+      
+      // Reset after timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current)
+      }
+      
+      errorTimeoutRef.current = setTimeout(() => {
+        console.log('[KakaoMap] Resetting error count and circuit breaker')
+        errorCountRef.current = 0
+        setCircuitBreakerOpen(false)
+        lastErrorTimeRef.current = null
+      }, ERROR_RESET_TIME)
+      
+      return true // Circuit breaker activated
+    }
+    
+    return false // Continue normal operation
+  }, [])
+
+  const resetErrorTracking = useCallback(() => {
+    errorCountRef.current = 0
+    lastErrorTimeRef.current = null
+    setCircuitBreakerOpen(false)
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current)
+      errorTimeoutRef.current = null
+    }
+  }, [])
 
   // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
   useEffect(() => {
+    // Return early if critical error
+    if (isCriticalError) {
+      console.log('[KakaoMap] Critical error state, skipping Kakao Maps initialization')
+      return
+    }
+
     if (isKakaoLoaded) return // 이미 로드된 경우 실행하지 않음
 
     let intervalId = null
@@ -81,10 +152,20 @@ function KakaoMap({
       
       if (attempts >= maxAttempts) {
         console.error('❌ Failed to load Kakao Maps after maximum attempts')
-        setError('Kakao Maps를 로드할 수 없습니다. 페이지를 새로고침해주세요.')
-        setIsLoading(false)
+        const errorMessage = 'Kakao Maps를 로드할 수 없습니다. 페이지를 새로고침해주세요.'
+        
+        // Track critical error
+        const shouldStop = trackError('kakao-maps-load-failed')
+        if (!shouldStop) {
+          setError(errorMessage)
+          setIsLoading(false)
+        }
+        
         if (intervalId) clearInterval(intervalId)
-        // onError 호출 제거 (무한 루프 방지)
+        
+        if (onError && !shouldStop) {
+          onError(new Error(errorMessage))
+        }
         return
       }
 
@@ -105,13 +186,19 @@ function KakaoMap({
     return () => {
       if (intervalId) clearInterval(intervalId)
     }
-  }, []) // 의존성 배열을 빈 배열로 변경
+  }, [trackError, onError, isCriticalError, isKakaoLoaded]) // 의존성 업데이트
 
   // Initialize map when Kakao is loaded
   useEffect(() => {
     console.log('🔍 Map initialization useEffect triggered')
     console.log('isKakaoLoaded:', isKakaoLoaded)
     console.log('mapContainer.current:', !!mapContainer.current)
+    
+    // Return early if critical error
+    if (isCriticalError) {
+      console.log('[KakaoMap] Critical error state, skipping map initialization')
+      return
+    }
     
     if (!isKakaoLoaded) {
       console.log('❌ Kakao not loaded yet')
@@ -189,14 +276,19 @@ function KakaoMap({
     } catch (error) {
       console.error('❌ Kakao Map initialization error:', error)
       const errorMessage = `Kakao Map 초기화 실패: ${error.message}`
-      setError(errorMessage)
-      setIsLoading(false)
       
-      if (onError) {
-        onError(error)
+      // Track initialization error
+      const shouldStop = trackError('kakao-map-init-failed')
+      if (!shouldStop) {
+        setError(errorMessage)
+        setIsLoading(false)
+        
+        if (onError) {
+          onError(error)
+        }
       }
     }
-  }, [isKakaoLoaded, center.lat, center.lng, level]) // 함수 props를 의존성에서 제거
+  }, [isKakaoLoaded, center.lat, center.lng, level, trackError, onError, isCriticalError]) // isCriticalError 추가
 
   // Update map center when props change
   useEffect(() => {
@@ -213,11 +305,23 @@ function KakaoMap({
     }
   }, [level])
 
-  // Geolocation functions
+  // Geolocation functions with circuit breaker
   const getCurrentLocation = useCallback(() => {
+    // Check circuit breaker before attempting geolocation
+    if (circuitBreakerOpen) {
+      console.warn('[KakaoMap] Circuit breaker is open, skipping geolocation request')
+      return
+    }
+    
+    if (isCriticalError) {
+      console.error('[KakaoMap] Critical error state, not attempting geolocation')
+      return
+    }
+    
     if (!navigator.geolocation) {
       const error = new Error('이 브라우저는 위치 서비스를 지원하지 않습니다.')
       setLocationError(error.message)
+      trackError('geolocation-not-supported')
       if (onLocationError) {
         onLocationError(error)
       }
@@ -238,6 +342,9 @@ function KakaoMap({
         const { latitude, longitude, accuracy } = position.coords
         const location = { lat: latitude, lng: longitude, accuracy }
         
+        // Reset error tracking on successful location
+        resetErrorTracking()
+        
         setUserLocation(location)
         setLocationLoading(false)
         setLocationError(null)
@@ -253,20 +360,32 @@ function KakaoMap({
       },
       (error) => {
         setLocationLoading(false)
+        
+        // Track error and check circuit breaker
+        const shouldStop = trackError('geolocation-error')
+        if (shouldStop) {
+          console.warn('[KakaoMap] Stopping geolocation requests due to circuit breaker/critical error')
+          return
+        }
+        
         let errorMessage = '위치를 가져올 수 없습니다.'
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
+            trackError('geolocation-permission-denied')
             break
           case error.POSITION_UNAVAILABLE:
             errorMessage = '위치 정보를 사용할 수 없습니다.'
+            trackError('geolocation-unavailable')
             break
           case error.TIMEOUT:
             errorMessage = '위치 요청 시간이 초과되었습니다.'
+            trackError('geolocation-timeout')
             break
           default:
             errorMessage = `위치 오류: ${error.message}`
+            trackError('geolocation-unknown')
             break
         }
         
@@ -277,7 +396,7 @@ function KakaoMap({
       },
       options
     )
-  }, [showUserLocation, onLocationFound, onLocationError])
+  }, [showUserLocation, onLocationFound, onLocationError, circuitBreakerOpen, isCriticalError, trackError, resetErrorTracking, updateUserLocationMarker])
 
   // Update user location marker
   const updateUserLocationMarker = useCallback((location) => {
@@ -518,6 +637,143 @@ function KakaoMap({
     }
   }, [mapInstance.current, gyms, updateGymMarkers])
 
+  // Component cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('🧹 Cleaning up KakaoMap component...')
+      
+      // Clear error timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current)
+      }
+      
+      // Clear timers and intervals
+      if (userLocationMarker.current) {
+        userLocationMarker.current.setMap(null)
+        userLocationMarker.current = null
+      }
+      
+      // Clear gym markers
+      gymMarkersRef.current.forEach(marker => {
+        if (marker) marker.setMap(null)
+      })
+      gymMarkersRef.current = []
+      
+      // Clean up map instance
+      if (mapInstance.current) {
+        mapInstance.current = null
+      }
+      
+      console.log('✅ KakaoMap component cleanup completed')
+    }
+  }, [])
+
+  // Render critical error UI
+  if (isCriticalError) {
+    return (
+      <Box
+        sx={{
+          width,
+          height,
+          minHeight: '300px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'grey.50',
+          border: '1px solid',
+          borderColor: 'grey.300',
+          borderRadius: 1,
+          p: 4,
+          textAlign: 'center',
+          ...sx
+        }}
+      >
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            bgcolor: 'error.light',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 3
+          }}
+        >
+          <Typography
+            variant="h3"
+            sx={{
+              color: 'error.main',
+              fontWeight: 'bold'
+            }}
+          >
+            ⚠️
+          </Typography>
+        </Box>
+        
+        <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', mb: 2 }}>
+          지도 서비스 오류
+        </Typography>
+        
+        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, maxWidth: 400 }}>
+          지도 서비스에 문제가 발생했습니다.
+          <br />
+          인터넷 연결 상태를 확인하고 페이지를 새로고침해주세요.
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            페이지 새로고침
+          </button>
+          
+          <button
+            onClick={() => {
+              setIsCriticalError(false)
+              resetErrorTracking()
+              window.kakaoMapAlertShown = false
+            }}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: 'transparent',
+              color: '#1976d2',
+              border: '1px solid #1976d2',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            다시 시도
+          </button>
+        </Box>
+        
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            color: 'text.disabled', 
+            mt: 3,
+            fontSize: '12px'
+          }}
+        >
+          문제가 지속되면 관리자에게 문의해주세요.
+        </Typography>
+      </Box>
+    )
+  }
+
   // Always render the map container, but show loading overlay
   return (
     <Box
@@ -604,7 +860,7 @@ function KakaoMap({
       )}
 
       {/* Location Error Alert */}
-      {locationError && (
+      {locationError && !circuitBreakerOpen && (
         <Alert 
           severity="warning" 
           onClose={() => setLocationError(null)}
@@ -619,6 +875,29 @@ function KakaoMap({
         >
           <Typography variant="body2">
             {locationError}
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Circuit Breaker Warning */}
+      {circuitBreakerOpen && !isCriticalError && (
+        <Alert 
+          severity="error"
+          sx={{ 
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            right: 10,
+            zIndex: 1000,
+            maxWidth: 450
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+            위치 서비스 일시 중단
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+            반복적인 오류로 인해 위치 서비스를 일시적으로 중단했습니다. 
+            {Math.ceil(ERROR_RESET_TIME / 1000)}초 후 자동으로 재시도됩니다.
           </Typography>
         </Alert>
       )}
