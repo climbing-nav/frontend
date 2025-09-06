@@ -124,6 +124,44 @@ function KakaoMap({
     }
   }, [])
 
+  // Update user location marker - moved before usage
+  const updateUserLocationMarker = useCallback((location) => {
+    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
+
+    // Remove existing marker
+    if (userLocationMarker.current) {
+      userLocationMarker.current.setMap(null)
+    }
+
+    // Create marker position
+    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
+
+    // Create custom marker image for user location
+    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="white"/>
+      </svg>
+    `)
+    const imageSize = new window.kakao.maps.Size(24, 24)
+    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
+    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
+
+    // Create marker
+    const marker = new window.kakao.maps.Marker({
+      position: markerPosition,
+      image: markerImage,
+      title: '내 위치'
+    })
+
+    // Add marker to map
+    marker.setMap(mapInstance.current)
+    userLocationMarker.current = marker
+
+    // Center map on user location
+    mapInstance.current.setCenter(markerPosition)
+  }, [])
+
   // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
   useEffect(() => {
     // Return early if critical error
@@ -397,44 +435,6 @@ function KakaoMap({
       options
     )
   }, [showUserLocation, onLocationFound, onLocationError, circuitBreakerOpen, isCriticalError, trackError, resetErrorTracking, updateUserLocationMarker])
-
-  // Update user location marker
-  const updateUserLocationMarker = useCallback((location) => {
-    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
-
-    // Remove existing marker
-    if (userLocationMarker.current) {
-      userLocationMarker.current.setMap(null)
-    }
-
-    // Create marker position
-    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
-
-    // Create custom marker image for user location
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
-        <circle cx="12" cy="12" r="4" fill="white"/>
-      </svg>
-    `)
-    const imageSize = new window.kakao.maps.Size(24, 24)
-    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
-    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
-
-    // Create marker
-    const marker = new window.kakao.maps.Marker({
-      position: markerPosition,
-      image: markerImage,
-      title: '내 위치'
-    })
-
-    // Add marker to map
-    marker.setMap(mapInstance.current)
-    userLocationMarker.current = marker
-
-    // Center map on user location
-    mapInstance.current.setCenter(markerPosition)
-  }, [])
 
   // Center map to user location
   const centerToUserLocation = useCallback(() => {
