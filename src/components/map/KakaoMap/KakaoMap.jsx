@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 
@@ -70,6 +70,12 @@ function KakaoMap({
   const [isCriticalError, setIsCriticalError] = useState(false)
   const [circuitBreakerOpen, setCircuitBreakerOpen] = useState(false)
 
+  // Memoize center object to prevent unnecessary re-renders
+  const memoizedCenter = useMemo(() => ({
+    lat: center.lat,
+    lng: center.lng
+  }), [center.lat, center.lng])
+
   // Error tracking and circuit breaker functions - moved before usage
   const trackError = useCallback((errorType = 'general') => {
     const now = Date.now()
@@ -124,6 +130,44 @@ function KakaoMap({
     }
   }, [])
 
+  // Update user location marker - moved before usage
+  const updateUserLocationMarker = useCallback((location) => {
+    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
+
+    // Remove existing marker
+    if (userLocationMarker.current) {
+      userLocationMarker.current.setMap(null)
+    }
+
+    // Create marker position
+    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
+
+    // Create custom marker image for user location
+    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="white"/>
+      </svg>
+    `)
+    const imageSize = new window.kakao.maps.Size(24, 24)
+    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
+    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
+
+    // Create marker
+    const marker = new window.kakao.maps.Marker({
+      position: markerPosition,
+      image: markerImage,
+      title: '내 위치'
+    })
+
+    // Add marker to map
+    marker.setMap(mapInstance.current)
+    userLocationMarker.current = marker
+
+    // Center map on user location
+    mapInstance.current.setCenter(markerPosition)
+  }, [])
+
   // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
   useEffect(() => {
     // Return early if critical error
@@ -158,7 +202,7 @@ function KakaoMap({
         const shouldStop = trackError('kakao-maps-load-failed')
         if (!shouldStop) {
           setError(errorMessage)
-          setIsLoading(false)
+          setIsLoading(prev => prev ? false : prev)
         }
         
         if (intervalId) clearInterval(intervalId)
@@ -217,8 +261,8 @@ function KakaoMap({
     })
 
     try {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(prev => !prev ? true : prev)
+      setError(prev => prev ? null : prev)
 
       // Ensure container has proper dimensions
       if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
@@ -235,14 +279,14 @@ function KakaoMap({
             try {
               const retryMap = new window.kakao.maps.Map(mapContainer.current, retryOptions)
               mapInstance.current = retryMap
-              setIsLoading(false)
+              setIsLoading(prev => prev ? false : prev)
               if (onMapReady) {
                 onMapReady(retryMap)
               }
             } catch (retryError) {
               console.error('❌ Retry failed:', retryError)
               setError(`지도 초기화 재시도 실패: ${retryError.message}`)
-              setIsLoading(false)
+              setIsLoading(prev => prev ? false : prev)
             }
           }
         }, 200)
@@ -251,7 +295,7 @@ function KakaoMap({
 
       // Map options
       const options = {
-        center: new window.kakao.maps.LatLng(center.lat, center.lng),
+        center: new window.kakao.maps.LatLng(memoizedCenter.lat, memoizedCenter.lng),
         level: level
       }
 
@@ -264,7 +308,7 @@ function KakaoMap({
       console.log('✅ Map created successfully!')
 
       // Map is ready
-      setIsLoading(false)
+      setIsLoading(prev => prev ? false : prev)
       
       // Set up map event listeners
       setupMapEventListeners(map)
@@ -281,22 +325,22 @@ function KakaoMap({
       const shouldStop = trackError('kakao-map-init-failed')
       if (!shouldStop) {
         setError(errorMessage)
-        setIsLoading(false)
+        setIsLoading(prev => prev ? false : prev)
         
         if (onError) {
           onError(error)
         }
       }
     }
-  }, [isKakaoLoaded, center.lat, center.lng, level, trackError, onError, isCriticalError]) // isCriticalError 추가
+  }, [isKakaoLoaded, memoizedCenter, level, trackError, onError, isCriticalError]) // isCriticalError 추가
 
   // Update map center when props change
   useEffect(() => {
     if (mapInstance.current) {
-      const newCenter = new window.kakao.maps.LatLng(center.lat, center.lng)
+      const newCenter = new window.kakao.maps.LatLng(memoizedCenter.lat, memoizedCenter.lng)
       mapInstance.current.setCenter(newCenter)
     }
-  }, [center.lat, center.lng])
+  }, [memoizedCenter])
 
   // Update map level when props change
   useEffect(() => {
@@ -328,8 +372,8 @@ function KakaoMap({
       return
     }
 
-    setLocationLoading(true)
-    setLocationError(null)
+    setLocationLoading(prev => !prev ? true : prev)
+    setLocationError(prev => prev ? null : prev)
 
     const options = {
       enableHighAccuracy: true,
@@ -346,7 +390,7 @@ function KakaoMap({
         resetErrorTracking()
         
         setUserLocation(location)
-        setLocationLoading(false)
+        setLocationLoading(prev => prev ? false : prev)
         setLocationError(null)
 
         if (onLocationFound) {
@@ -359,7 +403,7 @@ function KakaoMap({
         }
       },
       (error) => {
-        setLocationLoading(false)
+        setLocationLoading(prev => prev ? false : prev)
         
         // Track error and check circuit breaker
         const shouldStop = trackError('geolocation-error')
@@ -397,44 +441,6 @@ function KakaoMap({
       options
     )
   }, [showUserLocation, onLocationFound, onLocationError, circuitBreakerOpen, isCriticalError, trackError, resetErrorTracking, updateUserLocationMarker])
-
-  // Update user location marker
-  const updateUserLocationMarker = useCallback((location) => {
-    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
-
-    // Remove existing marker
-    if (userLocationMarker.current) {
-      userLocationMarker.current.setMap(null)
-    }
-
-    // Create marker position
-    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
-
-    // Create custom marker image for user location
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
-        <circle cx="12" cy="12" r="4" fill="white"/>
-      </svg>
-    `)
-    const imageSize = new window.kakao.maps.Size(24, 24)
-    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
-    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
-
-    // Create marker
-    const marker = new window.kakao.maps.Marker({
-      position: markerPosition,
-      image: markerImage,
-      title: '내 위치'
-    })
-
-    // Add marker to map
-    marker.setMap(mapInstance.current)
-    userLocationMarker.current = marker
-
-    // Center map on user location
-    mapInstance.current.setCenter(markerPosition)
-  }, [])
 
   // Center map to user location
   const centerToUserLocation = useCallback(() => {
@@ -980,4 +986,4 @@ function KakaoMap({
   )
 }
 
-export default KakaoMap
+export default memo(KakaoMap)
