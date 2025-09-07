@@ -608,24 +608,19 @@ function KakaoMap({
 
     // Add click event with popup functionality
     window.kakao.maps.event.addListener(marker, 'click', (mouseEvent) => {
-      // Calculate popup position from marker
-      const projection = mapInstance.current.getProjection()
-      const point = projection.pointFromCoord(position)
-      const mapCenter = mapInstance.current.getCenter()
-      const mapCenterPoint = projection.pointFromCoord(mapCenter)
-      
-      // Get map container position
+      // Simple approach: use map container center and add offset
       const mapContainer = mapInstance.current.getContainer()
       const mapRect = mapContainer.getBoundingClientRect()
       
-      // Calculate screen position
-      const offsetX = point.x - mapCenterPoint.x
-      const offsetY = point.y - mapCenterPoint.y
+      // Get the center of the map container as base position
+      const centerX = mapRect.left + mapRect.width / 2
+      const centerY = mapRect.top + mapRect.height / 2
       
-      const screenX = mapRect.left + mapRect.width / 2 + offsetX
-      const screenY = mapRect.top + mapRect.height / 2 + offsetY - 20
-      
-      setPopupPosition({ x: screenX, y: screenY })
+      // Set popup position near the center (can be improved later with exact marker position)
+      setPopupPosition({ 
+        x: centerX, 
+        y: centerY - 100 // Show popup above center
+      })
       setSelectedGym(gym)
       setIsPopupOpen(true)
       
