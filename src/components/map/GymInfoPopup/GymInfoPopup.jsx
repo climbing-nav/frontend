@@ -83,6 +83,11 @@ function GymInfoPopup({
         newPosition.x = (viewportWidth - rect.width) / 2
         newPosition.y = (viewportHeight - rect.height) / 2
       }
+    } else if (placement === 'center') {
+      // Force center placement for better mobile UX
+      newPlacement = 'center'
+      newPosition.x = (viewportWidth - rect.width) / 2
+      newPosition.y = (viewportHeight - rect.height) / 2
     }
 
     // Ensure popup stays within viewport bounds
@@ -440,7 +445,7 @@ GymInfoPopup.propTypes = {
     y: PropTypes.number
   }),
   anchor: PropTypes.object,
-  placement: PropTypes.oneOf(['top', 'bottom', 'left', 'right', 'auto'])
+  placement: PropTypes.oneOf(['top', 'bottom', 'left', 'right', 'auto', 'center'])
 }
 
 export default GymInfoPopup
