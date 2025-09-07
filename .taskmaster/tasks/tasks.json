@@ -340,8 +340,62 @@
         "testStrategy": "Unit tests for different congestion states, test color coding accuracy, verify animation performance, test accessibility features, validate responsive behavior across different contexts",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create CongestionBadge Base Component Structure",
+            "description": "Set up the foundational CongestionBadge component with TypeScript interfaces and basic styling structure",
+            "dependencies": [],
+            "details": "Create src/components/CongestionBadge/CongestionBadge.tsx with TypeScript interface for props (congestionLevel: '쾌적' | '보통' | '혼잡', size?: 'small' | 'medium' | 'large', className?: string). Set up basic component structure with styled-components or CSS modules for styling. Define congestion level enum and create base styling foundation with proper semantic HTML structure.",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering with different props, test TypeScript interface validation, verify proper HTML structure output"
+          },
+          {
+            "id": 2,
+            "title": "Implement Color Coding System",
+            "description": "Add visual color coding system for different congestion states with proper contrast ratios",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement color mapping: 쾌적 (green: #4CAF50), 보통 (yellow/orange: #FF9800), 혼잡 (red: #F44336). Create color constants in theme or constants file. Implement dynamic background color, text color, and border color based on congestion level. Ensure WCAG AA contrast compliance for accessibility. Add hover and focus states with appropriate color variations.",
+            "status": "done",
+            "testStrategy": "Unit tests for color application logic, visual regression tests for color accuracy, accessibility tests for contrast ratios, test color consistency across different themes"
+          },
+          {
+            "id": 3,
+            "title": "Add Framer Motion Animations",
+            "description": "Integrate subtle animations using Framer Motion for enhanced user experience",
+            "dependencies": [
+              2
+            ],
+            "details": "Install framer-motion dependency. Implement subtle entrance animation (fade in + scale from 0.8 to 1). Add pulse animation for 혼잡 state to draw attention. Create smooth color transition animations when congestion level changes. Implement hover animations with scale transform. Ensure animations are performant and respect user's motion preferences (prefers-reduced-motion).",
+            "status": "done",
+            "testStrategy": "Unit tests for animation triggers, performance tests for animation rendering, test motion preference respect, verify animation completion callbacks"
+          },
+          {
+            "id": 4,
+            "title": "Implement Accessibility Features",
+            "description": "Add comprehensive accessibility features including ARIA labels, keyboard navigation, and screen reader support",
+            "dependencies": [
+              3
+            ],
+            "details": "Add proper ARIA labels with congestion level text in Korean and English. Implement role='status' for dynamic updates. Add aria-describedby for additional context. Ensure proper focus management and keyboard navigation support. Add screen reader announcements for congestion level changes. Implement proper semantic markup with meaningful alt text or aria-label attributes.",
+            "status": "done",
+            "testStrategy": "Accessibility tests with screen readers, keyboard navigation tests, ARIA attribute validation, test with automated accessibility tools like axe-core"
+          },
+          {
+            "id": 5,
+            "title": "Add Responsive Sizing and Context Variants",
+            "description": "Implement responsive sizing system and context-specific variants for different use cases",
+            "dependencies": [
+              4
+            ],
+            "details": "Create size variants (small: 16px height, medium: 24px height, large: 32px height) with appropriate font sizes and padding. Implement context variants for map markers (compact, circular), gym cards (rounded rectangle), and gym details (prominent display). Add responsive behavior that adapts to container width. Create utility props for custom styling overrides. Ensure consistent spacing and typography across all variants.",
+            "status": "done",
+            "testStrategy": "Responsive design tests across different screen sizes, unit tests for size variant rendering, integration tests in different contexts (map, cards, details), visual regression tests for consistency"
+          }
+        ]
       },
       {
         "id": 7,
@@ -394,7 +448,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-07T04:30:36.496Z",
+      "updated": "2025-09-07T05:13:08.462Z",
       "description": "Tasks for master context"
     }
   }
