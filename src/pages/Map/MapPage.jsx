@@ -135,7 +135,8 @@ function MapPage() {
       {/* Map Level Indicator */}
       <Box sx={{
         position: 'absolute',
-        bottom: 50,
+        bottom: 50
+        ,
         left: 16,
         zIndex: 1000,
         bgcolor: 'rgba(0, 0, 0, 0.7)',

@@ -207,7 +207,7 @@
         "testStrategy": "Integration tests for Kakao Maps API, mock geolocation responses, test marker clustering functionality, verify map event handling, test responsive behavior across different screen sizes, validate map loading states",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -260,7 +260,7 @@
               4
             ],
             "details": "Integrate with Redux map slice for state management, implement loading states for map initialization, location detection, and marker loading, add error handling with user-friendly error messages, ensure responsive map sizing for mobile viewport, implement map state persistence, add proper cleanup on component unmount, handle map re-rendering optimization",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for Redux integration, test loading state transitions, integration tests for state persistence, verify error message display, test component cleanup and memory management, validate responsive behavior across screen sizes"
           }
         ]
@@ -275,8 +275,62 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Base GymMarker Component Structure",
+            "description": "Build the foundational GymMarker component with basic structure and prop interfaces",
+            "dependencies": [],
+            "details": "Create GymMarker.jsx component file with TypeScript interfaces for gym data props, implement basic marker structure using React components, define prop types for gym location, congestion status, and click handlers, set up component styling with styled-components or CSS modules, ensure proper integration with map library marker system",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering with different prop combinations, test prop validation and default values"
+          },
+          {
+            "id": 2,
+            "title": "Implement Congestion Status Display",
+            "description": "Add congestion status visualization with color coding and status indicators",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement congestion status color coding system (green/yellow/red), create status indicator UI elements within marker design, add congestion level calculation logic based on gym data, implement smooth color transitions for status changes, ensure accessibility compliance with color contrast ratios and alternative indicators",
+            "status": "done",
+            "testStrategy": "Unit tests for congestion status calculation logic, visual regression tests for color coding, accessibility tests for color contrast"
+          },
+          {
+            "id": 3,
+            "title": "Add Click Event Handling and Gym Info Popup",
+            "description": "Implement marker click interactions and gym information popup display",
+            "dependencies": [
+              2
+            ],
+            "details": "Add onClick event handler for marker clicks, create GymInfoPopup component for displaying gym details, implement popup positioning logic relative to marker, add popup close functionality and outside click handling, integrate with Redux gym slice to fetch detailed gym information, ensure proper z-index management for popup display",
+            "status": "done",
+            "testStrategy": "Integration tests for click event handling, test popup positioning and display logic, verify Redux integration for gym data fetching"
+          },
+          {
+            "id": 4,
+            "title": "Implement Marker Clustering and Positioning",
+            "description": "Add marker clustering functionality for dense areas and ensure proper positioning",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement marker clustering algorithm for handling dense gym locations, create cluster marker component with gym count display, add cluster expand/collapse functionality, implement proper marker positioning based on zoom level, add marker scaling based on map zoom, ensure smooth transitions during clustering operations",
+            "status": "done",
+            "testStrategy": "Unit tests for clustering algorithm, integration tests with map component for positioning accuracy, performance tests for large datasets"
+          },
+          {
+            "id": 5,
+            "title": "Add Animations and Final Polish",
+            "description": "Implement hover effects, animations, and integrate with Redux store",
+            "dependencies": [
+              4
+            ],
+            "details": "Add Framer Motion animations for marker hover states and transitions, implement marker bounce animation on selection, create smooth fade in/out effects for marker appearance, integrate fully with Redux gym slice for real-time data updates, add loading states for marker data, implement error handling for missing gym data, optimize performance for smooth animations on mobile devices",
+            "status": "done",
+            "testStrategy": "Integration tests for Redux store integration, performance tests for animation smoothness, test loading and error states, verify real-time data update functionality"
+          }
+        ]
       },
       {
         "id": 6,
@@ -340,7 +394,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-04T14:57:58.020Z",
+      "updated": "2025-09-07T04:30:36.496Z",
       "description": "Tasks for master context"
     }
   }
