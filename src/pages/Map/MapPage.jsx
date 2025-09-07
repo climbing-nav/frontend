@@ -32,8 +32,8 @@ function MapPage() {
 
   const handleGymClick = (gym) => {
     console.log('Gym clicked:', gym)
-    // TODO: Show gym detail modal or navigate to gym detail page
-    alert(`${gym.name} 클릭됨!\n혼잡도: ${gym.congestion}\n평점: ${gym.rating}`)
+    // GymInfoPopup은 이제 KakaoMap 컴포넌트 내에서 자동으로 처리됩니다
+    // 필요에 따라 추가 로직을 여기에 구현할 수 있습니다
   }
 
   const handleMapClick = (position) => {

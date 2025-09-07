@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
+import GymInfoPopup from '../GymInfoPopup'
 
 /**
  * KakaoMap Component
@@ -69,6 +70,11 @@ function KakaoMap({
   const [locationError, setLocationError] = useState(null)
   const [isCriticalError, setIsCriticalError] = useState(false)
   const [circuitBreakerOpen, setCircuitBreakerOpen] = useState(false)
+  
+  // Popup state for gym information
+  const [selectedGym, setSelectedGym] = useState(null)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
 
   // Removed memoizedCenter to fix infinite loop issue
 
@@ -124,6 +130,12 @@ function KakaoMap({
       clearTimeout(errorTimeoutRef.current)
       errorTimeoutRef.current = null
     }
+  }, [])
+
+  // Handle popup close
+  const handleClosePopup = useCallback(() => {
+    setIsPopupOpen(false)
+    setSelectedGym(null)
   }, [])
 
   // Update user location marker - moved before usage
@@ -594,12 +606,34 @@ function KakaoMap({
       title: gym.name
     })
 
-    // Add click event
-    if (onGymClick) {
-      window.kakao.maps.event.addListener(marker, 'click', () => {
+    // Add click event with popup functionality
+    window.kakao.maps.event.addListener(marker, 'click', (mouseEvent) => {
+      // Calculate popup position from marker
+      const projection = mapInstance.current.getProjection()
+      const point = projection.pointFromCoord(position)
+      const mapCenter = mapInstance.current.getCenter()
+      const mapCenterPoint = projection.pointFromCoord(mapCenter)
+      
+      // Get map container position
+      const mapContainer = mapInstance.current.getContainer()
+      const mapRect = mapContainer.getBoundingClientRect()
+      
+      // Calculate screen position
+      const offsetX = point.x - mapCenterPoint.x
+      const offsetY = point.y - mapCenterPoint.y
+      
+      const screenX = mapRect.left + mapRect.width / 2 + offsetX
+      const screenY = mapRect.top + mapRect.height / 2 + offsetY - 20
+      
+      setPopupPosition({ x: screenX, y: screenY })
+      setSelectedGym(gym)
+      setIsPopupOpen(true)
+      
+      // Call external callback if provided
+      if (onGymClick) {
         onGymClick(gym)
-      })
-    }
+      }
+    })
 
     // Store gym data in marker for reference
     marker.gymData = gym
@@ -978,6 +1012,15 @@ function KakaoMap({
           )}
         </Fab>
       )}
+      
+      {/* Gym Information Popup */}
+      <GymInfoPopup
+        gym={selectedGym}
+        isOpen={isPopupOpen}
+        onClose={handleClosePopup}
+        position={popupPosition}
+        placement="auto"
+      />
     </Box>
   )
 }
