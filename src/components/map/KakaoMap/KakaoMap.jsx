@@ -25,6 +25,7 @@ import GymInfoPopup from '../GymInfoPopup'
  * @param {Function} props.onCenterChanged - Callback when map center changes
  * @param {Function} props.onBoundsChanged - Callback when map bounds change
  * @param {Function} props.onError - Callback for error handling
+ * @param {Function} props.onNavigateToGymDetail - Callback to navigate to gym detail page
  * @param {Object} props.sx - Additional styling
  */
 function KakaoMap({
@@ -45,6 +46,7 @@ function KakaoMap({
   onCenterChanged,
   onBoundsChanged,
   onError,
+  onNavigateToGymDetail,
   sx = {}
 }) {
   const mapContainer = useRef(null)
@@ -611,7 +613,7 @@ function KakaoMap({
       // Set popup position to screen center for better mobile UX
       setPopupPosition({ 
         x: window.innerWidth / 2, 
-        y: window.innerHeight / 2 
+        y: window.innerHeight / 2
       })
       
       setSelectedGym(gym)
@@ -1008,6 +1010,7 @@ function KakaoMap({
         onClose={handleClosePopup}
         position={popupPosition}
         placement="center"
+        onNavigateToGymDetail={onNavigateToGymDetail}
       />
     </Box>
   )

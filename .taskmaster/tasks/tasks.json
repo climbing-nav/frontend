@@ -407,8 +407,63 @@
         "dependencies": [
           6
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create GymDetail Component Structure and Layout",
+            "description": "Build the main GymDetail component with proper layout structure, navigation header, and responsive design foundation",
+            "dependencies": [],
+            "details": "Create src/components/GymDetail/GymDetail.tsx with React component structure, implement mobile-first responsive layout using Material-UI Grid system, add navigation header with back button and share/favorite actions, set up proper spacing and typography following design system, create component prop interface for gym data, implement loading and error states placeholders",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering, test responsive layout breakpoints, verify navigation functionality, test loading and error state display"
+          },
+          {
+            "id": 2,
+            "title": "Implement Gym Information Display Section",
+            "description": "Create comprehensive gym information display with name, rating, address, operating hours, and contact details",
+            "dependencies": [
+              1
+            ],
+            "details": "Build gym info section with gym name, star rating display, address with location icon, operating hours in expandable format, contact information (phone, website), gym type badges, accessibility features display, integrate with Redux gym slice to fetch gym data, implement proper data formatting and null state handling",
+            "status": "done",
+            "testStrategy": "Unit tests for information rendering, test data formatting functions, verify Redux integration, test null/empty data handling"
+          },
+          {
+            "id": 3,
+            "title": "Build Image Gallery with Swipe Functionality",
+            "description": "Create interactive image gallery component with swipe navigation, thumbnails, and fullscreen view",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement image gallery using React components with touch swipe support, add thumbnail navigation at bottom, implement fullscreen image modal with zoom functionality, add image loading states and error handling, optimize images for mobile performance, implement lazy loading for gallery images, add image counter display",
+            "status": "done",
+            "testStrategy": "Unit tests for gallery navigation, test swipe gesture functionality, verify fullscreen modal behavior, test image loading states and error scenarios"
+          },
+          {
+            "id": 4,
+            "title": "Implement Review Section and Rating Display",
+            "description": "Create review section with rating breakdown, individual reviews display, and review statistics",
+            "dependencies": [
+              2
+            ],
+            "details": "Build review section with overall rating display, rating breakdown by stars (5-star histogram), individual review cards with user info and rating, implement review pagination or infinite scroll, add review sorting options (newest, highest rated), integrate with review data from Redux store, handle empty review states",
+            "status": "done",
+            "testStrategy": "Unit tests for rating calculations, test review display logic, verify pagination functionality, test sorting mechanisms, test empty state handling"
+          },
+          {
+            "id": 5,
+            "title": "Add Interactive Features and Actions",
+            "description": "Implement favorite/bookmark functionality, directions button with map integration, and action buttons",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Add favorite button with Redux state management and local storage persistence, implement directions button that opens native maps app or Google Maps, add share button functionality, create action buttons for booking/contact, integrate with user authentication state for personalized features, implement haptic feedback for button interactions, add confirmation dialogs for actions",
+            "status": "done",
+            "testStrategy": "Integration tests for favorite functionality, test map integration and directions, verify authentication-dependent features, test share functionality, validate button interactions and feedback"
+          }
+        ]
       },
       {
         "id": 8,
@@ -431,8 +486,62 @@
         "testStrategy": "Unit tests for form validation, integration tests for image upload, test draft save functionality, verify category and tag selection, test form submission and error handling, validate mobile input experience",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Base PostForm Component Structure",
+            "description": "Set up the foundational PostForm component with basic form structure and styling",
+            "dependencies": [],
+            "details": "Create PostForm.jsx component in src/components/post/PostForm/ directory. Set up basic form structure with Material-UI components including title input, content textarea, and form container. Implement responsive layout optimized for 393px mobile viewport. Add proper component prop-types and default props. Set up basic CSS modules or styled-components for component styling.\n<info added on 2025-09-08T13:49:36.025Z>\nImplementation completed: Base PostForm component created with Material-UI TextField for title input, multiline TextField for content textarea, and action buttons including Submit, Save Draft, and Cancel. Component uses Paper container for clean Material-UI styling, implements responsive design for 393px mobile viewport with proper spacing and padding. Added comprehensive prop-types validation and default props. Component structure ready for form validation and character counting features in next subtask.\n</info added on 2025-09-08T13:49:36.025Z>",
+            "status": "done",
+            "testStrategy": "Unit tests for component rendering, prop handling, and basic form structure validation"
+          },
+          {
+            "id": 2,
+            "title": "Implement Form Validation and Character Counting",
+            "description": "Add comprehensive form validation with real-time feedback and character counting for text fields",
+            "dependencies": [
+              1
+            ],
+            "details": "Integrate react-hook-form or Formik for form state management. Implement validation rules for title (required, max length), content (required, max length), and other form fields. Add real-time character counting displays for title and content fields. Implement error message display with proper styling. Add form submission validation and prevent submission with invalid data.\n<info added on 2025-09-08T13:59:35.530Z>\nImplementation completed successfully with react-hook-form integration. Established validation rules: title requires 2-100 characters, content requires 10-2000 characters. Character counting displays implemented with dynamic color coding (green/yellow/red based on remaining characters). Error messages styled with consistent design system. Submit button disabled state linked to form validation status. All validation prevents form submission when data is invalid.\n</info added on 2025-09-08T13:59:35.530Z>",
+            "status": "done",
+            "testStrategy": "Unit tests for validation logic, character counting accuracy, error message display, and form submission prevention with invalid data"
+          },
+          {
+            "id": 3,
+            "title": "Add Category Selection and Tag Input System",
+            "description": "Implement dropdown category selection and dynamic tag input functionality",
+            "dependencies": [
+              2
+            ],
+            "details": "Create category dropdown component using Material-UI Select with predefined categories (general, climbing tips, gear reviews, etc.). Implement tag input system with ability to add/remove tags dynamically. Add tag validation (no duplicates, character limits). Style tag chips with Material-UI Chip component. Ensure proper mobile interaction for both category selection and tag management.\n<info added on 2025-09-08T14:17:21.032Z>\nIMPLEMENTATION COMPLETED: Successfully implemented category dropdown with Korean categories (일반, 클라이밍 팁, 장비 리뷰, 루트 정보, 짐 리뷰, 기술 공유, 안전 수칙, 커뮤니티) using Material-UI Select. Built dynamic tag input system with comprehensive validation: maximum 5 tags per post, 20 character limit per tag, duplicate prevention with case-insensitive checking. Tags render as Material-UI Chip components with delete icons for easy removal. Form integration complete with validation rules enforced on submission. Mobile interactions optimized with proper touch targets and responsive design.\n</info added on 2025-09-08T14:17:21.032Z>",
+            "status": "done",
+            "testStrategy": "Unit tests for category selection, tag addition/removal, tag validation, and mobile interaction handling"
+          },
+          {
+            "id": 4,
+            "title": "Implement Image Upload with Preview Functionality",
+            "description": "Add image upload capability with preview, validation, and mobile optimization",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement file input for image uploads with drag-and-drop support. Add image preview functionality with thumbnails. Implement image validation (file type, size limits). Add image removal functionality from preview. Optimize for mobile with proper touch interactions. Handle multiple image uploads if required. Add loading states during upload processing.\n<info added on 2025-09-08T14:22:13.757Z>\nSuccessfully implemented complete image upload system with drag-and-drop support, file input, and comprehensive validation (JPG/PNG/WebP, 5MB max, 3 images max). Added image preview functionality with 100x100px thumbnails and delete buttons. Includes proper error handling, mobile-optimized touch interactions, and FileReader API integration. Upload area has visual feedback and prevents duplicate uploads.\n</info added on 2025-09-08T14:22:13.757Z>",
+            "status": "done",
+            "testStrategy": "Integration tests for image upload, preview functionality, file validation, and mobile touch interactions"
+          },
+          {
+            "id": 5,
+            "title": "Add Draft Save and Redux Integration",
+            "description": "Implement draft saving to localStorage and integrate with Redux community slice for form submission",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement auto-save draft functionality to localStorage with debouncing. Add manual save draft button. Create Redux actions and reducers for post creation/editing in community slice. Implement form submission handling with Redux state management. Add loading states during submission. Handle success/error states with proper user feedback. Implement form reset after successful submission. Add draft recovery on component mount.\n<info added on 2025-09-08T14:27:01.266Z>\nImplementation completed successfully. Auto-save functionality implemented with 2-second debounce timer, manual save draft button added with immediate localStorage storage. Redux integration fully implemented with createPost async thunk, proper loading/error state management, and form submission handling. Draft recovery system implemented on component mount with automatic form population. Form reset functionality implemented after successful submission. Visual feedback system added including draft status indicators, loading spinners during submission, and error message display. Clear draft functionality implemented to remove saved drafts from localStorage. All features tested and working correctly with proper user experience flow.\n</info added on 2025-09-08T14:27:01.266Z>",
+            "status": "done",
+            "testStrategy": "Integration tests for draft save/recovery, Redux integration, form submission flow, and error handling scenarios"
+          }
+        ]
       },
       {
         "id": 10,
@@ -448,7 +557,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-07T05:13:08.462Z",
+      "updated": "2025-09-08T14:27:07.574Z",
       "description": "Tasks for master context"
     }
   }

@@ -9,6 +9,8 @@ import CommunityPage from './pages/Community/CommunityPage'
 import MapPage from './pages/Map/MapPage'
 import ProfilePage from './pages/Profile/ProfilePage'
 import AuthPage from './pages/Auth/AuthPage'
+import GymDetailPage from './pages/GymDetail/GymDetailPage'
+import PostCreatePage from './pages/PostCreate/PostCreatePage'
 
 const theme = createTheme({
   palette: {
@@ -27,20 +29,25 @@ const theme = createTheme({
 
 function App() {
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth'
+  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate'
+  const [selectedGym, setSelectedGym] = useState(null)
 
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'home':
         return <HomePage />
       case 'map':
-        return <MapPage />
+        return <MapPage onNavigateToGymDetail={handleNavigateToGymDetail} />
       case 'community':
         return <CommunityPage />
       case 'mypage':
         return <ProfilePage />
       case 'auth':
         return <AuthPage />
+      case 'gymDetail':
+        return <GymDetailPage gym={selectedGym} onBack={handleBackFromGymDetail} />
+      case 'postCreate':
+        return <PostCreatePage onNavigateBack={handleBackFromPostCreate} onPostCreated={handlePostCreated} />
       default:
         return <HomePage />
     }
@@ -60,6 +67,32 @@ function App() {
     setCurrentTab('home')
   }
 
+  const handleNavigateToGymDetail = (gym) => {
+    setSelectedGym(gym)
+    setCurrentPage('gymDetail')
+  }
+
+  const handleBackFromGymDetail = () => {
+    setSelectedGym(null)
+    setCurrentPage('map')
+    setCurrentTab('map')
+  }
+
+  const handleNavigateToPostCreate = () => {
+    setCurrentPage('postCreate')
+  }
+
+  const handleBackFromPostCreate = () => {
+    setCurrentPage('community')
+    setCurrentTab('community')
+  }
+
+  const handlePostCreated = () => {
+    // 포스트 생성 완료 후 커뮤니티 페이지로 이동
+    setCurrentPage('community')
+    setCurrentTab('community')
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -76,12 +109,12 @@ function App() {
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
-            <Header onNavigateToAuth={handleNavigateToAuth} />
-            <Box sx={{ pb: 10 }}>
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <Header onNavigateToAuth={handleNavigateToAuth} />}
+            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            <FloatingActionButton />
-            <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
       </Box>
