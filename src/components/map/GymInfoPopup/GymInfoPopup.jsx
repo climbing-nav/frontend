@@ -31,6 +31,7 @@ import CongestionBadge from '../../common/CongestionBadge'
  * @param {Object} props.position - Popup position {x, y}
  * @param {Object} props.anchor - Anchor element for positioning
  * @param {string} props.placement - Popup placement ('top', 'bottom', 'left', 'right', 'auto')
+ * @param {Function} props.onNavigateToGymDetail - Callback to navigate to gym detail page
  */
 function GymInfoPopup({
   gym,
@@ -38,7 +39,8 @@ function GymInfoPopup({
   onClose,
   position = { x: 0, y: 0 },
   anchor = null,
-  placement = 'auto'
+  placement = 'auto',
+  onNavigateToGymDetail
 }) {
   const popupRef = useRef(null)
   const [adjustedPosition, setAdjustedPosition] = useState(position)
@@ -87,12 +89,16 @@ function GymInfoPopup({
       // Force center placement for better mobile UX
       newPlacement = 'center'
       newPosition.x = (viewportWidth - rect.width) / 2
-      newPosition.y = (viewportHeight - rect.height) / 2
+      // 중앙보다 약간 위쪽에 배치해서 하단 버튼이 안전하게 보이도록
+      newPosition.y = (viewportHeight - rect.height) / 2 - 40
     }
 
-    // Ensure popup stays within viewport bounds
+    // Ensure popup stays within viewport bounds with safe area consideration
+    const safeAreaBottom = 40 // Bottom safe area for mobile devices (홈 인디케이터 + 여백)
+    const safeAreaTop = 20 // Top safe area
+    
     newPosition.x = Math.max(10, Math.min(newPosition.x, viewportWidth - rect.width - 10))
-    newPosition.y = Math.max(10, Math.min(newPosition.y, viewportHeight - rect.height - 10))
+    newPosition.y = Math.max(safeAreaTop, Math.min(newPosition.y, viewportHeight - rect.height - safeAreaBottom))
 
     setAdjustedPosition(newPosition)
     setActualPlacement(newPlacement)
@@ -230,7 +236,8 @@ function GymInfoPopup({
               top: adjustedPosition.y,
               zIndex: 9999,
               maxWidth: 320,
-              minWidth: 280
+              minWidth: 280,
+              maxHeight: '80vh' // 화면 높이의 80%로 제한
             }}
           >
             <Box
@@ -239,7 +246,10 @@ function GymInfoPopup({
                 borderRadius: 2,
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                 overflow: 'hidden',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
+                border: '1px solid rgba(0, 0, 0, 0.08)',
+                display: 'flex',
+                flexDirection: 'column',
+                maxHeight: '100%'
               }}
             >
               {/* Header */}
@@ -291,7 +301,12 @@ function GymInfoPopup({
               </Box>
 
               {/* Content */}
-              <Box sx={{ p: 2 }}>
+              <Box sx={{ 
+                p: 2, 
+                flex: 1, 
+                overflowY: 'auto',
+                minHeight: 0 // flex item이 정상적으로 축소되도록 함
+              }}>
                 {/* Address */}
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
                   <LocationIcon sx={{ color: 'text.secondary', mt: 0.1 }} fontSize="small" />
@@ -389,7 +404,11 @@ function GymInfoPopup({
                 p: 2, 
                 pt: 0, 
                 display: 'flex', 
-                gap: 1 
+                gap: 1,
+                flexShrink: 0, // 축소되지 않도록 고정
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.paper'
               }}>
                 <Button
                   variant="outlined"
@@ -407,8 +426,11 @@ function GymInfoPopup({
                     background: 'linear-gradient(135deg, #667eea, #764ba2)'
                   }}
                   onClick={() => {
-                    // Navigate to gym detail page
-                    console.log('Navigate to gym detail:', gym.id)
+                    if (onNavigateToGymDetail) {
+                      onNavigateToGymDetail(gym)
+                    } else {
+                      console.log('Navigate to gym detail:', gym.id)
+                    }
                     onClose()
                   }}
                 >
@@ -445,7 +467,8 @@ GymInfoPopup.propTypes = {
     y: PropTypes.number
   }),
   anchor: PropTypes.object,
-  placement: PropTypes.oneOf(['top', 'bottom', 'left', 'right', 'auto', 'center'])
+  placement: PropTypes.oneOf(['top', 'bottom', 'left', 'right', 'auto', 'center']),
+  onNavigateToGymDetail: PropTypes.func
 }
 
 export default GymInfoPopup

@@ -1,9 +1,11 @@
 import { Fab } from '@mui/material'
 import { Edit } from '@mui/icons-material'
+import PropTypes from 'prop-types'
 
-function FloatingActionButton() {
+function FloatingActionButton({ onClick }) {
   return (
     <Fab
+      onClick={onClick}
       sx={{
         position: 'fixed',
         bottom: 110,
@@ -22,6 +24,10 @@ function FloatingActionButton() {
       <Edit />
     </Fab>
   )
+}
+
+FloatingActionButton.propTypes = {
+  onClick: PropTypes.func
 }
 
 export default FloatingActionButton

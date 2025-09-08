@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Box, Typography, Alert } from '@mui/material'
+import PropTypes from 'prop-types'
 import KakaoMap from '../../components/map/KakaoMap'
 import { mockGyms } from '../../data/mockGyms'
 
-function MapPage() {
+function MapPage({ onNavigateToGymDetail }) {
   const [mapInstance, setMapInstance] = useState(null)
   const [error, setError] = useState(null)
   const [mapLevel, setMapLevel] = useState(3)
@@ -60,7 +61,9 @@ function MapPage() {
       position: 'relative',
       width: '393px',
       height: 'calc(100vh - 120px)', // Header와 BottomNav 공간 제외
-      overflow: 'hidden'
+      overflow: 'hidden',
+      zIndex: 0, // 새로운 stacking context 생성하지 않도록
+      isolation: 'auto' // stacking context 격리 방지
     }}>
       {/* Header */}
       <Box sx={{
@@ -68,11 +71,12 @@ function MapPage() {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 1000,
+        zIndex: 1, // 팝업보다 낮은 z-index로 변경
         bgcolor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid #e0e0e0',
-        p: 2
+        p: 2,
+        border: '1px solid #e0e0e0'
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           클라이밍 짐 지도
@@ -89,7 +93,7 @@ function MapPage() {
           top: 80,
           left: 16,
           right: 16,
-          zIndex: 1000
+          zIndex: 100 // 모달보다 훨씬 낮은 z-index
         }}>
           <Alert 
             severity="error" 
@@ -104,7 +108,7 @@ function MapPage() {
       {/* Map Container */}
       <Box sx={{
         position: 'absolute',
-        top: 80,
+        top: 90,
         left: 0,
         right: 0,
         bottom: 0,
@@ -128,6 +132,7 @@ function MapPage() {
           onCenterChanged={handleCenterChanged}
           onBoundsChanged={handleBoundsChanged}
           onError={handleMapError}
+          onNavigateToGymDetail={onNavigateToGymDetail}
         />
       </Box>
 
@@ -135,10 +140,9 @@ function MapPage() {
       {/* Map Level Indicator */}
       <Box sx={{
         position: 'absolute',
-        bottom: 50
-        ,
+        bottom: 50,
         left: 16,
-        zIndex: 1000,
+        zIndex: 50, // 모달보다 훨씬 낮은 z-index
         bgcolor: 'rgba(0, 0, 0, 0.7)',
         color: 'white',
         px: 2,
@@ -150,6 +154,10 @@ function MapPage() {
       </Box>
     </Box>
   )
+}
+
+MapPage.propTypes = {
+  onNavigateToGymDetail: PropTypes.func
 }
 
 export default MapPage
