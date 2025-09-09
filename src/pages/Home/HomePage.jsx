@@ -1,4 +1,5 @@
 import { Box, Typography, Grid, Paper, Button } from '@mui/material'
+import PropTypes from 'prop-types'
 import GymCard from '../../components/gym/GymCard/GymCard'
 
 const mockGyms = [
@@ -28,7 +29,13 @@ const mockGyms = [
   }
 ]
 
-function HomePage() {
+function HomePage({ onNavigateToGymList }) {
+  const handleMoreButtonClick = () => {
+    if (onNavigateToGymList) {
+      onNavigateToGymList()
+    }
+  }
+  
   return (
     <Box sx={{ width: '393px' }}>
       {/* Quick Stats */}
@@ -145,7 +152,11 @@ function HomePage() {
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
             추천 암장
           </Typography>
-          <Button variant="text" sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}>
+          <Button 
+            variant="text" 
+            sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}
+            onClick={handleMoreButtonClick}
+          >
             더보기
           </Button>
         </Box>
@@ -156,6 +167,10 @@ function HomePage() {
       </Box>
     </Box>
   )
+}
+
+HomePage.propTypes = {
+  onNavigateToGymList: PropTypes.func
 }
 
 export default HomePage
