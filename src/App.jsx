@@ -11,6 +11,7 @@ import ProfilePage from './pages/Profile/ProfilePage'
 import AuthPage from './pages/Auth/AuthPage'
 import GymDetailPage from './pages/GymDetail/GymDetailPage'
 import PostCreatePage from './pages/PostCreate/PostCreatePage'
+import GymListPage from './pages/GymList/GymListPage'
 
 const theme = createTheme({
   palette: {
@@ -29,13 +30,13 @@ const theme = createTheme({
 
 function App() {
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate'
+  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList'
   const [selectedGym, setSelectedGym] = useState(null)
 
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'home':
-        return <HomePage />
+        return <HomePage onNavigateToGymList={handleNavigateToGymList} />
       case 'map':
         return <MapPage onNavigateToGymDetail={handleNavigateToGymDetail} />
       case 'community':
@@ -48,8 +49,10 @@ function App() {
         return <GymDetailPage gym={selectedGym} onBack={handleBackFromGymDetail} />
       case 'postCreate':
         return <PostCreatePage onNavigateBack={handleBackFromPostCreate} onPostCreated={handlePostCreated} />
+      case 'gymList':
+        return <GymListPage onNavigateToGymDetail={handleNavigateToGymDetail} onBack={handleBackFromGymList} />
       default:
-        return <HomePage />
+        return <HomePage onNavigateToGymList={handleNavigateToGymList} />
     }
   }
 
@@ -93,6 +96,15 @@ function App() {
     setCurrentTab('community')
   }
 
+  const handleNavigateToGymList = () => {
+    setCurrentPage('gymList')
+  }
+
+  const handleBackFromGymList = () => {
+    setCurrentPage('home')
+    setCurrentTab('home')
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -109,12 +121,12 @@ function App() {
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <Header onNavigateToAuth={handleNavigateToAuth} />}
-            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate') ? 0 : 10 }}>
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <Header onNavigateToAuth={handleNavigateToAuth} />}
+            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
       </Box>
