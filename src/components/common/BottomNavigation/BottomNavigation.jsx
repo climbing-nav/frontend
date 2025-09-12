@@ -21,7 +21,7 @@ function BottomNavigation({ currentTab, onTabChange }) {
       borderTop: '1px solid #e5e7eb',
       display: 'flex',
       py: 1,
-      pb: 3.5,
+      pb: 2,
       boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
       zIndex: 1000
     }}>
