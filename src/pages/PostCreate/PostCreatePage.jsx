@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import PostForm from '../../components/post/PostForm/PostForm'
+import PostForm from '../../components/community/PostForm/PostForm'
 
 function PostCreatePage({ onNavigateBack, onPostCreated }) {
   const { loading } = useSelector(state => state.community)
