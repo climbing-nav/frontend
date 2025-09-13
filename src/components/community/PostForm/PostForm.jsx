@@ -913,11 +913,16 @@ function PostForm({
 
 PostForm.propTypes = {
   post: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     title: PropTypes.string,
     content: PropTypes.string,
     category: PropTypes.string,
     tags: PropTypes.arrayOf(PropTypes.string),
-    images: PropTypes.arrayOf(PropTypes.string)
+    images: PropTypes.arrayOf(PropTypes.string),
+    createdAt: PropTypes.string,
+    likes: PropTypes.number,
+    comments: PropTypes.number,
+    views: PropTypes.number
   }),
   onSubmit: PropTypes.func,
   onCancel: PropTypes.func,

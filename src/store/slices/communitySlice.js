@@ -73,6 +73,36 @@ const communitySlice = createSlice({
     },
     resetCommunity: (state) => {
       return initialState
+    },
+    
+    // Like functionality
+    likePost: (state, action) => {
+      const post = state.posts.find(post => post.id === action.payload)
+      if (post) {
+        post.likes = (post.likes || 0) + 1
+        post.isLiked = true
+      }
+    },
+    unlikePost: (state, action) => {
+      const post = state.posts.find(post => post.id === action.payload)
+      if (post) {
+        post.likes = Math.max((post.likes || 0) - 1, 0)
+        post.isLiked = false
+      }
+    },
+    
+    // Bookmark functionality
+    bookmarkPost: (state, action) => {
+      const post = state.posts.find(post => post.id === action.payload)
+      if (post) {
+        post.isBookmarked = true
+      }
+    },
+    unbookmarkPost: (state, action) => {
+      const post = state.posts.find(post => post.id === action.payload)
+      if (post) {
+        post.isBookmarked = false
+      }
     }
   },
 })
@@ -91,7 +121,11 @@ export const {
   addComment,
   deleteComment,
   clearError,
-  resetCommunity
+  resetCommunity,
+  likePost,
+  unlikePost,
+  bookmarkPost,
+  unbookmarkPost
 } = communitySlice.actions
 
 export default communitySlice.reducer
