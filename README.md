@@ -1,4 +1,4 @@
-# 🧗‍♀️ 클라이밍 서울 (Climbing Seoul) - Frontend
+# 🧗‍♀️ 클라이밍 서울 (Climbing Seoul) - Frontends
 
 > 서울 지역 클라이밍 애호가들을 위한 모바일 웹 애플리케이션
 
