@@ -402,7 +402,7 @@ function GymInfoPopup({
               {/* Footer Actions */}
               <Box sx={{ 
                 p: 2, 
-                pt: 0, 
+                pt: 1.5, 
                 display: 'flex', 
                 gap: 1,
                 flexShrink: 0, // 축소되지 않도록 고정
