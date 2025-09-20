@@ -50,6 +50,7 @@ jobs:
           docker run -d \
             --name climbing_map \
             -p 5173:5173 \
+            -v /home/ubuntu/frontend/ssl:/app/ssl \
             --restart unless-stopped \
             ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
           
