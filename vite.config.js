@@ -5,9 +5,18 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0',  // 외부 접근 허용
-    port: 5173,       // 기본 포트 명시
-    strictPort: true, // 포트가 사용 중이면 실패하도록 설정
+    host: '0.0.0.0',  // 모든 네트워크 인터페이스에서 접근 허용
+    port: 5173,
+    strictPort: true,
+    // 특정 호스트 명시적으로 허용
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      'react-app-alb-1372513951.ap-northeast-2.elb.amazonaws.com',
+      '.elb.amazonaws.com',  // 모든 ELB 도메인
+      '.amazonaws.com'       // 모든 AWS 도메인
+    ]
   },
   build: {
     outDir: 'dist',
