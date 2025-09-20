@@ -10,11 +10,11 @@ COPY package*.json ./
 # 의존성 설치 (개발 의존성 포함)
 RUN npm install
 
-# SSL 디렉토리 생성 (볼륨 마운트용)
-RUN mkdir -p /app/ssl
-
 # 소스 코드 복사
 COPY . .
+
+# SSL 인증서 복사 (이미지에 포함)
+COPY ssl/ /app/ssl/
 
 # Vite 개발서버 포트 노출
 EXPOSE 5173
