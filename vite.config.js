@@ -9,8 +9,8 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     https: {
-      key: '/etc/ssl/private/vite-dev.key',
-      cert: '/etc/ssl/certs/vite-dev.crt'
+      key: './ssl/vite-dev.key',
+      cert: './ssl/vite-dev.crt'
     },
     // 특정 호스트 명시적으로 허용
     allowedHosts: [
