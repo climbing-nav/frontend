@@ -48,7 +48,7 @@ jobs:
           
           # 새 컨테이너 실행
           docker run -d \
-            --name your-app \
+            --name climbing_map \
             -p 5173:5173 \
             --restart unless-stopped \
             ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
