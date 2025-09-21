@@ -32,7 +32,7 @@ function AuthPage({ onNavigateToHome }) {
         fontWeight: 600
       }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>9:41</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>클라이밍 서울</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>{import.meta.env.VITE_APP_NAME || '클밍여지도'}</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>100%🔋</Typography>
       </Box>
 
@@ -71,7 +71,7 @@ function AuthPage({ onNavigateToHome }) {
           justifyContent: 'center',
           gap: 1
         }}>
-          🧗‍♂️ 클라이밍 서울
+          🧗‍♂️ {import.meta.env.VITE_APP_NAME || '클밍여지도'}
         </Typography>
         <Typography variant="body2" sx={{
           opacity: 0.9,
@@ -139,7 +139,7 @@ function AuthPage({ onNavigateToHome }) {
             fontSize: 13,
             lineHeight: 1.5
           }}>
-            클라이밍 서울을 이용하시면{' '}
+            {import.meta.env.VITE_APP_NAME || '클밍여지도'}을 이용하시면{' '}
             <Typography component="span" sx={{
               color: '#667eea',
               fontWeight: 600,
