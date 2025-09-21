@@ -3,8 +3,28 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README*'
+      - 'LICENSE'
+      - '.gitignore'
+      - 'CLAUDE.md'
+      - '.claude/**'
+      - '.taskmaster/**'
+      - '**.txt'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README*'
+      - 'LICENSE'
+      - '.gitignore'
+      - 'CLAUDE.md'
+      - '.claude/**'
+      - '.taskmaster/**'
+      - '**.txt'
 
 jobs:
   build-and-deploy:
