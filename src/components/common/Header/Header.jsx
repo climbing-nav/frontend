@@ -39,7 +39,7 @@ function Header({ onNavigateToAuth }) {
         fontWeight: 600
       }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>9:41</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>클라이밍 서울</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>{import.meta.env.VITE_APP_NAME || '클밍여지도'}</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>100%🔋</Typography>
       </Box>
 
@@ -61,7 +61,7 @@ function Header({ onNavigateToAuth }) {
             alignItems: 'center',
             gap: 1
           }}>
-            🧗‍♂️ 클라이밍 서울
+            🧗‍♂️ {import.meta.env.VITE_APP_NAME || '클밍여지도'}
           </Typography>
           <IconButton 
             onClick={handleClick}
