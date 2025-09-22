@@ -2,6 +2,29 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
 
+// 쿠키에서 JWT 토큰을 읽는 유틸리티 함수
+const getCookieValue = (name) => {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+  return null
+}
+
+// JWT 토큰 디코딩 함수 (간단한 payload 추출)
+const decodeJWT = (token) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    }).join(''))
+    return JSON.parse(jsonPayload)
+  } catch (error) {
+    console.error('JWT 디코딩 실패:', error)
+    return null
+  }
+}
+
 // Async thunk for login
 export const loginAsync = createAsyncThunk(
   'auth/loginAsync',
@@ -54,18 +77,6 @@ export const googleLoginAsync = createAsyncThunk(
   }
 )
 
-// Async thunk for Kakao login
-export const kakaoLoginAsync = createAsyncThunk(
-  'auth/kakaoLoginAsync',
-  async (authObj, { rejectWithValue }) => {
-    try {
-      const response = await authService.kakaoLogin(authObj)
-      return response
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || '카카오 로그인에 실패했습니다.')
-    }
-  }
-)
 
 // Async thunk for registration
 export const registerAsync = createAsyncThunk(
@@ -89,7 +100,87 @@ export const registerAsync = createAsyncThunk(
   }
 )
 
-// Async thunk for initializing auth state from storage
+// 쿠키 기반 인증 상태 확인을 위한 thunk
+export const checkCookieAuthAsync = createAsyncThunk(
+  'auth/checkCookieAuthAsync',
+  async (_, { rejectWithValue }) => {
+    try {
+      // 쿠키에서 JWT 토큰 확인
+      const cookieToken = getCookieValue('APP_SESSION')
+
+      if (cookieToken) {
+        // JWT 토큰 디코딩하여 사용자 정보 추출
+        const decoded = decodeJWT(cookieToken)
+
+        if (decoded && decoded.exp && Date.now() < decoded.exp * 1000) {
+          // 토큰이 유효한 경우 사용자 정보 구성
+          const user = {
+            id: decoded.sub,
+            email: decoded.email || '',
+            nickname: decoded.nickname || '',
+            avatar: decoded.avatar || '',
+          }
+
+          const provider = decoded.kp || 'email' // 카카오는 'kakao', 일반 로그인은 'email'
+
+          return {
+            user,
+            token: cookieToken,
+            provider
+          }
+        }
+      }
+
+      // 로컬 스토리지에서 fallback 체크
+      const token = authStorage.getToken()
+      const userData = authStorage.getUserData()
+      const provider = authStorage.getAuthProvider()
+
+      if (!token || !userData) {
+        return { user: null, token: null, provider: null }
+      }
+
+      // 토큰이 만료되었는지 확인
+      if (authStorage.isTokenExpired(token)) {
+        const refreshToken = authStorage.getRefreshToken()
+        if (refreshToken) {
+          try {
+            // 토큰 갱신 시도
+            const refreshResponse = await authService.refreshToken()
+            authStorage.setToken(refreshResponse.token)
+            if (refreshResponse.refresh_token) {
+              authStorage.setRefreshToken(refreshResponse.refresh_token)
+            }
+            return {
+              user: userData,
+              token: refreshResponse.token,
+              provider
+            }
+          } catch (refreshError) {
+            // 토큰 갱신 실패시 로그아웃 처리
+            authStorage.clearAuthData()
+            return { user: null, token: null, provider: null }
+          }
+        } else {
+          // Refresh token이 없으면 로그아웃 처리
+          authStorage.clearAuthData()
+          return { user: null, token: null, provider: null }
+        }
+      }
+
+      return {
+        user: userData,
+        token,
+        provider
+      }
+    } catch (error) {
+      authStorage.clearAuthData()
+      return rejectWithValue('인증 상태 초기화에 실패했습니다.')
+    }
+  }
+)
+
+// 기존 로컬 스토리지 기반 초기화 (호환성을 위해 유지)
 export const initializeAuthAsync = createAsyncThunk(
   'auth/initializeAuthAsync',
   async (_, { rejectWithValue }) => {
@@ -297,34 +388,6 @@ const authSlice = createSlice({
         state.user = null
         state.token = null
       })
-      // Kakao login cases
-      .addCase(kakaoLoginAsync.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
-        state.loading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
-        state.authProvider = 'kakao'
-        state.error = null
-        
-        // 로컬 스토리지에 저장
-        authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
-        authStorage.setAuthProvider('kakao')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
-      })
-      .addCase(kakaoLoginAsync.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload
-        state.isAuthenticated = false
-        state.user = null
-        state.token = null
-      })
       // Registration cases
       .addCase(registerAsync.pending, (state) => {
         state.loading = true
@@ -345,14 +408,51 @@ const authSlice = createSlice({
         state.token = null
         state.authProvider = null
       })
-      // Initialize auth cases
+      // Check cookie auth cases
+      .addCase(checkCookieAuthAsync.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(checkCookieAuthAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isInitialized = true
+
+        if (action.payload.user && action.payload.token) {
+          state.isAuthenticated = true
+          state.user = action.payload.user
+          state.token = action.payload.token
+          state.authProvider = action.payload.provider
+
+          // 카카오 로그인인 경우 로컬 스토리지에도 저장 (선택적)
+          if (action.payload.provider === 'kakao') {
+            authStorage.setToken(action.payload.token)
+            authStorage.setUserData(action.payload.user)
+            authStorage.setAuthProvider('kakao')
+          }
+        } else {
+          state.isAuthenticated = false
+          state.user = null
+          state.token = null
+          state.authProvider = null
+        }
+        state.error = null
+      })
+      .addCase(checkCookieAuthAsync.rejected, (state, action) => {
+        state.loading = false
+        state.isInitialized = true
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+        state.authProvider = null
+        state.error = action.payload
+      })
+      // Initialize auth cases (기존 로컬 스토리지 기반)
       .addCase(initializeAuthAsync.pending, (state) => {
         state.loading = true
       })
       .addCase(initializeAuthAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isInitialized = true
-        
+
         if (action.payload.user && action.payload.token) {
           state.isAuthenticated = true
           state.user = action.payload.user

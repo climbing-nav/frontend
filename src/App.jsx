@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
+import { checkCookieAuthAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -29,9 +31,39 @@ const theme = createTheme({
 })
 
 function App() {
+  const dispatch = useDispatch()
+  const isAuthInitialized = useSelector(selectIsAuthInitialized)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+
   const [currentTab, setCurrentTab] = useState('home')
   const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList'
   const [selectedGym, setSelectedGym] = useState(null)
+
+  // 앱 시작 시 쿠키 기반 인증 상태 확인
+  useEffect(() => {
+    if (!isAuthInitialized) {
+      dispatch(checkCookieAuthAsync())
+    }
+  }, [dispatch, isAuthInitialized])
+
+  // 카카오 로그인 성공 후 리다이렉트 처리
+  useEffect(() => {
+    // URL에서 카카오 로그인 성공 여부 확인
+    const urlParams = new URLSearchParams(window.location.search)
+    const loginSuccess = urlParams.get('login')
+
+    if (loginSuccess === 'success') {
+      // URL 파라미터 제거
+      window.history.replaceState({}, document.title, window.location.pathname)
+
+      // 인증 상태 다시 확인
+      dispatch(checkCookieAuthAsync())
+
+      // 홈 페이지로 이동
+      setCurrentPage('home')
+      setCurrentTab('home')
+    }
+  }, [dispatch])
 
   const renderCurrentPage = () => {
     switch (currentPage) {
