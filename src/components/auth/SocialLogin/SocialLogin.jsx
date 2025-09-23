@@ -42,16 +42,14 @@ function SocialLogin({
   
   // 소셜 로그인 Hooks
   const { signInWithGoogle, isGoogleScriptLoaded, scriptLoadError: googleError } = useGoogleAuth()
-  const { signInWithKakao, isKakaoScriptLoaded, scriptLoadError: kakaoError } = useKakaoAuth()
-  
+  const { signInWithKakao } = useKakaoAuth()
+
   const [socialLoading, setSocialLoading] = useState({
-    google: false,
-    kakao: false
+    google: false
   })
 
   const [retryCount, setRetryCount] = useState({
-    google: 0,
-    kakao: 0
+    google: 0
   })
 
   const [lastError, setLastError] = useState(null)
@@ -116,50 +114,27 @@ function SocialLogin({
     }
   }, [dispatch, googleError, isGoogleScriptLoaded, signInWithGoogle, onSuccess, onError])
 
-  const handleKakaoLogin = async () => {
+  const handleKakaoLogin = useCallback(() => {
     dispatch(clearError())
-    setSocialLoading(prev => ({ ...prev, kakao: true }))
-    
-    try {
-      // 스크립트 로드 에러 체크
-      if (kakaoError) {
-        throw new Error(kakaoError)
-      }
 
-      if (!isKakaoScriptLoaded) {
-        throw new Error('Kakao SDK가 아직 로드되지 않았습니다.')
-      }
-      
-      // Kakao 로그인 실행 (Promise 기반)
-      await signInWithKakao()
-      
-      // Success callback
+    try {
+      // 서버 사이드 OAuth 플로우 시작
+      signInWithKakao()
+
+      // 성공 콜백 (리다이렉트 전에 호출됨)
       if (onSuccess) {
         onSuccess('kakao')
       }
     } catch (error) {
-      console.error('Kakao 로그인 실패:', error)
-      let errorMessage = 'Kakao 로그인에 실패했습니다.'
-      
-      // 에러 타입에 따른 메시지 커스터마이징
-      if (error.message.includes('SDK')) {
-        errorMessage = 'Kakao 서비스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'
-      } else if (error.message.includes('취소') || error.message.includes('access_denied')) {
-        errorMessage = 'Kakao 로그인이 취소되었습니다.'
-      } else if (error.message.includes('server_error')) {
-        errorMessage = 'Kakao 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-      } else if (error.message.includes('네트워크') || error.message.includes('network')) {
-        errorMessage = '네트워크 연결을 확인하고 다시 시도해주세요.'
-      }
-      
+      console.error('Kakao 로그인 리다이렉트 실패:', error)
+      const errorMessage = '카카오 로그인을 시작할 수 없습니다.'
+
       // Error callback
       if (onError) {
         onError('kakao', errorMessage)
       }
-    } finally {
-      setSocialLoading(prev => ({ ...prev, kakao: false }))
     }
-  }
+  }, [dispatch, signInWithKakao, onSuccess, onError])
 
   return (
     <Box sx={sx}>
@@ -186,8 +161,6 @@ function SocialLogin({
                 onClick={() => {
                   if (lastError.provider === 'google') {
                     handleGoogleLogin(true)
-                  } else if (lastError.provider === 'kakao') {
-                    handleKakaoLogin(true)
                   }
                 }}
               >
@@ -258,7 +231,7 @@ function SocialLogin({
           onClick={handleKakaoLogin}
           variant="contained"
           fullWidth
-          disabled={loading || socialLoading.kakao || !isKakaoScriptLoaded || !!kakaoError}
+          disabled={loading}
           sx={{
             py: 1.5,
             borderRadius: 2,
@@ -285,38 +258,25 @@ function SocialLogin({
               color: '#6b7280'
             }
           }}
-          aria-label={socialLoading.kakao ? 'Kakao 로그인 진행 중' : 'Kakao 계정으로 로그인'}
-          aria-describedby={socialLoading.kakao ? 'kakao-login-status' : undefined}
+          aria-label="Kakao 계정으로 로그인"
           startIcon={
-            socialLoading.kakao ? (
-              <CircularProgress size={20} sx={{ color: '#000000' }} />
-            ) : (
-              <Box sx={{ 
-                width: 20, 
-                height: 20, 
-                borderRadius: '50%',
-                bgcolor: '#000000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 'bold',
-                color: '#FEE500'
-              }}>
-                K
-              </Box>
-            )
+            <Box sx={{
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              bgcolor: '#000000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 'bold',
+              color: '#FEE500'
+            }}>
+              K
+            </Box>
           }
         >
-          {socialLoading.kakao ? (
-            <span aria-live="polite" id="kakao-login-status">Kakao 로그인 중...</span>
-          ) : kakaoError ? (
-            <span aria-live="polite">Kakao 서비스 연결 실패</span>
-          ) : !isKakaoScriptLoaded ? (
-            <span aria-live="polite">Kakao SDK 로딩 중...</span>
-          ) : (
-            'Kakao로 로그인'
-          )}
+          Kakao로 로그인
         </Button>
       </Box>
     </Box>

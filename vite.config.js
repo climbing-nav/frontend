@@ -20,7 +20,15 @@ export default defineConfig({
       'react-app-alb-1372513951.ap-northeast-2.elb.amazonaws.com',
       '.elb.amazonaws.com',  // 모든 ELB 도메인
       '.amazonaws.com'       // 모든 AWS 도메인
-    ]
+    ],
+    // 백엔드 API 프록시 설정
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     outDir: 'dist',

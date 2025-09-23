@@ -7,7 +7,7 @@ import './index.css'
 import App from './App.jsx'
 import store from './store'
 import theme from './styles/theme'
-import './utils/envTest.js'
+// import './utils/envTest.js'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
