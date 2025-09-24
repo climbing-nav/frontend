@@ -1,7 +1,20 @@
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 import GymInfoPopup from '../GymInfoPopup'
+
+// Debouncing utility for event handlers
+const debounce = (func, wait) => {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
 
 /**
  * KakaoMap Component
@@ -53,6 +66,17 @@ function KakaoMap({
   const mapInstance = useRef(null)
   const userLocationMarker = useRef(null)
   const gymMarkersRef = useRef([])
+
+  const eventListenersRef = useRef([])
+
+  // Performance optimization refs
+  const isUnmountedRef = useRef(false)
+  const lastZoomLevelRef = useRef(level)
+
+  // Reset unmounted flag on mount
+  useEffect(() => {
+    isUnmountedRef.current = false
+  }, [])
   
   // Error tracking for circuit breaker pattern
   const errorCountRef = useRef(0)
@@ -77,6 +101,7 @@ function KakaoMap({
   const [selectedGym, setSelectedGym] = useState(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
+  const [isMapReady, setIsMapReady] = useState(false)
 
   // Removed memoizedCenter to fix infinite loop issue
 
@@ -112,7 +137,6 @@ function KakaoMap({
       }
       
       errorTimeoutRef.current = setTimeout(() => {
-        console.log('[KakaoMap] Resetting error count and circuit breaker')
         errorCountRef.current = 0
         setCircuitBreakerOpen(false)
         lastErrorTimeRef.current = null
@@ -140,49 +164,71 @@ function KakaoMap({
     setSelectedGym(null)
   }, [])
 
-  // Update user location marker - moved before usage
+  // Update user location marker - fixed to prevent flickering
   const updateUserLocationMarker = useCallback((location) => {
-    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
 
-    // Remove existing marker
-    if (userLocationMarker.current) {
-      userLocationMarker.current.setMap(null)
+    if (!mapInstance.current) {
+      return
     }
 
-    // Create marker position
-    const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
+    if (!window.kakao || !window.kakao.maps) {
+      return
+    }
 
-    // Create custom marker image for user location
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
-        <circle cx="12" cy="12" r="4" fill="white"/>
-      </svg>
-    `)
-    const imageSize = new window.kakao.maps.Size(24, 24)
-    const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
-    const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
+    try {
+      // Create position
+      const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
 
-    // Create marker
-    const marker = new window.kakao.maps.Marker({
-      position: markerPosition,
-      image: markerImage,
-      title: '내 위치'
-    })
+      // If marker already exists, just update its position instead of removing/recreating
+      if (userLocationMarker.current) {
+        userLocationMarker.current.setPosition(markerPosition)
 
-    // Add marker to map
-    marker.setMap(mapInstance.current)
-    userLocationMarker.current = marker
+        // Center map on user location only if this is a significant location change
+        if (!userLocation ||
+            Math.abs(userLocation.lat - location.lat) > 0.001 ||
+            Math.abs(userLocation.lng - location.lng) > 0.001) {
+          mapInstance.current.setCenter(markerPosition)
+        }
+        return
+      }
 
-    // Center map on user location
-    mapInstance.current.setCenter(markerPosition)
-  }, [])
+      // Create new marker only if it doesn't exist
+
+      // Create custom marker image for user location
+      const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
+          <circle cx="12" cy="12" r="4" fill="white"/>
+        </svg>
+      `)
+      const imageSize = new window.kakao.maps.Size(24, 24)
+      const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
+      const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
+
+      // Create marker
+      const marker = new window.kakao.maps.Marker({
+        position: markerPosition,
+        image: markerImage,
+        title: '내 위치',
+        zIndex: 10 // Ensure user location marker appears on top
+      })
+
+      // Add marker to map
+      marker.setMap(mapInstance.current)
+      userLocationMarker.current = marker
+
+
+      // Center map on user location
+      mapInstance.current.setCenter(markerPosition)
+    } catch (error) {
+      console.error('❌ Error creating user location marker:', error)
+    }
+  }, [userLocation])
 
   // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
   useEffect(() => {
     // Return early if critical error
     if (isCriticalError) {
-      console.log('[KakaoMap] Critical error state, skipping Kakao Maps initialization')
       return
     }
 
@@ -194,11 +240,8 @@ function KakaoMap({
 
     const checkKakaoMaps = () => {
       attempts++
-      console.log(`Kakao Maps check attempt ${attempts}/${maxAttempts}`)
       
       if (window.kakao && window.kakao.maps && window.kakao.maps.LatLng) {
-        console.log('✅ Kakao Maps SDK fully loaded')
-        console.log('🔄 Setting isKakaoLoaded to true...')
         setIsKakaoLoaded(true)
         if (intervalId) clearInterval(intervalId)
         return
@@ -225,9 +268,7 @@ function KakaoMap({
 
       // If kakao exists but maps is not ready
       if (window.kakao && !window.kakao.maps) {
-        console.log('🔄 Kakao loaded, waiting for maps...')
       } else if (!window.kakao) {
-        console.log('⏳ Waiting for Kakao SDK...')
       }
     }
 
@@ -238,37 +279,29 @@ function KakaoMap({
     intervalId = setInterval(checkKakaoMaps, 500) // Check every 500ms
 
     return () => {
-      if (intervalId) clearInterval(intervalId)
+      if (intervalId) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
     }
   }, [trackError, onError, isCriticalError, isKakaoLoaded]) // 의존성 업데이트
 
   // Initialize map when Kakao is loaded
   useEffect(() => {
-    console.log('🔍 Map initialization useEffect triggered')
-    console.log('isKakaoLoaded:', isKakaoLoaded)
-    console.log('mapContainer.current:', !!mapContainer.current)
     
     // Return early if critical error
     if (isCriticalError) {
-      console.log('[KakaoMap] Critical error state, skipping map initialization')
       return
     }
     
     if (!isKakaoLoaded) {
-      console.log('❌ Kakao not loaded yet')
       return
     }
     
     if (!mapContainer.current) {
-      console.log('❌ Map container not ready')
       return
     }
 
-    console.log('🗺️ Initializing Kakao Map...')
-    console.log('Container dimensions:', {
-      width: mapContainer.current.offsetWidth,
-      height: mapContainer.current.offsetHeight
-    })
 
     try {
       setIsLoading(true)
@@ -309,20 +342,22 @@ function KakaoMap({
         level: level
       }
 
-      console.log('📍 Creating map with center:', center, 'level:', level)
 
       // Create map
       const map = new window.kakao.maps.Map(mapContainer.current, options)
       mapInstance.current = map
 
-      console.log('✅ Map created successfully!')
 
       // Map is ready
       setIsLoading(prev => prev ? false : prev)
-      
+
       // Set up map event listeners
       setupMapEventListeners(map)
-      
+
+
+      // Set map as ready
+      setIsMapReady(true)
+
       if (onMapReady) {
         onMapReady(map)
       }
@@ -398,19 +433,28 @@ function KakaoMap({
         
         // Reset error tracking on successful location
         resetErrorTracking()
-        
-        setUserLocation(location)
+
+        // Check if location has significantly changed to avoid unnecessary updates
+        const hasSignificantChange = !userLocation ||
+          Math.abs(userLocation.lat - location.lat) > 0.0001 ||
+          Math.abs(userLocation.lng - location.lng) > 0.0001
+
+        if (hasSignificantChange) {
+          setUserLocation(location)
+
+          if (onLocationFound) {
+            onLocationFound(location)
+          }
+
+          // Add/update user location marker on map
+          if (mapInstance.current && showUserLocation) {
+            updateUserLocationMarker(location)
+          }
+        } else {
+        }
+
         setLocationLoading(false)
         setLocationError(null)
-
-        if (onLocationFound) {
-          onLocationFound(location)
-        }
-
-        // Add/update user location marker on map
-        if (mapInstance.current && showUserLocation) {
-          updateUserLocationMarker(location)
-        }
       },
       (error) => {
         setLocationLoading(false)
@@ -496,48 +540,98 @@ function KakaoMap({
     }
   }, [mapInstance.current, showUserLocation, userLocation, locationLoading, getCurrentLocation])
 
+  // Optimized event handlers with debouncing
+  const debouncedZoomHandler = useCallback(
+    debounce((level) => {
+      if (isUnmountedRef.current) return
+
+      // Only trigger if zoom level actually changed
+      if (lastZoomLevelRef.current !== level) {
+        lastZoomLevelRef.current = level
+        if (onZoomChanged) {
+          onZoomChanged(level)
+        }
+      }
+    }, 150),
+    [onZoomChanged]
+  )
+
+  const debouncedCenterHandler = useCallback(
+    debounce((center) => {
+      if (isUnmountedRef.current || !onCenterChanged) return
+      onCenterChanged(center)
+    }, 100),
+    [onCenterChanged]
+  )
+
+  const debouncedBoundsHandler = useCallback(
+    debounce((bounds) => {
+      if (isUnmountedRef.current || !onBoundsChanged) return
+      onBoundsChanged(bounds)
+    }, 200),
+    [onBoundsChanged]
+  )
+
+  // Clean up event listeners
+  const removeEventListeners = useCallback(() => {
+    eventListenersRef.current.forEach(listener => {
+      if (listener && typeof listener.remove === 'function') {
+        listener.remove()
+      }
+    })
+    eventListenersRef.current = []
+  }, [])
+
   // Setup map event listeners
   const setupMapEventListeners = useCallback((map) => {
-    if (!window.kakao || !window.kakao.maps) return
+    if (!window.kakao || !window.kakao.maps || isUnmountedRef.current) return
+
+    // Clear existing listeners first
+    removeEventListeners()
 
     // Map click event
     if (onMapClick) {
-      window.kakao.maps.event.addListener(map, 'click', (mouseEvent) => {
+      const clickListener = window.kakao.maps.event.addListener(map, 'click', (mouseEvent) => {
+        if (isUnmountedRef.current) return
         const latlng = mouseEvent.latLng
         onMapClick({
           lat: latlng.getLat(),
           lng: latlng.getLng()
         })
       })
+      eventListenersRef.current.push(clickListener)
     }
 
-    // Zoom change event
-    if (onZoomChanged) {
-      window.kakao.maps.event.addListener(map, 'zoom_changed', () => {
-        const level = map.getLevel()
-        onZoomChanged(level)
-      })
-    }
+    // Zoom change event with debouncing
+    const zoomListener = window.kakao.maps.event.addListener(map, 'zoom_changed', () => {
+      if (isUnmountedRef.current) return
+      const level = map.getLevel()
+      debouncedZoomHandler(level)
+    })
+    eventListenersRef.current.push(zoomListener)
 
-    // Center change event
+    // Center change event with debouncing
     if (onCenterChanged) {
-      window.kakao.maps.event.addListener(map, 'center_changed', () => {
+      const centerListener = window.kakao.maps.event.addListener(map, 'center_changed', () => {
+        if (isUnmountedRef.current) return
         const center = map.getCenter()
-        onCenterChanged({
+        debouncedCenterHandler({
           lat: center.getLat(),
           lng: center.getLng()
         })
       })
+      eventListenersRef.current.push(centerListener)
     }
 
-    // Bounds change event
+    // Bounds change event with debouncing
     if (onBoundsChanged) {
-      window.kakao.maps.event.addListener(map, 'bounds_changed', () => {
+      const boundsListener = window.kakao.maps.event.addListener(map, 'bounds_changed', () => {
+        if (isUnmountedRef.current) return
         const bounds = map.getBounds()
         const sw = bounds.getSouthWest()
         const ne = bounds.getNorthEast()
-        
-        onBoundsChanged({
+
+        debouncedBoundsHandler({
           southWest: {
             lat: sw.getLat(),
             lng: sw.getLng()
@@ -548,23 +642,31 @@ function KakaoMap({
           }
         })
       })
+      eventListenersRef.current.push(boundsListener)
     }
 
-    // Drag start event
-    window.kakao.maps.event.addListener(map, 'dragstart', () => {
-      console.log('Map drag started')
+    // Minimal drag events (no console logs for performance)
+    const dragStartListener = window.kakao.maps.event.addListener(map, 'dragstart', () => {
+      // Drag start - no action needed for memory optimization
     })
+    eventListenersRef.current.push(dragStartListener)
 
-    // Drag end event
-    window.kakao.maps.event.addListener(map, 'dragend', () => {
-      console.log('Map drag ended')
+    const dragEndListener = window.kakao.maps.event.addListener(map, 'dragend', () => {
+      // Drag end - no action needed for memory optimization
     })
+    eventListenersRef.current.push(dragEndListener)
 
-    // Idle event (when map stops moving/zooming)
-    window.kakao.maps.event.addListener(map, 'idle', () => {
-      console.log('Map idle')
+    // Idle event for optimization
+    const idleListener = window.kakao.maps.event.addListener(map, 'idle', () => {
+      if (isUnmountedRef.current) return
+      // Map idle - good time for cleanup or optimization
+      if (window.gc && typeof window.gc === 'function') {
+        // Force garbage collection if available (development)
+        setTimeout(() => window.gc(), 100)
+      }
     })
-  }, [onMapClick, onZoomChanged, onCenterChanged, onBoundsChanged])
+    eventListenersRef.current.push(idleListener)
+  }, [onMapClick, debouncedZoomHandler, debouncedCenterHandler, debouncedBoundsHandler, removeEventListeners])
 
   // Helper function to get congestion color
   const getCongestionColor = useCallback((congestion) => {
@@ -580,9 +682,13 @@ function KakaoMap({
     }
   }, [])
 
-  // Create gym marker with custom icon
+  // Create gym marker
   const createGymMarker = useCallback((gym) => {
     if (!window.kakao || !window.kakao.maps) return null
+
+    if (isUnmountedRef.current) {
+    }
+
 
     const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
     const congestionColor = getCongestionColor(gym.congestion)
@@ -601,7 +707,7 @@ function KakaoMap({
     const imageOption = { offset: new window.kakao.maps.Point(16, 40) }
     const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
 
-    // Create marker
+    // Create marker (simplified - no pooling for now to fix the issue)
     const marker = new window.kakao.maps.Marker({
       position: position,
       image: markerImage,
@@ -609,90 +715,209 @@ function KakaoMap({
     })
 
     // Add click event with popup functionality
-    window.kakao.maps.event.addListener(marker, 'click', (mouseEvent) => {
+    const clickHandler = (mouseEvent) => {
+      if (isUnmountedRef.current) return
+
       // Set popup position to screen center for better mobile UX
-      setPopupPosition({ 
-        x: window.innerWidth / 2, 
+      setPopupPosition({
+        x: window.innerWidth / 2,
         y: window.innerHeight / 2
       })
-      
+
       setSelectedGym(gym)
       setIsPopupOpen(true)
-      
+
       // Call external callback if provided
       if (onGymClick) {
         onGymClick(gym)
       }
-    })
+    }
+
+    // Add click listener
+    marker.clickListener = window.kakao.maps.event.addListener(marker, 'click', clickHandler)
 
     // Store gym data in marker for reference
     marker.gymData = gym
 
     return marker
-  }, [getCongestionColor, onGymClick])
+  }, [getCongestionColor]) // onGymClick 의존성 제거로 불필요한 재생성 방지
 
-  // Update gym markers
+  // Update gym markers with memory optimization
   const updateGymMarkers = useCallback(() => {
-    if (!mapInstance.current || !window.kakao || !window.kakao.maps) return
+
+    if (!mapInstance.current) {
+      return
+    }
+
+    if (!window.kakao) {
+      return
+    }
+
+    if (!window.kakao.maps) {
+      return
+    }
+
+    if (isUnmountedRef.current) {
+      // Component is unmounting, but continue to avoid breaking existing markers
+    }
 
     // Clear existing markers
     gymMarkersRef.current.forEach(marker => {
-      marker.setMap(null)
+      if (marker) {
+        marker.setMap(null)
+        if (marker.clickListener) {
+          window.kakao.maps.event.removeListener(marker.clickListener)
+        }
+      }
     })
     gymMarkersRef.current = []
 
-    // Create new markers for gyms
-    const markers = gyms.map(gym => createGymMarker(gym)).filter(Boolean)
+    // Create new markers for all gyms (inline to avoid dependency issues)
+    const markers = gyms.map(gym => {
+      if (!gym || !gym.lat || !gym.lng) {
+        console.warn('⚠️ Invalid gym data:', gym)
+        return null
+      }
+
+
+      try {
+        const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
+        const congestionColor = getCongestionColor(gym.congestion)
+
+        // Create custom marker image with congestion color
+        const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
+          <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="${congestionColor}"/>
+            <circle cx="16" cy="16" r="8" fill="white"/>
+            <path d="M12 12L20 12L20 20L12 20Z" fill="${congestionColor}"/>
+            <path d="M14 14L18 16L14 18Z" fill="white"/>
+          </svg>
+        `)
+
+        const imageSize = new window.kakao.maps.Size(32, 40)
+        const imageOption = { offset: new window.kakao.maps.Point(16, 40) }
+        const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
+
+        // Create marker
+        const marker = new window.kakao.maps.Marker({
+          position: position,
+          image: markerImage,
+          title: gym.name
+        })
+
+        // Add click event with popup functionality
+        const clickHandler = () => {
+          if (isUnmountedRef.current) return
+
+          setPopupPosition({
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2
+          })
+
+          setSelectedGym(gym)
+          setIsPopupOpen(true)
+
+          // Call external callback if provided
+          if (onGymClick) {
+            onGymClick(gym)
+          }
+        }
+
+        // Add click listener
+        marker.clickListener = window.kakao.maps.event.addListener(marker, 'click', clickHandler)
+
+        // Store gym data in marker for reference
+        marker.gymData = gym
+
+        return marker
+      } catch (error) {
+        console.error('❌ Error creating marker for gym:', gym.name, error)
+        return null
+      }
+    }).filter(Boolean)
+
     gymMarkersRef.current = markers
 
-    if (markers.length === 0) return
+    if (markers.length === 0) {
+      return
+    }
 
-    // Add markers to map (without clustering for now)
-    markers.forEach(marker => {
-      marker.setMap(mapInstance.current)
+
+    // Add markers to map
+    markers.forEach((marker, index) => {
+      if (marker && mapInstance.current) {
+        marker.setMap(mapInstance.current)
+      }
     })
 
-    // TODO: Implement clustering when MarkerClusterer library is properly loaded
-    // For now, we'll display individual markers
-  }, [gyms, createGymMarker])
+  }, [gyms, getCongestionColor, onGymClick])
 
   // Update gym markers when gyms data changes or map is ready
   useEffect(() => {
-    if (mapInstance.current) {
-      updateGymMarkers()
-    }
-  }, [mapInstance.current, gyms, updateGymMarkers])
 
-  // Component cleanup on unmount
+    if (isMapReady && mapInstance.current && gyms.length > 0) {
+      updateGymMarkers()
+    } else {
+      if (!isMapReady) {
+      }
+      if (!mapInstance.current) {
+      }
+      if (gyms.length === 0) {
+      }
+    }
+  }, [isMapReady, gyms, updateGymMarkers]) // isMapReady 추가로 정확한 타이밍 보장
+
+  // Component cleanup on unmount with comprehensive memory management
   useEffect(() => {
     return () => {
-      console.log('🧹 Cleaning up KakaoMap component...')
-      
+
+      // Set unmounted flag to prevent any further operations
+      isUnmountedRef.current = true
+
       // Clear error timeout
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current)
+        errorTimeoutRef.current = null
       }
-      
-      // Clear timers and intervals
+
+      // Remove all event listeners
+      removeEventListeners()
+
+      // Clear user location marker
       if (userLocationMarker.current) {
         userLocationMarker.current.setMap(null)
         userLocationMarker.current = null
       }
-      
-      // Clear gym markers
+
+      // Clear gym markers (simplified cleanup)
       gymMarkersRef.current.forEach(marker => {
-        if (marker) marker.setMap(null)
+        if (marker) {
+          marker.setMap(null)
+          if (marker.clickListener) {
+            window.kakao.maps.event.removeListener(marker.clickListener)
+          }
+        }
       })
       gymMarkersRef.current = []
-      
+
       // Clean up map instance
       if (mapInstance.current) {
+        // Remove all map event listeners
+        try {
+          window.kakao?.maps?.event?.removeListener(mapInstance.current)
+        } catch (e) {
+          console.warn('Error removing map listeners:', e)
+        }
         mapInstance.current = null
       }
-      
-      console.log('✅ KakaoMap component cleanup completed')
+
+      // Force garbage collection if available (development)
+      if (window.gc && typeof window.gc === 'function') {
+        setTimeout(() => window.gc(), 100)
+      }
+
     }
-  }, [])
+  }, [removeEventListeners])
 
   // Render critical error UI
   if (isCriticalError) {
