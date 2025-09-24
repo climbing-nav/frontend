@@ -10,6 +10,12 @@ COPY package*.json ./
 # 의존성 설치 (개발 의존성 포함)
 RUN npm install
 
+# Build arguments 정의 - GitHub Secrets에서 전달받을 환경변수
+ARG VITE_API_URL
+
+# Environment variables 설정 - 런타임에 사용할 환경변수
+ENV VITE_API_URL=$VITE_API_URL
+
 # SSL 디렉토리 생성 (볼륨 마운트용)
 RUN mkdir -p /app/ssl
 
