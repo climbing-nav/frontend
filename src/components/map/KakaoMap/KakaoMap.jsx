@@ -8,6 +8,7 @@ import {
   isMobileDevice,
   logMemoryUsage
 } from '../../../utils/mobileMarkerOptimizer'
+import { startMobileDebugging } from '../../../utils/simpleMobileDebug'
 
 // Debouncing utility for event handlers
 const debounce = (func, wait) => {
@@ -82,6 +83,12 @@ function KakaoMap({
   // Reset unmounted flag on mount
   useEffect(() => {
     isUnmountedRef.current = false
+
+    // 모바일 환경에서 디버깅 활성화
+    if (isMobileDevice() && process.env.NODE_ENV === 'development') {
+      console.log('🔍 모바일 디버깅 모드 활성화')
+      startMobileDebugging()
+    }
   }, [])
   
   // Error tracking for circuit breaker pattern
