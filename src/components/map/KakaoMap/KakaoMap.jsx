@@ -758,8 +758,8 @@ function KakaoMap({
   // 마커 업데이트 동기화를 위한 뮤텍스
   const markerUpdateMutex = useRef(false)
 
-  // 충돌 방지된 체육관 마커 업데이트
-  const updateGymMarkers = useCallback(async () => {
+  // 단순하고 안정적인 체육관 마커 업데이트
+  const updateGymMarkers = useCallback(() => {
     if (!mapInstance.current || isUnmountedRef.current) {
       return
     }
@@ -768,7 +768,7 @@ function KakaoMap({
       return
     }
 
-    // 뮤텍스로 동시 실행 방지
+    // 뮤텍스로 동시 실행 방지 (동기 방식)
     if (markerUpdateMutex.current) {
       console.warn('⚠️ 마커 업데이트가 이미 진행 중입니다.')
       return
@@ -777,20 +777,7 @@ function KakaoMap({
     markerUpdateMutex.current = true
 
     try {
-      // 현위치 마커 임시 제거 (충돌 방지)
-      let tempUserLocationMarker = null
-      if (userLocationMarker.current) {
-        tempUserLocationMarker = {
-          position: userLocationMarker.current.getPosition(),
-          image: userLocationMarker.current.getImage()
-        }
-        userLocationMarker.current.setMap(null)
-      }
-
-      // 작은 지연으로 카카오맵 내부 처리 대기
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      // 기존 체육관 마커 정리
+      // 기존 체육관 마커만 정리 (현위치 마커는 건드리지 않음)
       gymMarkersRef.current.forEach(marker => {
         if (marker) {
           try {
@@ -805,76 +792,91 @@ function KakaoMap({
       })
       gymMarkersRef.current = []
 
-      // 모바일 환경 감지
+      // 모바일 환경 감지 및 제한
       const isMobile = isMobileDevice()
-
-      // 모바일에서는 마커 수를 제한하여 성능 향상
-      const maxMarkers = isMobile ? 20 : 50 // 더 보수적으로 제한
+      const maxMarkers = isMobile ? 15 : 30 // 매우 보수적으로 제한
       const limitedGyms = gyms.slice(0, maxMarkers)
 
       if (limitedGyms.length === 0) {
-        // 현위치 마커 복원
-        if (tempUserLocationMarker && userLocation) {
-          setTimeout(() => {
-            updateUserLocationMarker(userLocation)
-          }, 100)
-        }
+        markerUpdateMutex.current = false
         return
       }
 
-      // 최적화된 마커 업데이트 사용
-      const handleGymClick = (gym, marker) => {
-        if (isUnmountedRef.current) return
+      // 간단한 마커 생성 (복잡한 최적화 제거)
+      const markers = limitedGyms.map(gym => {
+        if (!gym?.lat || !gym?.lng) return null
 
-        setPopupPosition({
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2
-        })
+        try {
+          const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
+          const congestionColor = getCongestionColor(gym.congestion)
 
-        setSelectedGym(gym)
-        setIsPopupOpen(true)
+          // 매우 단순한 SVG 마커
+          const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
+            <svg width="24" height="30" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 0C5.4 0 0 5.4 0 12C0 21 12 30 12 30S24 21 24 12C24 5.4 18.6 0 12 0Z"
+                    fill="${congestionColor}" stroke="white" stroke-width="1"/>
+              <circle cx="12" cy="12" r="6" fill="white"/>
+              <circle cx="12" cy="12" r="3" fill="${congestionColor}"/>
+            </svg>
+          `)
 
-        if (onGymClick) {
-          onGymClick(gym)
+          const imageSize = new window.kakao.maps.Size(24, 30)
+          const imageOption = { offset: new window.kakao.maps.Point(12, 30) }
+          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
+
+          const marker = new window.kakao.maps.Marker({
+            position: position,
+            image: markerImage,
+            title: gym.name,
+            zIndex: selectedGym?.id === gym.id ? 100 : 50
+          })
+
+          // 단순한 클릭 핸들러
+          const clickHandler = () => {
+            if (isUnmountedRef.current) return
+
+            setPopupPosition({
+              x: window.innerWidth / 2,
+              y: window.innerHeight / 2
+            })
+
+            setSelectedGym(gym)
+            setIsPopupOpen(true)
+
+            if (onGymClick) {
+              onGymClick(gym)
+            }
+          }
+
+          window.kakao.maps.event.addListener(marker, 'click', clickHandler)
+          marker.clickListener = clickHandler
+          marker.setMap(mapInstance.current)
+
+          return marker
+        } catch (error) {
+          console.warn(`체육관 마커 생성 실패: ${gym.name}`, error)
+          return null
         }
-      }
-
-      const markers = updateMarkersOptimized(
-        mapInstance.current,
-        limitedGyms,
-        handleGymClick,
-        selectedGym?.id
-      )
+      }).filter(Boolean)
 
       gymMarkersRef.current = markers
 
-      // 체육관 마커 생성 완료 후 현위치 마커 복원
-      if (tempUserLocationMarker && userLocation) {
+      // 현위치 마커가 없으면 다시 생성 시도
+      if (!userLocationMarker.current && userLocation) {
         setTimeout(() => {
           updateUserLocationMarker(userLocation)
-        }, 100)
+        }, 200)
       }
 
-      // 개발 환경에서 메모리 사용량 로깅
-      if (process.env.NODE_ENV === 'development') {
-        logMemoryUsage()
-        console.log(`✅ 체육관 마커 ${markers.length}개 생성 완료`)
-      }
+      console.log(`✅ 체육관 마커 ${markers.length}개 생성 완료`)
 
     } catch (error) {
       console.error('❌ 체육관 마커 업데이트 오류:', error)
       trackError('marker-update-failed')
-
-      // 에러 발생 시 현위치 마커라도 복원
-      if (userLocation) {
-        setTimeout(() => {
-          updateUserLocationMarker(userLocation)
-        }, 100)
-      }
     } finally {
       markerUpdateMutex.current = false
     }
-  }, [gyms, onGymClick, selectedGym?.id, trackError, userLocation, updateUserLocationMarker])
+  }, [gyms, onGymClick, selectedGym?.id, trackError, userLocation, updateUserLocationMarker, getCongestionColor])
 
   // Update gym markers when gyms data changes or map is ready
   useEffect(() => {
