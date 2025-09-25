@@ -2,6 +2,12 @@ import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 import GymInfoPopup from '../GymInfoPopup'
+import {
+  updateMarkersOptimized,
+  cleanupMarkers,
+  isMobileDevice,
+  logMemoryUsage
+} from '../../../utils/mobileMarkerOptimizer'
 
 // Debouncing utility for event handlers
 const debounce = (func, wait) => {
@@ -742,115 +748,74 @@ function KakaoMap({
     return marker
   }, [getCongestionColor]) // onGymClick 의존성 제거로 불필요한 재생성 방지
 
-  // Update gym markers with memory optimization
+  // 모바일 최적화된 체육관 마커 업데이트
   const updateGymMarkers = useCallback(() => {
-
-    if (!mapInstance.current) {
+    if (!mapInstance.current || isUnmountedRef.current) {
       return
     }
 
-    if (!window.kakao) {
+    if (!window.kakao?.maps) {
       return
     }
 
-    if (!window.kakao.maps) {
-      return
-    }
-
-    if (isUnmountedRef.current) {
-      // Component is unmounting, but continue to avoid breaking existing markers
-    }
-
-    // Clear existing markers
-    gymMarkersRef.current.forEach(marker => {
-      if (marker) {
-        marker.setMap(null)
-        if (marker.clickListener) {
-          window.kakao.maps.event.removeListener(marker.clickListener)
-        }
-      }
-    })
-    gymMarkersRef.current = []
-
-    // Create new markers for all gyms (inline to avoid dependency issues)
-    const markers = gyms.map(gym => {
-      if (!gym || !gym.lat || !gym.lng) {
-        console.warn('⚠️ Invalid gym data:', gym)
-        return null
-      }
-
-
-      try {
-        const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
-        const congestionColor = getCongestionColor(gym.congestion)
-
-        // Create custom marker image with congestion color
-        const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
-          <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="${congestionColor}"/>
-            <circle cx="16" cy="16" r="8" fill="white"/>
-            <path d="M12 12L20 12L20 20L12 20Z" fill="${congestionColor}"/>
-            <path d="M14 14L18 16L14 18Z" fill="white"/>
-          </svg>
-        `)
-
-        const imageSize = new window.kakao.maps.Size(32, 40)
-        const imageOption = { offset: new window.kakao.maps.Point(16, 40) }
-        const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
-
-        // Create marker
-        const marker = new window.kakao.maps.Marker({
-          position: position,
-          image: markerImage,
-          title: gym.name
-        })
-
-        // Add click event with popup functionality
-        const clickHandler = () => {
-          if (isUnmountedRef.current) return
-
-          setPopupPosition({
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2
-          })
-
-          setSelectedGym(gym)
-          setIsPopupOpen(true)
-
-          // Call external callback if provided
-          if (onGymClick) {
-            onGymClick(gym)
+    try {
+      // 기존 마커 정리
+      gymMarkersRef.current.forEach(marker => {
+        if (marker) {
+          marker.setMap(null)
+          if (marker.clickListener) {
+            window.kakao.maps.event.removeListener(marker.clickListener)
           }
         }
+      })
+      gymMarkersRef.current = []
 
-        // Add click listener
-        marker.clickListener = window.kakao.maps.event.addListener(marker, 'click', clickHandler)
+      // 모바일 환경 감지
+      const isMobile = isMobileDevice()
 
-        // Store gym data in marker for reference
-        marker.gymData = gym
+      // 모바일에서는 마커 수를 제한하여 성능 향상
+      const maxMarkers = isMobile ? 25 : 100
+      const limitedGyms = gyms.slice(0, maxMarkers)
 
-        return marker
-      } catch (error) {
-        console.error('❌ Error creating marker for gym:', gym.name, error)
-        return null
+      if (limitedGyms.length === 0) return
+
+      // 최적화된 마커 업데이트 사용
+      const handleGymClick = (gym, marker) => {
+        if (isUnmountedRef.current) return
+
+        // 모바일에서는 간단한 팝업 위치 설정
+        setPopupPosition({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2
+        })
+
+        setSelectedGym(gym)
+        setIsPopupOpen(true)
+
+        if (onGymClick) {
+          onGymClick(gym)
+        }
       }
-    }).filter(Boolean)
 
-    gymMarkersRef.current = markers
+      const markers = updateMarkersOptimized(
+        mapInstance.current,
+        limitedGyms,
+        handleGymClick,
+        selectedGym?.id
+      )
 
-    if (markers.length === 0) {
-      return
+      gymMarkersRef.current = markers
+
+      // 개발 환경에서 메모리 사용량 로깅
+      if (process.env.NODE_ENV === 'development') {
+        logMemoryUsage()
+      }
+
+    } catch (error) {
+      console.error('❌ 체육관 마커 업데이트 오류:', error)
+      trackError('marker-update-failed')
     }
-
-
-    // Add markers to map
-    markers.forEach((marker, index) => {
-      if (marker && mapInstance.current) {
-        marker.setMap(mapInstance.current)
-      }
-    })
-
-  }, [gyms, getCongestionColor, onGymClick])
+  }, [gyms, onGymClick, selectedGym?.id, trackError])
 
   // Update gym markers when gyms data changes or map is ready
   useEffect(() => {
@@ -889,15 +854,8 @@ function KakaoMap({
         userLocationMarker.current = null
       }
 
-      // Clear gym markers (simplified cleanup)
-      gymMarkersRef.current.forEach(marker => {
-        if (marker) {
-          marker.setMap(null)
-          if (marker.clickListener) {
-            window.kakao.maps.event.removeListener(marker.clickListener)
-          }
-        }
-      })
+      // 마커 최적화된 정리
+      cleanupMarkers()
       gymMarkersRef.current = []
 
       // Clean up map instance
