@@ -2,15 +2,8 @@ import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { Box, CircularProgress, Alert, Typography, Fab, IconButton } from '@mui/material'
 import { MyLocation, LocationOn, ZoomIn, ZoomOut } from '@mui/icons-material'
 import GymInfoPopup from '../GymInfoPopup'
-import {
-  updateMarkersOptimized,
-  cleanupMarkers,
-  isMobileDevice,
-  logMemoryUsage
-} from '../../../utils/mobileMarkerOptimizer'
-import { startMobileDebugging } from '../../../utils/simpleMobileDebug'
+import { cleanupMarkers, isMobileDevice } from '../../../utils/mobileMarkerOptimizer'
 
-// Debouncing utility for event handlers
 const debounce = (func, wait) => {
   let timeout
   return function executedFunction(...args) {
@@ -24,34 +17,13 @@ const debounce = (func, wait) => {
 }
 
 /**
- * KakaoMap Component
- * Interactive map component using Kakao Maps API with gym markers and user location features
- * 
- * @param {Object} props
- * @param {number} props.width - Map width (default: '100%')
- * @param {number} props.height - Map height (default: 400)
- * @param {Object} props.center - Map center coordinates { lat, lng }
- * @param {number} props.level - Map zoom level (1-14, default: 3)
- * @param {boolean} props.showUserLocation - Whether to show user location (default: true)
- * @param {boolean} props.showLocationButton - Whether to show location button (default: true)
- * @param {boolean} props.showZoomControls - Whether to show zoom controls (default: true)
- * @param {Array} props.gyms - Array of gym data to display as markers
- * @param {Function} props.onMapReady - Callback when map is initialized
- * @param {Function} props.onLocationFound - Callback when user location is found
- * @param {Function} props.onLocationError - Callback for location errors
- * @param {Function} props.onGymClick - Callback when gym marker is clicked
- * @param {Function} props.onMapClick - Callback when map is clicked
- * @param {Function} props.onZoomChanged - Callback when zoom level changes
- * @param {Function} props.onCenterChanged - Callback when map center changes
- * @param {Function} props.onBoundsChanged - Callback when map bounds change
- * @param {Function} props.onError - Callback for error handling
- * @param {Function} props.onNavigateToGymDetail - Callback to navigate to gym detail page
- * @param {Object} props.sx - Additional styling
+ * KakaoMap 컴포넌트
+ * 카카오 지도 API를 사용한 대화형 지도 컴포넌트
  */
 function KakaoMap({
   width = '100%',
   height = 400,
-  center = { lat: 37.5665, lng: 126.9780 }, // Default: Seoul City Hall
+  center = { lat: 37.5665, lng: 126.9780 },
   level = 3,
   showUserLocation = true,
   showLocationButton = true,
@@ -73,34 +45,21 @@ function KakaoMap({
   const mapInstance = useRef(null)
   const userLocationMarker = useRef(null)
   const gymMarkersRef = useRef([])
-
   const eventListenersRef = useRef([])
-
-  // Performance optimization refs
   const isUnmountedRef = useRef(false)
   const lastZoomLevelRef = useRef(level)
+  const markerUpdateMutex = useRef(false)
 
-  // Reset unmounted flag on mount
-  useEffect(() => {
-    isUnmountedRef.current = false
-
-    // 모바일 환경에서 디버깅 활성화
-    if (isMobileDevice() && process.env.NODE_ENV === 'development') {
-      console.log('🔍 모바일 디버깅 모드 활성화')
-      startMobileDebugging()
-    }
-  }, [])
-  
-  // Error tracking for circuit breaker pattern
+  // 에러 추적 refs
   const errorCountRef = useRef(0)
-  const lastErrorTimeRef = useRef(null)
   const errorTimeoutRef = useRef(null)
-  
-  // Circuit breaker constants
+
+  // 상수
   const MAX_ERRORS = 3
-  const ERROR_RESET_TIME = 30000 // 30 seconds
+  const ERROR_RESET_TIME = 30000
   const CRITICAL_ERROR_THRESHOLD = 5
-  
+
+  // 상태
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isKakaoLoaded, setIsKakaoLoaded] = useState(false)
@@ -109,61 +68,178 @@ function KakaoMap({
   const [locationError, setLocationError] = useState(null)
   const [isCriticalError, setIsCriticalError] = useState(false)
   const [circuitBreakerOpen, setCircuitBreakerOpen] = useState(false)
-  
-  // Popup state for gym information
-  const [selectedGym, setSelectedGym] = useState(null)
-  const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
   const [isMapReady, setIsMapReady] = useState(false)
+  const [isZooming, setIsZooming] = useState(false)
+  const [isMarkersLoading, setIsMarkersLoading] = useState(false)
+  const [currentBounds, setCurrentBounds] = useState(null)
+  const visibleMarkersRef = useRef(new Map()) // 현재 화면에 표시된 마커들
+  const allGymsRef = useRef([]) // 전체 체육관 데이터
 
-  // Removed memoizedCenter to fix infinite loop issue
+  // 팝업 상태 통합
+  const [popup, setPopup] = useState({
+    gym: null,
+    isOpen: false,
+    position: { x: 0, y: 0 }
+  })
 
-  // Error tracking and circuit breaker functions - moved before usage
+  useEffect(() => {
+    isUnmountedRef.current = false
+    allGymsRef.current = gyms // 체육관 데이터 저장
+  }, [gyms])
+
+  // 혼잡도 색상 (먼저 정의)
+  const getCongestionColor = useCallback((congestion) => {
+    switch (congestion) {
+      case 'comfortable': return '#4CAF50'
+      case 'normal': return '#FF9800'
+      case 'crowded': return '#F44336'
+      default: return '#9E9E9E'
+    }
+  }, [])
+
+  // 현재 화면 영역 계산
+  const getCurrentBounds = useCallback(() => {
+    if (!mapInstance.current) return null
+    return mapInstance.current.getBounds()
+  }, [])
+
+  // 마커가 현재 화면에 보이는지 확인
+  const isMarkerInBounds = useCallback((lat, lng, bounds) => {
+    if (!bounds) return false
+    const position = new window.kakao.maps.LatLng(lat, lng)
+    return bounds.contain(position)
+  }, [])
+
+  // 화면에서 보이지 않는 마커 제거
+  const removeInvisibleMarkers = useCallback((bounds) => {
+    const markersToRemove = []
+
+    visibleMarkersRef.current.forEach((marker, gymId) => {
+      const gym = allGymsRef.current.find(g => g.id === gymId)
+      if (!gym || !isMarkerInBounds(gym.lat, gym.lng, bounds)) {
+        // 화면 밖으로 나간 마커 제거
+        try {
+          marker.setMap(null)
+          console.log('🗑️ 마커 제거:', gym?.name || gymId)
+        } catch (e) {
+          console.warn('마커 제거 오류:', e)
+        }
+        markersToRemove.push(gymId)
+      }
+    })
+
+    // 제거된 마커들을 맵에서 삭제
+    markersToRemove.forEach(gymId => {
+      visibleMarkersRef.current.delete(gymId)
+    })
+
+    console.log(`📊 마커 정리 완료: ${markersToRemove.length}개 제거, ${visibleMarkersRef.current.size}개 유지`)
+  }, [isMarkerInBounds])
+
+  // 화면에 보이는 새로운 마커 추가
+  const addVisibleMarkers = useCallback((bounds) => {
+    if (!mapInstance.current || !bounds) return
+
+    let addedCount = 0
+    const isMobile = isMobileDevice()
+
+    allGymsRef.current.forEach(gym => {
+      // 이미 표시된 마커는 건너뛰기
+      if (visibleMarkersRef.current.has(gym.id)) return
+
+      // 화면에 보이는 체육관만 처리
+      if (!gym?.lat || !gym?.lng || !isMarkerInBounds(gym.lat, gym.lng, bounds)) return
+
+      try {
+        const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
+        const congestionColor = getCongestionColor(gym.congestion)
+
+        const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
+          <svg width="24" height="30" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.4 0 0 5.4 0 12C0 21 12 30 12 30S24 21 24 12C24 5.4 18.6 0 12 0Z"
+                  fill="${congestionColor}" stroke="white" stroke-width="1"/>
+            <circle cx="12" cy="12" r="6" fill="white"/>
+            <circle cx="12" cy="12" r="3" fill="${congestionColor}"/>
+          </svg>
+        `)
+
+        const markerImage = new window.kakao.maps.MarkerImage(
+          markerImageSrc,
+          new window.kakao.maps.Size(24, 30),
+          { offset: new window.kakao.maps.Point(12, 30) }
+        )
+
+        const marker = new window.kakao.maps.Marker({
+          position: position,
+          image: markerImage,
+          title: gym.name,
+          zIndex: popup.gym?.id === gym.id ? 100 : 50
+        })
+
+        const clickHandler = () => {
+          if (isUnmountedRef.current) return
+
+          setPopup({
+            gym,
+            isOpen: true,
+            position: { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+          })
+
+          if (onGymClick) onGymClick(gym)
+        }
+
+        window.kakao.maps.event.addListener(marker, 'click', clickHandler)
+        marker.setMap(mapInstance.current)
+
+        // 가시 마커 맵에 추가
+        visibleMarkersRef.current.set(gym.id, marker)
+        addedCount++
+
+        console.log('➕ 새 마커 추가:', gym.name)
+
+      } catch (error) {
+        console.warn(`체육관 마커 생성 실패: ${gym.name}`, error)
+      }
+    })
+
+    console.log(`📊 새 마커 추가 완료: ${addedCount}개 추가, 총 ${visibleMarkersRef.current.size}개 표시`)
+  }, [isMarkerInBounds, getCongestionColor, popup.gym?.id, onGymClick])
+
+  // 에러 추적
   const trackError = useCallback((errorType = 'general') => {
-    const now = Date.now()
     errorCountRef.current += 1
-    lastErrorTimeRef.current = now
-    
-    console.warn(`[KakaoMap] Error tracked: ${errorType} (Count: ${errorCountRef.current})`)
-    
-    // Check for critical error threshold
+
     if (errorCountRef.current >= CRITICAL_ERROR_THRESHOLD) {
-      console.error(`[KakaoMap] Critical error threshold reached (${errorCountRef.current} errors)`)
       setIsCriticalError(true)
       setCircuitBreakerOpen(true)
-      
-      // Show alert to user
+
       if (!window.kakaoMapAlertShown) {
         window.kakaoMapAlertShown = true
-        alert('지도 서비스에 문제가 발생했습니다.\n인터넷 연결 상태를 확인하고 페이지를 새로고침해주세요.')
+        alert('지도 서비스에 문제가 발생했습니다.\n페이지를 새로고침해주세요.')
       }
-      return true // Critical error detected
+      return true
     }
-    
-    // Activate circuit breaker for repeated errors
+
     if (errorCountRef.current >= MAX_ERRORS) {
       setCircuitBreakerOpen(true)
-      
-      // Reset after timeout
+
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current)
       }
-      
+
       errorTimeoutRef.current = setTimeout(() => {
         errorCountRef.current = 0
         setCircuitBreakerOpen(false)
-        lastErrorTimeRef.current = null
       }, ERROR_RESET_TIME)
-      
-      return true // Circuit breaker activated
+
+      return true
     }
-    
-    return false // Continue normal operation
+
+    return false
   }, [])
 
   const resetErrorTracking = useCallback(() => {
     errorCountRef.current = 0
-    lastErrorTimeRef.current = null
     setCircuitBreakerOpen(false)
     if (errorTimeoutRef.current) {
       clearTimeout(errorTimeoutRef.current)
@@ -171,81 +247,135 @@ function KakaoMap({
     }
   }, [])
 
-  // Handle popup close
-  const handleClosePopup = useCallback(() => {
-    setIsPopupOpen(false)
-    setSelectedGym(null)
-  }, [])
-
-  // Update user location marker - fixed to prevent flickering
-  const updateUserLocationMarker = useCallback((location) => {
-
-    if (!mapInstance.current) {
+  // 뷰포트 기반 마커 업데이트
+  const updateViewportMarkers = useCallback(() => {
+    if (!mapInstance.current || isUnmountedRef.current || !window.kakao?.maps || markerUpdateMutex.current) {
       return
     }
 
-    if (!window.kakao || !window.kakao.maps) {
+    markerUpdateMutex.current = true
+    setIsMarkersLoading(true)
+
+    try {
+      const bounds = getCurrentBounds()
+      if (!bounds) return
+
+      console.log('🗺️ 뷰포트 기반 마커 업데이트 시작')
+      console.log('📊 현재 표시 중인 마커 수:', visibleMarkersRef.current.size)
+
+      // 1. 화면 밖으로 나간 마커 제거
+      removeInvisibleMarkers(bounds)
+
+      // 2. 화면에 새로 보이는 마커 추가
+      addVisibleMarkers(bounds)
+
+      // 3. 현재 bounds 저장
+      setCurrentBounds(bounds)
+
+      // 4. 사용자 위치 마커 보호 및 최상위 유지
+      if (userLocationMarker.current) {
+        const markerMap = userLocationMarker.current.getMap()
+        console.log('📍 사용자 마커가 지도에 연결됨:', !!markerMap)
+        console.log('📍 사용자 마커 위치:', userLocationMarker.current.getPosition())
+        console.log('📍 사용자 마커 zIndex:', userLocationMarker.current.getZIndex())
+
+        // 마커가 지도에서 제거되었다면 다시 추가
+        if (!markerMap && mapInstance.current) {
+          console.log('🔄 사용자 위치 마커 지도에 다시 추가')
+          userLocationMarker.current.setMap(mapInstance.current)
+        }
+
+        // 사용자 위치 마커를 맨 위로 올리기
+        userLocationMarker.current.setZIndex(9999)
+        console.log('🔄 사용자 위치 마커 zIndex 재설정 완료')
+
+        // 혹시 마커가 보이지 않는다면 강제로 다시 지도에 추가
+        try {
+          userLocationMarker.current.setMap(null)
+          userLocationMarker.current.setMap(mapInstance.current)
+          console.log('🔄 사용자 위치 마커 강제 재추가 완료')
+        } catch (e) {
+          console.warn('사용자 마커 재추가 중 오류:', e)
+        }
+      }
+
+      console.log('✅ 뷰포트 마커 업데이트 완료')
+
+    } catch (error) {
+      console.error('❌ 뷰포트 마커 업데이트 오류:', error)
+      trackError('viewport-marker-update-failed')
+    } finally {
+      markerUpdateMutex.current = false
+
+      // 최소 로딩 시간을 보장하여 깜빡임 방지
+      setTimeout(() => {
+        setIsMarkersLoading(false)
+      }, 150)
+    }
+  }, [getCurrentBounds, removeInvisibleMarkers, addVisibleMarkers, trackError])
+
+  // 팝업 핸들러
+  const handleClosePopup = useCallback(() => {
+    setPopup({ gym: null, isOpen: false, position: { x: 0, y: 0 } })
+  }, [])
+
+  // 사용자 위치 마커 업데이트
+  const updateUserLocationMarker = useCallback((location) => {
+    console.log('🎯 updateUserLocationMarker 호출됨:', location)
+
+    if (!mapInstance.current || !window.kakao?.maps || isUnmountedRef.current) {
+      console.log('❌ 마커 업데이트 중단: map =', !!mapInstance.current, 'kakao =', !!window.kakao?.maps, 'unmounted =', isUnmountedRef.current)
       return
     }
 
     try {
-      // Create position
       const markerPosition = new window.kakao.maps.LatLng(location.lat, location.lng)
 
-      // If marker already exists, just update its position instead of removing/recreating
+      // 기존 마커가 있으면 위치만 업데이트
       if (userLocationMarker.current) {
+        console.log('✅ 기존 마커 위치 업데이트:', location)
         userLocationMarker.current.setPosition(markerPosition)
-
-        // Center map on user location only if this is a significant location change
-        if (!userLocation ||
-            Math.abs(userLocation.lat - location.lat) > 0.001 ||
-            Math.abs(userLocation.lng - location.lng) > 0.001) {
-          mapInstance.current.setCenter(markerPosition)
-        }
+        mapInstance.current.setCenter(markerPosition)
         return
       }
 
-      // Create new marker only if it doesn't exist
-
-      // Create custom marker image for user location
+      // 새 마커 생성 - 더 크고 뚜렷한 마커
       const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="white" stroke-width="2"/>
-          <circle cx="12" cy="12" r="4" fill="white"/>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="#FF0000" stroke="white" stroke-width="3"/>
+          <circle cx="16" cy="16" r="8" fill="white"/>
+          <circle cx="16" cy="16" r="4" fill="#FF0000"/>
         </svg>
       `)
-      const imageSize = new window.kakao.maps.Size(24, 24)
-      const imageOption = { offset: new window.kakao.maps.Point(12, 12) }
-      const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
 
-      // Create marker
+      const markerImage = new window.kakao.maps.MarkerImage(
+        imageSrc,
+        new window.kakao.maps.Size(32, 32),
+        { offset: new window.kakao.maps.Point(16, 16) }
+      )
+
       const marker = new window.kakao.maps.Marker({
         position: markerPosition,
         image: markerImage,
-        title: '내 위치',
-        zIndex: 1000 // 체육관 마커보다 높은 우선순위로 항상 최상위 표시
+        title: '내 위치'
       })
 
-      // Add marker to map
       marker.setMap(mapInstance.current)
+      marker.setZIndex(9999) // 명시적으로 높은 zIndex 설정
       userLocationMarker.current = marker
+      console.log('🎯 새 사용자 위치 마커 생성 완료:', location)
 
-
-      // Center map on user location
+      // 마커 생성 시 중심 이동
       mapInstance.current.setCenter(markerPosition)
+
     } catch (error) {
       console.error('❌ Error creating user location marker:', error)
     }
-  }, [userLocation])
+  }, [])
 
-  // Check if Kakao Maps API is loaded - 의존성 배열 제거로 무한 루프 방지
+  // 카카오 API 로드 확인
   useEffect(() => {
-    // Return early if critical error
-    if (isCriticalError) {
-      return
-    }
-
-    if (isKakaoLoaded) return // 이미 로드된 경우 실행하지 않음
+    if (isCriticalError || isKakaoLoaded) return
 
     let intervalId = null
     let attempts = 0
@@ -253,81 +383,49 @@ function KakaoMap({
 
     const checkKakaoMaps = () => {
       attempts++
-      
-      if (window.kakao && window.kakao.maps && window.kakao.maps.LatLng) {
+
+      if (window.kakao?.maps?.LatLng) {
         setIsKakaoLoaded(true)
         if (intervalId) clearInterval(intervalId)
         return
       }
-      
+
       if (attempts >= maxAttempts) {
-        console.error('❌ Failed to load Kakao Maps after maximum attempts')
         const errorMessage = 'Kakao Maps를 로드할 수 없습니다. 페이지를 새로고침해주세요.'
-        
-        // Track critical error
         const shouldStop = trackError('kakao-maps-load-failed')
+
         if (!shouldStop) {
           setError(errorMessage)
           setIsLoading(false)
+          if (onError) onError(new Error(errorMessage))
         }
-        
-        if (intervalId) clearInterval(intervalId)
-        
-        if (onError && !shouldStop) {
-          onError(new Error(errorMessage))
-        }
-        return
-      }
 
-      // If kakao exists but maps is not ready
-      if (window.kakao && !window.kakao.maps) {
-      } else if (!window.kakao) {
+        if (intervalId) clearInterval(intervalId)
+        return
       }
     }
 
-    // Initial check
     checkKakaoMaps()
-
-    // Set up interval to keep checking
-    intervalId = setInterval(checkKakaoMaps, 500) // Check every 500ms
+    intervalId = setInterval(checkKakaoMaps, 500)
 
     return () => {
       if (intervalId) {
         clearInterval(intervalId)
-        intervalId = null
       }
     }
-  }, [trackError, onError, isCriticalError, isKakaoLoaded]) // 의존성 업데이트
+  }, [trackError, onError, isCriticalError, isKakaoLoaded])
 
-  // Initialize map when Kakao is loaded
+  // 지도 초기화
   useEffect(() => {
-    
-    // Return early if critical error
-    if (isCriticalError) {
-      return
-    }
-    
-    if (!isKakaoLoaded) {
-      return
-    }
-    
-    if (!mapContainer.current) {
-      return
-    }
-
+    if (isCriticalError || !isKakaoLoaded || !mapContainer.current) return
 
     try {
       setIsLoading(true)
       setError(null)
 
-      // Ensure container has proper dimensions
       if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
-        console.warn('⚠️ Map container has zero dimensions, retrying...')
-        // Use a different approach to retry without changing isKakaoLoaded
         setTimeout(() => {
-          // Force re-render by re-running this effect
-          if (mapContainer.current && mapContainer.current.offsetWidth > 0) {
-            // Container is ready now, continue with initialization
+          if (mapContainer.current?.offsetWidth > 0) {
             const retryOptions = {
               center: new window.kakao.maps.LatLng(center.lat, center.lng),
               level: level
@@ -336,11 +434,8 @@ function KakaoMap({
               const retryMap = new window.kakao.maps.Map(mapContainer.current, retryOptions)
               mapInstance.current = retryMap
               setIsLoading(false)
-              if (onMapReady) {
-                onMapReady(retryMap)
-              }
+              if (onMapReady) onMapReady(retryMap)
             } catch (retryError) {
-              console.error('❌ Retry failed:', retryError)
               setError(`지도 초기화 재시도 실패: ${retryError.message}`)
               setIsLoading(false)
             }
@@ -349,26 +444,16 @@ function KakaoMap({
         return
       }
 
-      // Map options
       const options = {
         center: new window.kakao.maps.LatLng(center.lat, center.lng),
         level: level
       }
 
-
-      // Create map
       const map = new window.kakao.maps.Map(mapContainer.current, options)
       mapInstance.current = map
 
-
-      // Map is ready
-      setIsLoading(prev => prev ? false : prev)
-
-      // Set up map event listeners
+      setIsLoading(false)
       setupMapEventListeners(map)
-
-
-      // Set map as ready
       setIsMapReady(true)
 
       if (onMapReady) {
@@ -376,23 +461,18 @@ function KakaoMap({
       }
 
     } catch (error) {
-      console.error('❌ Kakao Map initialization error:', error)
       const errorMessage = `Kakao Map 초기화 실패: ${error.message}`
-      
-      // Track initialization error
       const shouldStop = trackError('kakao-map-init-failed')
+
       if (!shouldStop) {
         setError(errorMessage)
-        setIsLoading(prev => prev ? false : prev)
-        
-        if (onError) {
-          onError(error)
-        }
+        setIsLoading(false)
+        if (onError) onError(error)
       }
     }
-  }, [isKakaoLoaded, center.lat, center.lng, level, isCriticalError]) // memoizedCenter 대신 원래 값 사용
+  }, [isKakaoLoaded, center.lat, center.lng, level, isCriticalError])
 
-  // Update map center when props change
+  // 지도 중심/레벨 업데이트
   useEffect(() => {
     if (mapInstance.current) {
       const newCenter = new window.kakao.maps.LatLng(center.lat, center.lng)
@@ -400,32 +480,20 @@ function KakaoMap({
     }
   }, [center.lat, center.lng])
 
-  // Update map level when props change
   useEffect(() => {
     if (mapInstance.current) {
       mapInstance.current.setLevel(level)
     }
   }, [level])
 
-  // Geolocation functions with circuit breaker
+  // 위치 정보 함수
   const getCurrentLocation = useCallback(() => {
-    // Check circuit breaker before attempting geolocation
-    if (circuitBreakerOpen) {
-      console.warn('[KakaoMap] Circuit breaker is open, skipping geolocation request')
-      return
-    }
-    
-    if (isCriticalError) {
-      console.error('[KakaoMap] Critical error state, not attempting geolocation')
-      return
-    }
-    
-    if (!navigator.geolocation) {
-      const error = new Error('이 브라우저는 위치 서비스를 지원하지 않습니다.')
-      setLocationError(error.message)
-      trackError('geolocation-not-supported')
-      if (onLocationError) {
-        onLocationError(error)
+    if (circuitBreakerOpen || isCriticalError || !navigator.geolocation) {
+      if (!navigator.geolocation) {
+        const error = new Error('이 브라우저는 위치 서비스를 지원하지 않습니다.')
+        setLocationError(error.message)
+        trackError('geolocation-not-supported')
+        if (onLocationError) onLocationError(error)
       }
       return
     }
@@ -436,18 +504,16 @@ function KakaoMap({
     const options = {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 60000 // Cache for 1 minute
+      maximumAge: 60000
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude, accuracy } = position.coords
         const location = { lat: latitude, lng: longitude, accuracy }
-        
-        // Reset error tracking on successful location
+
         resetErrorTracking()
 
-        // Check if location has significantly changed to avoid unnecessary updates
         const hasSignificantChange = !userLocation ||
           Math.abs(userLocation.lat - location.lat) > 0.0001 ||
           Math.abs(userLocation.lng - location.lng) > 0.0001
@@ -459,11 +525,9 @@ function KakaoMap({
             onLocationFound(location)
           }
 
-          // Add/update user location marker on map
           if (mapInstance.current && showUserLocation) {
             updateUserLocationMarker(location)
           }
-        } else {
         }
 
         setLocationLoading(false)
@@ -471,35 +535,27 @@ function KakaoMap({
       },
       (error) => {
         setLocationLoading(false)
-        
-        // Track error and check circuit breaker
+
         const shouldStop = trackError('geolocation-error')
-        if (shouldStop) {
-          console.warn('[KakaoMap] Stopping geolocation requests due to circuit breaker/critical error')
-          return
-        }
-        
+        if (shouldStop) return
+
         let errorMessage = '위치를 가져올 수 없습니다.'
-        
+
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
-            trackError('geolocation-permission-denied')
             break
           case error.POSITION_UNAVAILABLE:
             errorMessage = '위치 정보를 사용할 수 없습니다.'
-            trackError('geolocation-unavailable')
             break
           case error.TIMEOUT:
             errorMessage = '위치 요청 시간이 초과되었습니다.'
-            trackError('geolocation-timeout')
             break
           default:
             errorMessage = `위치 오류: ${error.message}`
-            trackError('geolocation-unknown')
             break
         }
-        
+
         setLocationError(errorMessage)
         if (onLocationError) {
           onLocationError(error)
@@ -509,7 +565,6 @@ function KakaoMap({
     )
   }, [showUserLocation, onLocationFound, onLocationError, circuitBreakerOpen, isCriticalError, trackError, resetErrorTracking, updateUserLocationMarker])
 
-  // Center map to user location
   const centerToUserLocation = useCallback(() => {
     if (userLocation && mapInstance.current) {
       const position = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
@@ -519,62 +574,81 @@ function KakaoMap({
     }
   }, [userLocation, getCurrentLocation])
 
-  // Zoom control functions
+  // 부드러운 줌 컨트롤
   const handleZoomIn = useCallback(() => {
-    if (mapInstance.current) {
+    if (mapInstance.current && !isZooming) {
       const currentLevel = mapInstance.current.getLevel()
       if (currentLevel > 1) {
-        mapInstance.current.setLevel(currentLevel - 1)
+        setIsZooming(true)
+
+        // 부드러운 줌 애니메이션
+        const targetLevel = currentLevel - 1
+        mapInstance.current.setLevel(targetLevel, { animate: { duration: 350 } })
+
+        // 줌 완료 후 상태 리셋
+        setTimeout(() => {
+          setIsZooming(false)
+        }, 400)
       }
     }
-  }, [])
+  }, [isZooming])
 
   const handleZoomOut = useCallback(() => {
-    if (mapInstance.current) {
+    if (mapInstance.current && !isZooming) {
       const currentLevel = mapInstance.current.getLevel()
       if (currentLevel < 14) {
-        mapInstance.current.setLevel(currentLevel + 1)
+        setIsZooming(true)
+
+        // 부드러운 줌 애니메이션
+        const targetLevel = currentLevel + 1
+        mapInstance.current.setLevel(targetLevel, { animate: { duration: 350 } })
+
+        // 줌 완료 후 상태 리셋
+        setTimeout(() => {
+          setIsZooming(false)
+        }, 400)
       }
     }
-  }, [])
+  }, [isZooming])
 
-  // Get current zoom level
   const getCurrentZoomLevel = useCallback(() => {
-    if (mapInstance.current) {
-      return mapInstance.current.getLevel()
-    }
-    return level
+    return mapInstance.current ? mapInstance.current.getLevel() : level
   }, [level])
 
-  // Get user location when map is ready and showUserLocation is true
+  // 사용자 위치 가져오기
   useEffect(() => {
     if (mapInstance.current && showUserLocation && !userLocation && !locationLoading) {
       getCurrentLocation()
     }
   }, [mapInstance.current, showUserLocation, userLocation, locationLoading, getCurrentLocation])
 
-  // Optimized event handlers with debouncing
+  // 디바운스된 이벤트 핸들러
   const debouncedZoomHandler = useCallback(
     debounce((level) => {
-      if (isUnmountedRef.current) return
+      if (isUnmountedRef.current || lastZoomLevelRef.current === level) return
+      lastZoomLevelRef.current = level
 
-      // Only trigger if zoom level actually changed
-      if (lastZoomLevelRef.current !== level) {
-        lastZoomLevelRef.current = level
-        if (onZoomChanged) {
-          onZoomChanged(level)
-        }
-      }
-    }, 150),
-    [onZoomChanged]
+      // 줌 변경 완료 시 상태 업데이트
+      setIsZooming(false)
+
+      // 줌 변경 시 뷰포트 마커 업데이트
+      updateViewportMarkers()
+
+      if (onZoomChanged) onZoomChanged(level)
+    }, 250),
+    [onZoomChanged, updateViewportMarkers]
   )
 
   const debouncedCenterHandler = useCallback(
     debounce((center) => {
-      if (isUnmountedRef.current || !onCenterChanged) return
-      onCenterChanged(center)
-    }, 100),
-    [onCenterChanged]
+      if (isUnmountedRef.current) return
+
+      // 지도 중심 이동 시 뷰포트 마커 업데이트
+      updateViewportMarkers()
+
+      if (onCenterChanged) onCenterChanged(center)
+    }, 300),
+    [onCenterChanged, updateViewportMarkers]
   )
 
   const debouncedBoundsHandler = useCallback(
@@ -585,24 +659,20 @@ function KakaoMap({
     [onBoundsChanged]
   )
 
-  // Clean up event listeners
+  // 이벤트 리스너 정리
   const removeEventListeners = useCallback(() => {
     eventListenersRef.current.forEach(listener => {
-      if (listener && typeof listener.remove === 'function') {
-        listener.remove()
-      }
+      if (listener?.remove) listener.remove()
     })
     eventListenersRef.current = []
   }, [])
 
-  // Setup map event listeners
+  // 지도 이벤트 리스너 설정
   const setupMapEventListeners = useCallback((map) => {
-    if (!window.kakao || !window.kakao.maps || isUnmountedRef.current) return
+    if (!window.kakao?.maps || isUnmountedRef.current) return
 
-    // Clear existing listeners first
     removeEventListeners()
 
-    // Map click event
     if (onMapClick) {
       const clickListener = window.kakao.maps.event.addListener(map, 'click', (mouseEvent) => {
         if (isUnmountedRef.current) return
@@ -615,15 +685,12 @@ function KakaoMap({
       eventListenersRef.current.push(clickListener)
     }
 
-    // Zoom change event with debouncing
     const zoomListener = window.kakao.maps.event.addListener(map, 'zoom_changed', () => {
       if (isUnmountedRef.current) return
-      const level = map.getLevel()
-      debouncedZoomHandler(level)
+      debouncedZoomHandler(map.getLevel())
     })
     eventListenersRef.current.push(zoomListener)
 
-    // Center change event with debouncing
     if (onCenterChanged) {
       const centerListener = window.kakao.maps.event.addListener(map, 'center_changed', () => {
         if (isUnmountedRef.current) return
@@ -636,7 +703,6 @@ function KakaoMap({
       eventListenersRef.current.push(centerListener)
     }
 
-    // Bounds change event with debouncing
     if (onBoundsChanged) {
       const boundsListener = window.kakao.maps.event.addListener(map, 'bounds_changed', () => {
         if (isUnmountedRef.current) return
@@ -645,283 +711,71 @@ function KakaoMap({
         const ne = bounds.getNorthEast()
 
         debouncedBoundsHandler({
-          southWest: {
-            lat: sw.getLat(),
-            lng: sw.getLng()
-          },
-          northEast: {
-            lat: ne.getLat(),
-            lng: ne.getLng()
-          }
+          southWest: { lat: sw.getLat(), lng: sw.getLng() },
+          northEast: { lat: ne.getLat(), lng: ne.getLng() }
         })
       })
       eventListenersRef.current.push(boundsListener)
     }
-
-    // Minimal drag events (no console logs for performance)
-    const dragStartListener = window.kakao.maps.event.addListener(map, 'dragstart', () => {
-      // Drag start - no action needed for memory optimization
-    })
-    eventListenersRef.current.push(dragStartListener)
-
-    const dragEndListener = window.kakao.maps.event.addListener(map, 'dragend', () => {
-      // Drag end - no action needed for memory optimization
-    })
-    eventListenersRef.current.push(dragEndListener)
-
-    // Idle event for optimization
-    const idleListener = window.kakao.maps.event.addListener(map, 'idle', () => {
-      if (isUnmountedRef.current) return
-      // Map idle - good time for cleanup or optimization
-      if (window.gc && typeof window.gc === 'function') {
-        // Force garbage collection if available (development)
-        setTimeout(() => window.gc(), 100)
-      }
-    })
-    eventListenersRef.current.push(idleListener)
   }, [onMapClick, debouncedZoomHandler, debouncedCenterHandler, debouncedBoundsHandler, removeEventListeners])
 
-  // Helper function to get congestion color
-  const getCongestionColor = useCallback((congestion) => {
-    switch (congestion) {
-      case 'comfortable':
-        return '#4CAF50' // Green
-      case 'normal':
-        return '#FF9800' // Orange
-      case 'crowded':
-        return '#F44336' // Red
-      default:
-        return '#9E9E9E' // Grey
-    }
-  }, [])
-
-  // Create gym marker
-  const createGymMarker = useCallback((gym) => {
-    if (!window.kakao || !window.kakao.maps) return null
-
-    if (isUnmountedRef.current) {
-    }
-
-
-    const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
-    const congestionColor = getCongestionColor(gym.congestion)
-
-    // Create custom marker image with congestion color
-    const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="${congestionColor}"/>
-        <circle cx="16" cy="16" r="8" fill="white"/>
-        <path d="M12 12L20 12L20 20L12 20Z" fill="${congestionColor}"/>
-        <path d="M14 14L18 16L14 18Z" fill="white"/>
-      </svg>
-    `)
-
-    const imageSize = new window.kakao.maps.Size(32, 40)
-    const imageOption = { offset: new window.kakao.maps.Point(16, 40) }
-    const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
-
-    // Create marker (simplified - no pooling for now to fix the issue)
-    const marker = new window.kakao.maps.Marker({
-      position: position,
-      image: markerImage,
-      title: gym.name
-    })
-
-    // Add click event with popup functionality
-    const clickHandler = (mouseEvent) => {
-      if (isUnmountedRef.current) return
-
-      // Set popup position to screen center for better mobile UX
-      setPopupPosition({
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2
-      })
-
-      setSelectedGym(gym)
-      setIsPopupOpen(true)
-
-      // Call external callback if provided
-      if (onGymClick) {
-        onGymClick(gym)
-      }
-    }
-
-    // Add click listener
-    marker.clickListener = window.kakao.maps.event.addListener(marker, 'click', clickHandler)
-
-    // Store gym data in marker for reference
-    marker.gymData = gym
-
-    return marker
-  }, [getCongestionColor]) // onGymClick 의존성 제거로 불필요한 재생성 방지
-
-  // 마커 업데이트 동기화를 위한 뮤텍스
-  const markerUpdateMutex = useRef(false)
-
-  // 단순하고 안정적인 체육관 마커 업데이트
-  const updateGymMarkers = useCallback(() => {
-    if (!mapInstance.current || isUnmountedRef.current) {
-      return
-    }
-
-    if (!window.kakao?.maps) {
-      return
-    }
-
-    // 뮤텍스로 동시 실행 방지 (동기 방식)
-    if (markerUpdateMutex.current) {
-      console.warn('⚠️ 마커 업데이트가 이미 진행 중입니다.')
-      return
-    }
-
-    markerUpdateMutex.current = true
-
-    try {
-      // 기존 체육관 마커만 정리 (현위치 마커는 건드리지 않음)
-      gymMarkersRef.current.forEach(marker => {
-        if (marker) {
-          try {
-            marker.setMap(null)
-            if (marker.clickListener) {
-              window.kakao.maps.event.removeListener(marker.clickListener)
-            }
-          } catch (e) {
-            console.warn('마커 정리 중 오류:', e)
-          }
-        }
-      })
-      gymMarkersRef.current = []
-
-      // 모바일 환경 감지 및 제한
-      const isMobile = isMobileDevice()
-      const maxMarkers = isMobile ? 15 : 30 // 매우 보수적으로 제한
-      const limitedGyms = gyms.slice(0, maxMarkers)
-
-      if (limitedGyms.length === 0) {
-        markerUpdateMutex.current = false
-        return
-      }
-
-      // 간단한 마커 생성 (복잡한 최적화 제거)
-      const markers = limitedGyms.map(gym => {
-        if (!gym?.lat || !gym?.lng) return null
-
-        try {
-          const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
-          const congestionColor = getCongestionColor(gym.congestion)
-
-          // 매우 단순한 SVG 마커
-          const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(`
-            <svg width="24" height="30" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 0C5.4 0 0 5.4 0 12C0 21 12 30 12 30S24 21 24 12C24 5.4 18.6 0 12 0Z"
-                    fill="${congestionColor}" stroke="white" stroke-width="1"/>
-              <circle cx="12" cy="12" r="6" fill="white"/>
-              <circle cx="12" cy="12" r="3" fill="${congestionColor}"/>
-            </svg>
-          `)
-
-          const imageSize = new window.kakao.maps.Size(24, 30)
-          const imageOption = { offset: new window.kakao.maps.Point(12, 30) }
-          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize, imageOption)
-
-          const marker = new window.kakao.maps.Marker({
-            position: position,
-            image: markerImage,
-            title: gym.name,
-            zIndex: selectedGym?.id === gym.id ? 100 : 50
-          })
-
-          // 단순한 클릭 핸들러
-          const clickHandler = () => {
-            if (isUnmountedRef.current) return
-
-            setPopupPosition({
-              x: window.innerWidth / 2,
-              y: window.innerHeight / 2
-            })
-
-            setSelectedGym(gym)
-            setIsPopupOpen(true)
-
-            if (onGymClick) {
-              onGymClick(gym)
-            }
-          }
-
-          window.kakao.maps.event.addListener(marker, 'click', clickHandler)
-          marker.clickListener = clickHandler
-          marker.setMap(mapInstance.current)
-
-          return marker
-        } catch (error) {
-          console.warn(`체육관 마커 생성 실패: ${gym.name}`, error)
-          return null
-        }
-      }).filter(Boolean)
-
-      gymMarkersRef.current = markers
-
-      // 현위치 마커가 없으면 다시 생성 시도
-      if (!userLocationMarker.current && userLocation) {
-        setTimeout(() => {
-          updateUserLocationMarker(userLocation)
-        }, 200)
-      }
-
-      console.log(`✅ 체육관 마커 ${markers.length}개 생성 완료`)
-
-    } catch (error) {
-      console.error('❌ 체육관 마커 업데이트 오류:', error)
-      trackError('marker-update-failed')
-    } finally {
-      markerUpdateMutex.current = false
-    }
-  }, [gyms, onGymClick, selectedGym?.id, trackError, userLocation, updateUserLocationMarker, getCongestionColor])
-
-  // Update gym markers when gyms data changes or map is ready
+  // 뷰포트 기반 마커 업데이트 효과
   useEffect(() => {
-
-    if (isMapReady && mapInstance.current && gyms.length > 0) {
-      updateGymMarkers()
-    } else {
-      if (!isMapReady) {
-      }
-      if (!mapInstance.current) {
-      }
-      if (gyms.length === 0) {
-      }
+    if (isMapReady && mapInstance.current && allGymsRef.current.length > 0) {
+      updateViewportMarkers()
     }
-  }, [isMapReady, gyms, updateGymMarkers]) // isMapReady 추가로 정확한 타이밍 보장
+  }, [isMapReady, updateViewportMarkers])
 
-  // Component cleanup on unmount with comprehensive memory management
+  // 체육관 데이터 변경 시 뷰포트 마커 다시 계산
+  useEffect(() => {
+    if (isMapReady && mapInstance.current) {
+      // 기존 마커 모두 제거
+      visibleMarkersRef.current.forEach(marker => {
+        try {
+          marker.setMap(null)
+        } catch (e) {
+          console.warn('마커 제거 오류:', e)
+        }
+      })
+      visibleMarkersRef.current.clear()
+
+      // 새로운 데이터로 마커 업데이트
+      updateViewportMarkers()
+    }
+  }, [gyms, isMapReady, updateViewportMarkers])
+
+  // 컴포넌트 정리
   useEffect(() => {
     return () => {
-
-      // Set unmounted flag to prevent any further operations
       isUnmountedRef.current = true
 
-      // Clear error timeout
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current)
         errorTimeoutRef.current = null
       }
 
-      // Remove all event listeners
       removeEventListeners()
 
-      // Clear user location marker
       if (userLocationMarker.current) {
         userLocationMarker.current.setMap(null)
         userLocationMarker.current = null
       }
 
-      // 마커 최적화된 정리
+      // 기존 마커 시스템 정리
       cleanupMarkers()
       gymMarkersRef.current = []
 
-      // Clean up map instance
+      // 뷰포트 마커 시스템 정리
+      visibleMarkersRef.current.forEach(marker => {
+        try {
+          marker.setMap(null)
+        } catch (e) {
+          console.warn('가시 마커 정리 오류:', e)
+        }
+      })
+      visibleMarkersRef.current.clear()
+
       if (mapInstance.current) {
-        // Remove all map event listeners
         try {
           window.kakao?.maps?.event?.removeListener(mapInstance.current)
         } catch (e) {
@@ -930,15 +784,13 @@ function KakaoMap({
         mapInstance.current = null
       }
 
-      // Force garbage collection if available (development)
       if (window.gc && typeof window.gc === 'function') {
         setTimeout(() => window.gc(), 100)
       }
-
     }
   }, [removeEventListeners])
 
-  // Render critical error UI
+  // 치명적 오류 UI
   if (isCriticalError) {
     return (
       <Box
@@ -971,27 +823,21 @@ function KakaoMap({
             mb: 3
           }}
         >
-          <Typography
-            variant="h3"
-            sx={{
-              color: 'error.main',
-              fontWeight: 'bold'
-            }}
-          >
+          <Typography variant="h3" sx={{ color: 'error.main', fontWeight: 'bold' }}>
             ⚠️
           </Typography>
         </Box>
-        
+
         <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', mb: 2 }}>
           지도 서비스 오류
         </Typography>
-        
+
         <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, maxWidth: 400 }}>
           지도 서비스에 문제가 발생했습니다.
           <br />
           인터넷 연결 상태를 확인하고 페이지를 새로고침해주세요.
         </Typography>
-        
+
         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <button
             onClick={() => window.location.reload()}
@@ -1008,7 +854,7 @@ function KakaoMap({
           >
             페이지 새로고침
           </button>
-          
+
           <button
             onClick={() => {
               setIsCriticalError(false)
@@ -1029,14 +875,10 @@ function KakaoMap({
             다시 시도
           </button>
         </Box>
-        
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            color: 'text.disabled', 
-            mt: 3,
-            fontSize: '12px'
-          }}
+
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.disabled', mt: 3, fontSize: '12px' }}
         >
           문제가 지속되면 관리자에게 문의해주세요.
         </Typography>
@@ -1044,34 +886,31 @@ function KakaoMap({
     )
   }
 
-  // Always render the map container, but show loading overlay
   return (
     <Box
       sx={{
         width,
         height,
         position: 'relative',
-        '& > div': {
-          borderRadius: 1,
-          overflow: 'hidden'
-        },
+        '& > div': { borderRadius: 1, overflow: 'hidden' },
         ...sx
       }}
     >
-      {/* Map Container - Always Present */}
-      <div 
+      {/* 지도 컨테이너 */}
+      <div
         ref={mapContainer}
-        style={{ 
-          width: '100%', 
+        style={{
+          width: '100%',
           height: '100%',
           borderRadius: '4px',
-          position: 'relative'
+          position: 'relative',
+          transition: 'all 0.3s ease'
         }}
         role="application"
         aria-label="Kakao 지도"
       />
 
-      {/* Loading Overlay */}
+      {/* 로딩 오버레이 */}
       {isLoading && (
         <Box
           sx={{
@@ -1097,7 +936,7 @@ function KakaoMap({
         </Box>
       )}
 
-      {/* Error Overlay */}
+      {/* 오류 오버레이 */}
       {error && (
         <Box
           sx={{
@@ -1114,13 +953,9 @@ function KakaoMap({
             zIndex: 1000
           }}
         >
-          <Alert 
-            severity="error" 
-            sx={{ 
-              width: '100%', 
-              maxWidth: 400,
-              mx: 2
-            }}
+          <Alert
+            severity="error"
+            sx={{ width: '100%', maxWidth: 400, mx: 2 }}
           >
             <Typography variant="body2">
               {error}
@@ -1129,12 +964,12 @@ function KakaoMap({
         </Box>
       )}
 
-      {/* Location Error Alert */}
+      {/* 위치 오류 알림 */}
       {locationError && !circuitBreakerOpen && (
-        <Alert 
-          severity="warning" 
+        <Alert
+          severity="warning"
           onClose={() => setLocationError(null)}
-          sx={{ 
+          sx={{
             position: 'absolute',
             top: 10,
             left: 10,
@@ -1149,11 +984,11 @@ function KakaoMap({
         </Alert>
       )}
 
-      {/* Circuit Breaker Warning */}
+      {/* 서킷 브레이커 경고 */}
       {circuitBreakerOpen && !isCriticalError && (
-        <Alert 
+        <Alert
           severity="error"
-          sx={{ 
+          sx={{
             position: 'absolute',
             top: 10,
             left: 10,
@@ -1166,13 +1001,13 @@ function KakaoMap({
             위치 서비스 일시 중단
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-            반복적인 오류로 인해 위치 서비스를 일시적으로 중단했습니다. 
+            반복적인 오류로 인해 위치 서비스를 일시적으로 중단했습니다.
             {Math.ceil(ERROR_RESET_TIME / 1000)}초 후 자동으로 재시도됩니다.
           </Typography>
         </Alert>
       )}
 
-      {/* Zoom Controls */}
+      {/* 줌 컨트롤 */}
       {showZoomControls && !isLoading && !error && (
         <Box sx={{
           position: 'absolute',
@@ -1185,40 +1020,77 @@ function KakaoMap({
         }}>
           <IconButton
             onClick={handleZoomIn}
-            disabled={getCurrentZoomLevel() <= 1}
+            disabled={getCurrentZoomLevel() <= 1 || isZooming}
             sx={{
               bgcolor: 'white',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': {
-                bgcolor: 'grey.50'
-              },
-              '&:disabled': {
-                bgcolor: 'grey.100'
-              }
+              '&:hover': { bgcolor: 'grey.50' },
+              '&:disabled': { bgcolor: 'grey.100' },
+              transition: 'all 0.3s ease',
+              opacity: isZooming ? 0.7 : 1
             }}
           >
-            <ZoomIn />
+            {isZooming ? <CircularProgress size={24} /> : <ZoomIn />}
           </IconButton>
           <IconButton
             onClick={handleZoomOut}
-            disabled={getCurrentZoomLevel() >= 14}
+            disabled={getCurrentZoomLevel() >= 14 || isZooming}
             sx={{
               bgcolor: 'white',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': {
-                bgcolor: 'grey.50'
-              },
-              '&:disabled': {
-                bgcolor: 'grey.100'
-              }
+              '&:hover': { bgcolor: 'grey.50' },
+              '&:disabled': { bgcolor: 'grey.100' },
+              transition: 'all 0.3s ease',
+              opacity: isZooming ? 0.7 : 1
             }}
           >
-            <ZoomOut />
+            {isZooming ? <CircularProgress size={24} /> : <ZoomOut />}
           </IconButton>
         </Box>
       )}
 
-      {/* Location Button */}
+      {/* 마커 로딩 인디케이터 */}
+      {isMarkersLoading && (
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1001,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 1,
+          bgcolor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: 2,
+          padding: 2,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          <CircularProgress size={32} />
+          <Typography variant="caption" color="text.secondary">
+            마커 업데이트 중...
+          </Typography>
+        </Box>
+      )}
+
+      {/* 줌 로딩 오버레이 */}
+      {isZooming && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 999,
+          bgcolor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(1px)',
+          transition: 'all 0.3s ease',
+          pointerEvents: 'none'
+        }} />
+      )}
+
+      {/* 위치 버튼 */}
       {showLocationButton && !isLoading && !error && (
         <Fab
           size="small"
@@ -1233,9 +1105,7 @@ function KakaoMap({
             zIndex: 1000,
             bgcolor: 'white',
             color: locationLoading ? 'text.disabled' : 'primary.main',
-            '&:hover': {
-              bgcolor: 'grey.50'
-            },
+            '&:hover': { bgcolor: 'grey.50' },
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
         >
@@ -1246,13 +1116,13 @@ function KakaoMap({
           )}
         </Fab>
       )}
-      
-      {/* Gym Information Popup */}
+
+      {/* 체육관 정보 팝업 */}
       <GymInfoPopup
-        gym={selectedGym}
-        isOpen={isPopupOpen}
+        gym={popup.gym}
+        isOpen={popup.isOpen}
         onClose={handleClosePopup}
-        position={popupPosition}
+        position={popup.position}
         placement="center"
         onNavigateToGymDetail={onNavigateToGymDetail}
       />
