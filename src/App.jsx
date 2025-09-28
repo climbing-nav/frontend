@@ -74,7 +74,7 @@ function App() {
       case 'community':
         return <CommunityPage />
       case 'mypage':
-        return <ProfilePage />
+        return <ProfilePage onNavigateToAuth={handleNavigateToAuth} />
       case 'auth':
         return <AuthPage />
       case 'gymDetail':
@@ -95,6 +95,11 @@ function App() {
 
   const handleNavigateToAuth = () => {
     setCurrentPage('auth')
+  }
+
+  const handleNavigateToProfile = () => {
+    setCurrentPage('mypage')
+    setCurrentTab('mypage')
   }
 
   const handleNavigateToHome = () => {
@@ -153,7 +158,12 @@ function App() {
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <Header onNavigateToAuth={handleNavigateToAuth} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && (
+              <Header
+                onNavigateToAuth={handleNavigateToAuth}
+                onNavigateToProfile={handleNavigateToProfile}
+              />
+            )}
             <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
