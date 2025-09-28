@@ -43,10 +43,10 @@ function GymInfoPopup({
   onNavigateToGymDetail
 }) {
   const popupRef = useRef(null)
-  const [adjustedPosition, setAdjustedPosition] = useState(position)
-  const [actualPlacement, setActualPlacement] = useState(placement)
+  const [adjustedPosition, setAdjustedPosition] = useState({ x: 0, y: 0 })
+  const [actualPlacement, setActualPlacement] = useState('center')
 
-  // Calculate optimal popup position
+  // Center popup on screen
   useEffect(() => {
     if (!isOpen || !popupRef.current) return
 
@@ -54,55 +54,25 @@ function GymInfoPopup({
     const rect = popup.getBoundingClientRect()
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
-    
-    let newPosition = { ...position }
-    let newPlacement = placement
-
-    if (placement === 'auto') {
-      // Auto-determine best placement
-      const spaceAbove = position.y
-      const spaceBelow = viewportHeight - position.y
-      const spaceLeft = position.x
-      const spaceRight = viewportWidth - position.x
-
-      if (spaceBelow >= rect.height + 20) {
-        newPlacement = 'bottom'
-        newPosition.y = position.y + 20
-      } else if (spaceAbove >= rect.height + 20) {
-        newPlacement = 'top'
-        newPosition.y = position.y - rect.height - 20
-      } else if (spaceRight >= rect.width + 20) {
-        newPlacement = 'right'
-        newPosition.x = position.x + 20
-        newPosition.y = Math.max(20, position.y - rect.height / 2)
-      } else if (spaceLeft >= rect.width + 20) {
-        newPlacement = 'left'
-        newPosition.x = position.x - rect.width - 20
-        newPosition.y = Math.max(20, position.y - rect.height / 2)
-      } else {
-        // Center in viewport as fallback
-        newPlacement = 'center'
-        newPosition.x = (viewportWidth - rect.width) / 2
-        newPosition.y = (viewportHeight - rect.height) / 2
-      }
-    } else if (placement === 'center') {
-      // Force center placement for better mobile UX
-      newPlacement = 'center'
-      newPosition.x = (viewportWidth - rect.width) / 2
-      // 중앙보다 약간 위쪽에 배치해서 하단 버튼이 안전하게 보이도록
-      newPosition.y = (viewportHeight - rect.height) / 2 - 40
+    console.log(`뷰포트 너비: ${viewportWidth}`)   
+    if (viewportWidth <= 430) {
+    // Always center the popup
+    const newPosition = {
+      x: (viewportWidth - rect.width) / 3,
+      y: (viewportHeight - rect.height) / 10
     }
-
-    // Ensure popup stays within viewport bounds with safe area consideration
-    const safeAreaBottom = 40 // Bottom safe area for mobile devices (홈 인디케이터 + 여백)
-    const safeAreaTop = 20 // Top safe area
-    
-    newPosition.x = Math.max(10, Math.min(newPosition.x, viewportWidth - rect.width - 10))
-    newPosition.y = Math.max(safeAreaTop, Math.min(newPosition.y, viewportHeight - rect.height - safeAreaBottom))
-
     setAdjustedPosition(newPosition)
-    setActualPlacement(newPlacement)
-  }, [isOpen, position, placement])
+    setActualPlacement('center')
+    } else {
+      const newPosition = {
+        x: (viewportWidth - rect.width) / 2.1,
+        y: (viewportHeight - rect.height) / 2.7
+      }
+      setAdjustedPosition(newPosition)
+      setActualPlacement('center')
+    }
+  }, [isOpen])
+
 
   // Handle click outside to close
   useEffect(() => {
@@ -301,11 +271,25 @@ function GymInfoPopup({
               </Box>
 
               {/* Content */}
-              <Box sx={{ 
-                p: 2, 
-                flex: 1, 
+              <Box sx={{
+                p: 2,
+                flex: 1,
                 overflowY: 'auto',
-                minHeight: 0 // flex item이 정상적으로 축소되도록 함
+                minHeight: 0, // flex item이 정상적으로 축소되도록 함
+                maxHeight: 'calc(80vh - 140px)', // 헤더+푸터 높이 제외
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#c1c1c1',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: '#a8a8a8',
+                }
               }}>
                 {/* Address */}
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
