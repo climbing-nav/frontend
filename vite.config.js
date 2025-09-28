@@ -8,10 +8,10 @@ export default defineConfig({
     host: '0.0.0.0',  // 모든 네트워크 인터페이스에서 접근 허용
     port: 5173,
     strictPort: true,
-    // https: {
-    //   key: './ssl/vite-dev.key',
-    //   cert: './ssl/vite-dev.crt'
-    // },
+    https: {
+      key: './ssl/vite-dev.key',
+      cert: './ssl/vite-dev.crt'
+    },
     // 특정 호스트 명시적으로 허용
     allowedHosts: [
       'localhost',
