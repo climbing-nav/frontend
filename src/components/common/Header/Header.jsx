@@ -1,28 +1,12 @@
-import { useState } from 'react'
-import { Box, Typography, IconButton, TextField, InputAdornment, Menu, MenuItem } from '@mui/material'
-import { Person, Search } from '@mui/icons-material'
+import { useSelector } from 'react-redux'
+import { Box, Typography, TextField, InputAdornment } from '@mui/material'
+import { Search } from '@mui/icons-material'
+import { selectIsAuthenticated } from '../../../store/slices/authSlice'
+import UserProfileButton from './UserProfileButton'
+import GuestButtons from './GuestButtons'
 
-function Header({ onNavigateToAuth }) {
-  const [anchorEl, setAnchorEl] = useState(null)
-  const open = Boolean(anchorEl)
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
-  const handleLogin = () => {
-    onNavigateToAuth()
-    handleClose()
-  }
-
-  const handleSignup = () => {
-    onNavigateToAuth()
-    handleClose()
-  }
+function Header({ onNavigateToAuth, onNavigateToProfile }) {
+  const isAuthenticated = useSelector(selectIsAuthenticated)
 
   return (
     <>
@@ -63,43 +47,13 @@ function Header({ onNavigateToAuth }) {
           }}>
             🧗‍♂️ {import.meta.env.VITE_APP_NAME || '클밍여지도'}
           </Typography>
-          <IconButton 
-            onClick={handleClick}
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: 'rgba(255,255,255,0.2)',
-              color: 'white'
-            }}
-          >
-            <Person />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                minWidth: 120,
-                '& .MuiMenuItem-root': {
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  py: 1.5,
-                  px: 2,
-                  '&:hover': {
-                    bgcolor: 'rgba(102, 126, 234, 0.1)',
-                  }
-                }
-              }
-            }}
-          >
-            <MenuItem onClick={handleLogin}>로그인</MenuItem>
-            <MenuItem onClick={handleSignup}>회원가입</MenuItem>
-          </Menu>
+
+          {/* 인증 상태에 따른 조건부 렌더링 */}
+          {isAuthenticated ? (
+            <UserProfileButton onNavigateToProfile={onNavigateToProfile} />
+          ) : (
+            <GuestButtons onNavigateToAuth={onNavigateToAuth} />
+          )}
         </Box>
         
         <TextField
