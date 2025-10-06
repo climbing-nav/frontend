@@ -10,8 +10,8 @@ function Header({ onNavigateToAuth, onNavigateToProfile }) {
 
   return (
     <>
-      {/* Status Bar */}
-      <Box sx={{
+      {/* Status Bar - 사용하지 않음 */}
+      {/* <Box sx={{
         height: 44,
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -25,7 +25,7 @@ function Header({ onNavigateToAuth, onNavigateToProfile }) {
         <Typography variant="body2" sx={{ fontWeight: 600 }}>9:41</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>{import.meta.env.VITE_APP_NAME || '클밍여지도'}</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>100%🔋</Typography>
-      </Box>
+      </Box> */}
 
       {/* App Header */}
       <Box sx={{
