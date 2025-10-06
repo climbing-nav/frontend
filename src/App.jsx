@@ -167,7 +167,7 @@ function App() {
             <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {!['gymDetail', 'postCreate', 'gymList', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
             {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
