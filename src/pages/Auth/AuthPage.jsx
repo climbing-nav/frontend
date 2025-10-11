@@ -21,7 +21,7 @@ function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
   return (
     <Box sx={{ width: '393px', minHeight: '100vh', bgcolor: '#f8f9fa' }}>
       {/* Status Bar */}
-      <Box sx={{
+      {/* <Box sx={{
         height: 44,
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
@@ -35,7 +35,7 @@ function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
         <Typography variant="body2" sx={{ fontWeight: 600 }}>9:41</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>{import.meta.env.VITE_APP_NAME || '클밍여지도'}</Typography>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>100%🔋</Typography>
-      </Box>
+      </Box> */}
 
       {/* Auth Header */}
       <Box sx={{
