@@ -99,7 +99,7 @@ function CommunityPage({ onNavigateToPostDetail }) {
         ))}
       </Tabs>
 
-      <Box sx={{ px: 2.5 }}>
+      <Box sx={{ py: 2, px: 2.5 }}>
         {filteredPosts.map((post) => (
           <PostCard
             key={post.id}

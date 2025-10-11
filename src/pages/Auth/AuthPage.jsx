@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Box, Typography, Tabs, Tab, Paper, IconButton } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
+import PropTypes from 'prop-types'
 import LoginForm from '../../components/auth/LoginForm/LoginForm'
 import RegisterForm from '../../components/auth/RegisterForm/RegisterForm'
 
-function AuthPage({ onNavigateToHome }) {
-  const [tabValue, setTabValue] = useState(0)
+function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
+  const [tabValue, setTabValue] = useState(initialTab === 'signup' ? 1 : 0)
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue)
@@ -161,6 +162,11 @@ function AuthPage({ onNavigateToHome }) {
       </Box>
     </Box>
   )
+}
+
+AuthPage.propTypes = {
+  onNavigateToHome: PropTypes.func,
+  initialTab: PropTypes.oneOf(['login', 'signup'])
 }
 
 export default AuthPage

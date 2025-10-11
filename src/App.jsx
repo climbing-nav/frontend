@@ -40,6 +40,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
+  const [selectedAuthType, setSelectedAuthType] = useState('login') // 'login' or 'signup'
 
   // 앱 시작 시 쿠키 기반 인증 상태 확인
   useEffect(() => {
@@ -97,7 +98,8 @@ function App() {
     setCurrentPage(tab)
   }
 
-  const handleNavigateToAuth = () => {
+  const handleNavigateToAuth = (type = 'login') => {
+    setSelectedAuthType(type) // 'login' 또는 'signup'
     setCurrentPage('auth')
   }
 
@@ -170,7 +172,7 @@ function App() {
         position: 'relative',
       }}>
         {currentPage === 'auth' ? (
-          <AuthPage onNavigateToHome={handleNavigateToHome} />
+          <AuthPage initialTab={selectedAuthType} onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
             {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
