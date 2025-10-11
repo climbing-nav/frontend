@@ -54,6 +54,11 @@ function CommunityPage() {
     setActiveTab(newValue)
   }
 
+  // 선택된 탭에 따라 게시물 필터링
+  const filteredPosts = activeTab === 0
+    ? mockPosts // '전체' 탭인 경우 모든 게시물 표시
+    : mockPosts.filter(post => post.category === tabs[activeTab])
+
   return (
     <Box>
       <Tabs
@@ -87,7 +92,7 @@ function CommunityPage() {
       </Tabs>
 
       <Box sx={{ px: 2.5 }}>
-        {mockPosts.map((post) => (
+        {filteredPosts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
       </Box>
