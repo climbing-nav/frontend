@@ -86,9 +86,13 @@ function CommunityPage() {
         ))}
       </Tabs>
 
-      <Box sx={{ px: 2.5 }}>
-        {mockPosts.map((post) => (
-          <PostCard key={post.id} post={post} />
+      <Box sx={{ py: 2, px: 2.5 }}>
+        {filteredPosts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onCardClick={handlePostClick}
+          />
         ))}
       </Box>
     </Box>
