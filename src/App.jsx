@@ -14,6 +14,7 @@ import AuthPage from './pages/Auth/AuthPage'
 import GymDetailPage from './pages/GymDetail/GymDetailPage'
 import PostCreatePage from './pages/PostCreate/PostCreatePage'
 import GymListPage from './pages/GymList/GymListPage'
+import PostDetailPage from './pages/PostDetail/PostDetailPage'
 
 const theme = createTheme({
   palette: {
@@ -36,7 +37,7 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList'
+  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
   const [selectedAuthType, setSelectedAuthType] = useState('login') // 'login' or 'signup'
@@ -74,7 +75,7 @@ function App() {
       case 'map':
         return <MapPage onNavigateToGymDetail={handleNavigateToGymDetail} />
       case 'community':
-        return <CommunityPage />
+        return <CommunityPage onNavigateToPostDetail={handleNavigateToPostDetail} />
       case 'mypage':
         return <ProfilePage onNavigateToAuth={handleNavigateToAuth} />
       case 'auth':
@@ -85,6 +86,8 @@ function App() {
         return <PostCreatePage onNavigateBack={handleBackFromPostCreate} onPostCreated={handlePostCreated} />
       case 'gymList':
         return <GymListPage onNavigateToGymDetail={handleNavigateToGymDetail} onBack={handleBackFromGymList} />
+      case 'postDetail':
+        return <PostDetailPage post={selectedPost} onBack={handleBackFromPostDetail} />
       default:
         return <HomePage onNavigateToGymList={handleNavigateToGymList} />
     }
@@ -145,6 +148,17 @@ function App() {
     setCurrentTab('home')
   }
 
+  const handleNavigateToPostDetail = (post) => {
+    setSelectedPost(post)
+    setCurrentPage('postDetail')
+  }
+
+  const handleBackFromPostDetail = () => {
+    setSelectedPost(null)
+    setCurrentPage('community')
+    setCurrentTab('community')
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -161,17 +175,17 @@ function App() {
           <AuthPage initialTab={selectedAuthType} onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && (
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
               <Header
                 onNavigateToAuth={handleNavigateToAuth}
                 onNavigateToProfile={handleNavigateToProfile}
               />
             )}
-            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList') ? 0 : 10 }}>
+            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList' || currentPage === 'postDetail') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            {!['gymDetail', 'postCreate', 'gymList', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
+            {!['gymDetail', 'postCreate', 'gymList', 'postDetail', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
       </Box>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Box, Tabs, Tab } from '@mui/material'
+import PropTypes from 'prop-types'
 import PostCard from '../../components/community/PostCard/PostCard'
 
 const mockPosts = [
@@ -47,12 +48,24 @@ const mockPosts = [
 
 const tabs = ['전체', '자유게시판', '후기', '팁&노하우', '중고거래', '메이트모집']
 
-function CommunityPage() {
+function CommunityPage({ onNavigateToPostDetail }) {
   const [activeTab, setActiveTab] = useState(0)
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
   }
+
+  // 게시물 카드 클릭 핸들러
+  const handlePostClick = (post) => {
+    if (onNavigateToPostDetail) {
+      onNavigateToPostDetail(post)
+    }
+  }
+
+  // 선택된 탭에 따라 게시물 필터링
+  const filteredPosts = activeTab === 0
+    ? mockPosts // '전체' 탭인 경우 모든 게시물 표시
+    : mockPosts.filter(post => post.category === tabs[activeTab])
 
   return (
     <Box>
@@ -97,6 +110,10 @@ function CommunityPage() {
       </Box>
     </Box>
   )
+}
+
+CommunityPage.propTypes = {
+  onNavigateToPostDetail: PropTypes.func
 }
 
 export default CommunityPage
