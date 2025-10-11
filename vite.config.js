@@ -10,10 +10,8 @@ export default defineConfig({
     strictPort: true,
     // HMR WebSocket 설정 (Nginx가 SSL 처리)
     hmr: {
-      protocol: 'wss',
-      host: 'climbing-dev.kro.kr',
-      port: 443,
-      clientPort: 443
+      clientPort: 443,
+      host: 'climbing-dev.kro.kr'
     },
     // 특정 호스트 명시적으로 허용
     allowedHosts: [
