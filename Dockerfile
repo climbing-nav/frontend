@@ -16,9 +16,6 @@ ARG VITE_API_URL
 # Environment variables 설정 - 런타임에 사용할 환경변수
 ENV VITE_API_URL=$VITE_API_URL
 
-# SSL 디렉토리 생성 (볼륨 마운트용)
-RUN mkdir -p /app/ssl
-
 # 소스 코드 복사
 COPY . .
 
