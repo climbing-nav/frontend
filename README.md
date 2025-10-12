@@ -1,4 +1,4 @@
-# 🧗‍♀️ 클라이밍 서울 (Climbing Seoul) - Frontends
+# 🧗‍♀️ 클라이밍 서울 (Climbing Seoul) - Frontend
 
 > 서울 지역 클라이밍 애호가들을 위한 모바일 웹 애플리케이션
 
@@ -7,17 +7,23 @@
 ![Redux](https://img.shields.io/badge/Redux-2.8.2-764ABC?style=for-the-badge&logo=redux)
 ![Vite](https://img.shields.io/badge/Vite-7.0.4-646CFF?style=for-the-badge&logo=vite)
 
+## 🌐 배포 정보
+
+- **프로덕션 URL**: https://climbing-dev.kro.kr
+- **CI/CD**: GitHub Actions (자동 배포)
+- **인프라**: Docker + Nginx + SSL (Let's Encrypt)
+
 ## 📋 프로젝트 개요
 
 클라이밍 서울은 서울 및 수도권의 클라이밍 암장 정보를 제공하고, 클라이밍 커뮤니티를 연결하는 모바일 우선 웹 애플리케이션입니다.
 
 ### 🎯 주요 기능
 
-- 🗺️ **암장 지도**: 서울 지역 클라이밍 암장 위치 및 실시간 혼잡도 확인
-- 🏠 **홈**: 주변 암장 정보와 추천 암장 목록
-- 💬 **커뮤니티**: 클라이머들 간의 정보 공유 및 소통
+- 🗺️ **암장 지도**: 카카오맵 기반 암장 위치 및 실시간 혼잡도 확인
+- 🏠 **홈**: 주변 암장 지도 미리보기와 추천 암장 목록
+- 💬 **커뮤니티**: 탭별 게시물 필터링 (전체/질문/팁/후기) 및 상세보기
 - 👤 **프로필**: 개인 프로필 및 클라이밍 기록 관리
-- 🔐 **인증**: 로그인/회원가입 및 소셜 로그인 (구글, 카카오)
+- 🔐 **인증**: 소셜 로그인 (카카오) 및 회원가입
 
 ## 🛠️ 기술 스택
 
@@ -37,9 +43,15 @@
 ### HTTP 통신
 - **Axios** 1.10.0 - API 통신 및 인터셉터
 
+### 지도 & 위치
+- **Kakao Maps API** - 지도 표시 및 마커
+- **Geolocation API** - 사용자 위치 기반 기능
+
 ### 개발 도구
 - **ESLint** - 코드 품질 관리
 - **React Hook Form** 7.53.2 - 폼 관리
+- **Docker** - 컨테이너화 및 배포
+- **GitHub Actions** - CI/CD 파이프라인
 
 ## 🏗️ 프로젝트 구조
 
@@ -124,12 +136,19 @@ src/
    npm install
    ```
 
-3. **개발 서버 실행**
+3. **환경 변수 설정**
+   - `.env` 파일 생성 및 설정
+   ```bash
+   VITE_API_URL=https://climbing-dev.kro.kr
+   VITE_KAKAO_MAP_API_KEY=your_kakao_map_api_key
+   ```
+
+4. **개발 서버 실행**
    ```bash
    npm run dev
    ```
 
-4. **브라우저에서 확인**
+5. **브라우저에서 확인**
    - `http://localhost:5173`에서 애플리케이션 확인
 
 ### 빌드 및 배포
@@ -145,32 +164,46 @@ npm run preview
 npm run lint
 ```
 
+### Docker로 실행
+
+```bash
+# Docker 이미지 빌드
+docker build -t climbing-map .
+
+# 컨테이너 실행
+docker run -p 5173:5173 climbing-map
+```
+
 ## 📱 화면 구성
 
 ### 🏠 홈페이지
-- 서울 암장 통계 (24개 암장, 12개 쾌적한 곳)
-- 내 주변 암장 지도 미리보기
-- 추천 암장 목록 (어썸클라이밍, 볼더링스튜디오 등)
+- 서울 암장 통계 (24개 암장, 12개 쾌적한 곳) ✅
+- 내 주변 암장 지도 미리보기 (카카오맵 연동) ✅
+- 추천 암장 목록 (어썸클라이밍, 볼더링스튜디오 등) ✅
 
 ### 🗺️ 지도 페이지
-- 카카오 지도 API 기반 암장 위치 표시
-- 실시간 혼잡도 정보 (쾌적/보통/혼잡)
-- 현재 위치 기반 주변 암장 검색
+- 카카오맵 API 기반 암장 위치 표시 ✅
+- 실시간 혼잡도 정보 (쾌적/보통/혼잡) ✅
+- 현재 위치 기반 주변 암장 검색 ✅
+- 모바일 최적화된 마커 렌더링 ✅
 
 ### 💬 커뮤니티 페이지
-- 탭 기반 네비게이션 (전체/질문/팁/후기)
-- 게시글 목록 및 상세보기
-- 댓글 및 대댓글 시스템
+- 탭 기반 필터링 (전체/질문/팁/후기) ✅
+- 게시글 목록 및 카드 UI ✅
+- 게시글 상세보기 페이지 ✅
+- 게시글 작성 페이지 ✅
+- 댓글 시스템 (개발 중)
 
 ### 👤 프로필 페이지
-- 사용자 프로필 정보
-- 클라이밍 레벨 및 성취도
-- 설정 및 고객센터 메뉴
+- 사용자 프로필 정보 표시 ✅
+- 클라이밍 레벨 및 성취도 ✅
+- 설정 및 고객센터 메뉴 ✅
 
 ### 🔐 인증 페이지
-- 로그인/회원가입 폼
-- 소셜 로그인 (구글, 카카오)
-- 이메일 인증 플로우
+- 로그인/회원가입 UI ✅
+- 카카오 소셜 로그인 (HTTPS) ✅
+- 인증 상태 관리 (Redux) ✅
+- 회원가입 라우팅 ✅
 
 ## 🎨 디자인 시스템
 
@@ -185,87 +218,99 @@ npm run lint
 
 ## 📊 개발 현황
 
-### ✅ 완료된 기능 (50%)
+### ✅ 완료된 기능 (진행률 75%)
 
-#### 페이지 레벨
+#### 페이지
 - [x] **HomePage** - 통계, 지도 미리보기, 추천 암장 목록
-- [x] **CommunityPage** - 탭 네비게이션, 게시글 목록
-- [x] **ProfilePage** - 사용자 프로필, 메뉴 섹션
-- [x] **AuthPage** - 로그인/회원가입 인터페이스
+- [x] **MapPage** - 카카오맵 기반 암장 지도 (모바일 최적화)
+- [x] **CommunityPage** - 탭 필터링, 게시글 목록
+- [x] **PostDetailPage** - 게시글 상세보기
+- [x] **PostCreatePage** - 게시글 작성
+- [x] **ProfilePage** - 사용자 프로필, 메뉴
+- [x] **AuthPage** - 로그인/회원가입
+- [x] **GymDetailPage** - 암장 상세 정보
+- [x] **GymListPage** - 암장 목록
 
 #### 공통 컴포넌트
 - [x] **Header** - 검색바, 프로필 버튼
 - [x] **BottomNavigation** - 4개 탭 네비게이션
 - [x] **FAB** - 플로팅 액션 버튼
-
-#### 상태 관리 & 서비스
-- [x] **Redux Slices** - auth, gym, community, map 슬라이스
-- [x] **Custom Hooks** - useAuth, useGyms, useMap, usePosts
-- [x] **Services** - API 서비스 레이어
-- [x] **LoginForm** - 완전한 로그인 폼 (Redux 연동, 유효성 검사, 에러 처리)
-
-### 🚧 개발 중인 기능 (진행률 50%)
+- [x] **CongestionBadge** - 혼잡도 표시 컴포넌트
 
 #### 인증 시스템
-- [x] **LoginForm** - 이메일/비밀번호, 소셜 로그인 UI
-- [ ] **RegisterForm** - 회원가입 폼 구현 필요
-- [ ] **SocialLogin** - OAuth 연동 구현 필요
-
-#### 암장 관련
-- [x] **GymCard** - 암장 카드 컴포넌트
-- [ ] **GymDetail** - 암장 상세 정보
-- [ ] **GymList** - 암장 목록 및 필터
-
-#### 커뮤니티
-- [x] **PostCard** - 게시글 카드 컴포넌트
-- [ ] **PostForm** - 게시글 작성/수정
-- [ ] **PostList** - 게시글 목록
-- [ ] **CommentForm** - 댓글 작성
-- [ ] **CommentList** - 댓글 목록
+- [x] **LoginForm** - 로그인 폼 (유효성 검사)
+- [x] **RegisterForm** - 회원가입 폼
+- [x] **SocialLogin** - 카카오 OAuth (HTTPS)
+- [x] **AuthInitializer** - 인증 상태 초기화
+- [x] **EmailVerification** - 이메일 인증
 
 #### 지도 기능
-- [ ] **KakaoMap** - 카카오 지도 API 연동
-- [ ] **GymMarker** - 암장 마커 및 클러스터링
-- [ ] **CongestionBadge** - 혼잡도 표시
+- [x] **KakaoMap** - 카카오맵 API 연동
+- [x] **GymMarker** - 암장 마커 렌더링
+- [x] **모바일 최적화** - 메모리 효율적인 마커 관리
 
-#### 공통 컴포넌트
-- [ ] **Loading** - 스켈레톤/스피너 로딩
-- [ ] **Modal** - 재사용 가능한 모달
-- [ ] **Footer** - 푸터 컴포넌트
+#### 상태 관리 & 서비스
+- [x] **Redux Slices** - auth, gym, community, map
+- [x] **Custom Hooks** - useAuth, useGyms, useMap, usePosts, useKakaoAuth
+- [x] **API Services** - 백엔드 API 통신 레이어
+
+#### 인프라 & 배포
+- [x] **Docker** - 컨테이너화
+- [x] **Nginx** - 리버스 프록시 및 SSL
+- [x] **GitHub Actions** - CI/CD 파이프라인
+- [x] **도메인 & SSL** - HTTPS 적용 (climbing-dev.kro.kr)
+
+### 🚧 개발 중인 기능
+
+#### 커뮤니티
+- [ ] **CommentForm** - 댓글 작성 기능
+- [ ] **CommentList** - 댓글 목록 및 대댓글
+- [ ] **게시글 수정/삭제** - CRUD 완성
+
+#### 추가 기능
+- [ ] **알림 시스템** - 실시간 알림
+- [ ] **검색 기능** - 암장/게시글 통합 검색
+- [ ] **북마크** - 암장 즐겨찾기
 
 ## 🛣️ 로드맵
 
-### Phase 1: 핵심 기능 완성 (4주)
-- [ ] 인증 시스템 완전 구현
-- [ ] 지도 기능 (카카오 지도 API)
-- [ ] 암장 상세 정보 페이지
+### Phase 1: 핵심 기능 완성 ✅ (완료)
+- [x] 인증 시스템 구현 (카카오 소셜 로그인)
+- [x] 지도 기능 (카카오맵 API, 모바일 최적화)
+- [x] 암장 상세 정보 페이지
+- [x] 배포 인프라 구축 (Docker, Nginx, SSL)
 
-### Phase 2: 커뮤니티 기능 확장 (3주)
-- [ ] 게시글 관리 시스템
+### Phase 2: 커뮤니티 기능 구현 🚧 (진행 중)
+- [x] 게시글 CRUD 시스템
+- [x] 탭별 필터링 기능
 - [ ] 댓글 및 대댓글 기능
-- [ ] 검색 및 필터링
+- [ ] 통합 검색 기능
 
-### Phase 3: 사용자 경험 향상 (2주)
-- [ ] 로딩 상태 및 애니메이션
-- [ ] 알림 시스템
-- [ ] 성능 최적화
+### Phase 3: 사용자 경험 향상 (예정)
+- [ ] 실시간 알림 시스템
+- [ ] 암장 북마크 기능
+- [ ] 성능 최적화 (이미지 lazy loading, 코드 스플리팅)
+- [ ] PWA 기능 (오프라인 지원)
 
 ## 🤝 기여 방법
 
 1. **이슈 확인**: [GitHub Issues](https://github.com/climbing-nav/frontend/issues)
 2. **브랜치 생성**: `feature/기능명` 또는 `fix/버그명`
-3. **커밋 컨벤션**:
-   - `feat: 새로운 기능`
-   - `fix: 버그 수정`
-   - `docs: 문서 수정`
-   - `style: 코드 포맷팅`
-   - `refactor: 리팩토링`
+3. **커밋 컨벤션** (Emoji 포함):
+   - `✨ feat: 새로운 기능`
+   - `🐛 fix: 버그 수정`
+   - `📝 docs: 문서 수정`
+   - `🎨 style: 코드 포맷팅`
+   - `♻️ refactor: 리팩토링`
+   - `🔧 chore: 설정 변경`
+   - `🔥 hotfix: 긴급 수정`
 4. **Pull Request 생성**
+5. **자동 배포**: main 브랜치 머지 시 자동 배포됨
 
 ## 📞 문의 및 지원
 
 - **GitHub Issues**: [버그 리포트 및 기능 요청](https://github.com/climbing-nav/frontend/issues)
-- **이메일**: climbing.seoul@example.com
+- **이메일**: 추후 추가
 
 ## 📄 라이선스
 
