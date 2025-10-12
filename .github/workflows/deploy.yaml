@@ -47,11 +47,11 @@ jobs:
           
           # 새 컨테이너 실행
           docker run -d \
-            --name climbing-frontend \
+            --name climbing_map \
             -p 5173:5173 \
             -e VITE_API_URL="${{ secrets.VITE_API_URL }}" \
             --restart unless-stopped \
-            ${{ secrets.DOCKER_USERNAME }}/climbing-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
           
           # 사용하지 않는 이미지 정리
           docker image prune -f
