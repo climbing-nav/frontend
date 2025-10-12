@@ -3,24 +3,24 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main ]
-    
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-    
+
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
@@ -30,7 +30,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: VITE_API_URL=${{ secrets.VITE_API_URL }}
-    
+
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
       with:
@@ -38,21 +38,19 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         script: |
-          # Docker 이미지 pull
+          # 홈 디렉토리로 이동
+          cd ~
+
+          # 기존 단독 실행 컨테이너 제거 (포트 충돌 방지)
+          docker stop climbing_map 2>/dev/null || true
+          docker rm climbing_map 2>/dev/null || true
+
+          # 최신 이미지 pull
           docker pull ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
-          
-          # 기존 컨테이너 중지 및 제거
-          docker stop climbing_map || true
-          docker rm climbing_map || true
-          
-          # 새 컨테이너 실행
-          docker run -d \
-            --name climbing_map \
-            -p 5173:5173 \
-            -e VITE_API_URL="${{ secrets.VITE_API_URL }}" \
-            --restart unless-stopped \
-            ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
-          
+
+          # docker-compose로 frontend 서비스만 재시작
+          docker-compose pull frontend
+          docker-compose up -d --no-deps frontend
+
           # 사용하지 않는 이미지 정리
           docker image prune -f
-
