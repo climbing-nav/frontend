@@ -5,7 +5,7 @@ export const useKakaoAuth = () => {
   const signInWithKakao = useCallback(() => {
     try {
       // 백엔드의 카카오 OAuth 시작 엔드포인트로 리다이렉트
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://13.125.229.39:8080'
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://climbing-dev.kro.kr'
       window.location.href = `${backendUrl}/auth/kakao/login`
     } catch (error) {
       console.error('카카오 로그인 리다이렉트 실패:', error)
