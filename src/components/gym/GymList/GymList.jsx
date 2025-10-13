@@ -85,15 +85,16 @@ function GymList() {
 
       {/* Filter and Sort Controls */}
       <Box sx={{ mb: 3 }}>
-        <FilterControls 
-          filters={filters}
-          onChange={handleFilterChange}
-        />
         <SortControls 
           sortBy={sortBy}
           sortOrder={sortOrder}
           onChange={handleSortChange}
         />
+        <FilterControls 
+          filters={filters}
+          onChange={handleFilterChange}
+        />
+
       </Box>
 
       {/* Results Summary */}
