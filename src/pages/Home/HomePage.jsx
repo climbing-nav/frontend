@@ -299,7 +299,11 @@ function HomePage({ onNavigateToGymList }) {
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
             내 주변 암장
           </Typography>
-          <Button variant="text" sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}>
+          <Button
+            variant="text"
+            sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}
+            onClick={handleMoreButtonClick}
+          >
             전체보기
           </Button>
         </Box>
@@ -332,13 +336,13 @@ function HomePage({ onNavigateToGymList }) {
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
             추천 암장
           </Typography>
-          <Button 
+          {/* <Button 
             variant="text" 
             sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}
             onClick={handleMoreButtonClick}
           >
             더보기
-          </Button>
+          </Button> */}
         </Box>
         
         {mockGyms.map((gym) => (

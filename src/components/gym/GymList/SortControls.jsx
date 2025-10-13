@@ -44,9 +44,10 @@ function SortControls({ sortBy, sortOrder, onChange }) {
   return (
     <Box sx={{ 
       display: 'flex', 
-      alignItems: 'center', 
+      alignItems: 'center',
       gap: 2,
-      mb: 1
+      mb: 3,
+      mt: 2
     }}>
       <SwapVert sx={{ fontSize: 20, color: '#6b7280' }} />
       
