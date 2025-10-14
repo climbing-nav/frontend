@@ -1,40 +1,41 @@
 import { Box, Typography, Grid, Paper, Button } from '@mui/material'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import GymCard from '../../components/gym/GymCard/GymCard'
+import { mockGyms } from '../../data/mockGyms'
 
-const mockGyms = [
-  {
-    id: 1,
-    name: '어썸클라이밍 강남점',
-    address: '서울 강남구 테헤란로',
-    tags: ['볼더링', '리드'],
-    crowdedness: 'comfortable',
-    logo: 'A',
-    lat: 37.5012,
-    lng: 127.0396
-  },
-  {
-    id: 2,
-    name: '볼더링스튜디오 홍대',
-    address: '서울 마포구 와우산로',
-    tags: ['볼더링', '24시간'],
-    crowdedness: 'moderate',
-    logo: 'B',
-    lat: 37.5563,
-    lng: 126.9233
-  },
-  {
-    id: 3,
-    name: '클라임플러스 성수',
-    address: '서울 성동구 성수일로',
-    tags: ['볼더링', '루프톱'],
-    crowdedness: 'crowded',
-    logo: 'C',
-    lat: 37.5443,
-    lng: 127.0557
-  }
-]
+// const mockGyms = [
+//   {
+//     id: 1,
+//     name: '어썸클라이밍 강남점',
+//     address: '서울 강남구 테헤란로',
+//     tags: ['볼더링', '리드'],
+//     crowdedness: 'comfortable',
+//     logo: 'A',
+//     lat: 37.5012,
+//     lng: 127.0396
+//   },
+//   {
+//     id: 2,
+//     name: '볼더링스튜디오 홍대',
+//     address: '서울 마포구 와우산로',
+//     tags: ['볼더링', '24시간'],
+//     crowdedness: 'moderate',
+//     logo: 'B',
+//     lat: 37.5563,
+//     lng: 126.9233
+//   },
+//   {
+//     id: 3,
+//     name: '클라임플러스 성수',
+//     address: '서울 성동구 성수일로',
+//     tags: ['볼더링', '루프톱'],
+//     crowdedness: 'crowded',
+//     logo: 'C',
+//     lat: 37.5443,
+//     lng: 127.0557
+//   }
+// ]
 
 // 유틸리티 함수: Haversine 공식으로 거리 계산 (km)
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -53,7 +54,7 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
 const getCongestionColor = (congestion) => {
   const colors = {
     comfortable: '#10b981',
-    moderate: '#f59e0b',
+    normal: '#f59e0b',
     crowded: '#ef4444'
   }
   return colors[congestion] || '#9E9E9E'
@@ -88,6 +89,12 @@ function HomePage({ onNavigateToGymList }) {
   const userMarkerRef = useRef(null)
 
   const [userLocation, setUserLocation] = useState(null)
+
+  // 동적 통계 계산
+  const totalGymsCount = useMemo(() => mockGyms.length, [])
+  const comfortableGymsCount = useMemo(() => {
+    return mockGyms.filter(gym => gym.congestion === 'comfortable').length
+  }, [])
 
   const handleMoreButtonClick = () => {
     if (onNavigateToGymList) {
@@ -260,7 +267,7 @@ function HomePage({ onNavigateToGymList }) {
               color: '#667eea',
               mb: 0.5
             }}>
-              24
+              {totalGymsCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               서울 암장
@@ -279,7 +286,7 @@ function HomePage({ onNavigateToGymList }) {
               color: '#667eea',
               mb: 0.5
             }}>
-              12
+              {comfortableGymsCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               쾌적한 곳
