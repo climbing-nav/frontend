@@ -10,6 +10,7 @@ export const mockGyms = [
     congestion: "comfortable", // comfortable, normal, crowded
     rating: 4.5,
     reviewCount: 128,
+    logo: "A",
     phone: "02-336-1234",
     website: "https://theclimb-hongdae.com",
     type: "실내 클라이밍",
@@ -75,7 +76,7 @@ export const mockGyms = [
         isHelpful: true
       }
     ],
-    image: "/images/gym1.jpg"
+    // image: "/images/gym1.jpg"
   },
   {
     id: 2,
@@ -87,6 +88,7 @@ export const mockGyms = [
     congestion: "normal",
     rating: 4.3,
     reviewCount: 95,
+    logo: "B",
     phone: "02-555-9876",
     website: "https://climbingpark-gangnam.co.kr",
     type: "실내 클라이밍",
@@ -97,7 +99,7 @@ export const mockGyms = [
     facilities: ["볼더링", "리드클라이밍", "키즈존", "샤워실"],
     tags: ["패밀리 친화", "키즈 전용", "주차 가능"],
     description: "강남 중심가에 위치한 가족 단위 방문객을 위한 클라이밍 파크입니다. 어린이 전용 구역과 다양한 난이도의 루트를 제공합니다.",
-    image: "/images/gym2.jpg"
+    // image: "/images/gym2.jpg"
   },
   {
     id: 3,
@@ -107,10 +109,11 @@ export const mockGyms = [
     lng: 127.0697,
     congestion: "crowded",
     rating: 4.2,
+    logo: "C",
     phone: "02-444-5555",
     operatingHours: "06:30-23:30",
     facilities: ["볼더링", "리드클라이밍", "샤워실", "카페"],
-    image: "/images/gym3.jpg"
+    // image: "/images/gym3.jpg"
   },
   {
     id: 4,
@@ -120,10 +123,11 @@ export const mockGyms = [
     lng: 127.0557,
     congestion: "comfortable",
     rating: 4.7,
+    logo: "D",
     phone: "02-333-7777",
     operatingHours: "24시간",
     facilities: ["볼더링", "리드클라이밍", "샤워실", "주차장", "카페"],
-    image: "/images/gym4.jpg"
+    // image: "/images/gym4.jpg"
   },
   {
     id: 5,
@@ -133,10 +137,11 @@ export const mockGyms = [
     lng: 126.9947,
     congestion: "normal",
     rating: 4.1,
+    logo: "E",
     phone: "02-222-8888",
     operatingHours: "08:00-22:00",
     facilities: ["볼더링", "샤워실"],
-    image: "/images/gym5.jpg"
+    // image: "/images/gym5.jpg"
   },
   {
     id: 6,
@@ -146,10 +151,11 @@ export const mockGyms = [
     lng: 127.1028,
     congestion: "crowded",
     rating: 4.4,
+    logo: "F",
     phone: "02-111-9999",
     operatingHours: "06:00-24:00",
     facilities: ["볼더링", "리드클라이밍", "샤워실", "주차장", "키즈존"],
-    image: "/images/gym6.jpg"
+    // image: "/images/gym6.jpg"
   },
   {
     id: 7,
@@ -159,10 +165,11 @@ export const mockGyms = [
     lng: 126.9425,
     congestion: "comfortable",
     rating: 4.0,
+    logo: "G",
     phone: "02-777-1111",
     operatingHours: "07:00-23:00",
     facilities: ["볼더링", "리드클라이밍"],
-    image: "/images/gym7.jpg"
+    // image: "/images/gym7.jpg"
   },
   {
     id: 8,
@@ -172,10 +179,11 @@ export const mockGyms = [
     lng: 127.0617,
     congestion: "normal",
     rating: 4.3,
+    logo: "H",
     phone: "02-888-2222",
     operatingHours: "06:00-22:00",
     facilities: ["볼더링", "리드클라이밍", "샤워실", "주차장"],
-    image: "/images/gym8.jpg"
+    // image: "/images/gym8.jpg"
   }
 ]
 
