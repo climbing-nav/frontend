@@ -96,6 +96,19 @@ function HomePage({ onNavigateToGymList }) {
     return mockGyms.filter(gym => gym.congestion === 'comfortable').length
   }, [])
 
+  // 가장 가까운 암장 3개 계산
+  const nearestGyms = useMemo(() => {
+    if (!userLocation) return mockGyms.slice(0, 3)
+
+    return mockGyms
+      .map(gym => ({
+        ...gym,
+        distance: calculateDistance(userLocation.lat, userLocation.lng, gym.lat, gym.lng)
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 3)
+  }, [userLocation])
+
   const handleMoreButtonClick = () => {
     if (onNavigateToGymList) {
       onNavigateToGymList()
@@ -118,19 +131,6 @@ function HomePage({ onNavigateToGymList }) {
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     )
-  }, [])
-
-  // 가장 가까운 암장 3개 찾기
-  const findNearestGyms = useCallback((location, gyms) => {
-    if (!location || !gyms || gyms.length === 0) return gyms.slice(0, 3)
-
-    return gyms
-      .map(gym => ({
-        ...gym,
-        distance: calculateDistance(location.lat, location.lng, gym.lat, gym.lng)
-      }))
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 3)
   }, [])
 
   // 지도 초기화 및 마커 표시
@@ -184,9 +184,6 @@ function HomePage({ onNavigateToGymList }) {
       userMarkerRef.current = null
     }
 
-    const location = userLocation || { lat: 37.5665, lng: 126.9780 }
-    const nearestGyms = findNearestGyms(userLocation, mockGyms)
-
     // 사용자 위치 마커
     if (userLocation) {
       const userPos = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
@@ -211,7 +208,7 @@ function HomePage({ onNavigateToGymList }) {
     nearestGyms.forEach(gym => {
       const position = new window.kakao.maps.LatLng(gym.lat, gym.lng)
       const markerImage = new window.kakao.maps.MarkerImage(
-        createGymMarkerImage(gym.crowdedness),
+        createGymMarkerImage(gym.congestion),
         new window.kakao.maps.Size(24, 30),
         { offset: new window.kakao.maps.Point(12, 30) }
       )
@@ -239,7 +236,7 @@ function HomePage({ onNavigateToGymList }) {
     })
 
     mapInstance.current.setBounds(bounds, 30, 30, 30, 30)
-  }, [userLocation, findNearestGyms])
+  }, [userLocation, nearestGyms])
 
   // 정리
   useEffect(() => {
@@ -343,16 +340,16 @@ function HomePage({ onNavigateToGymList }) {
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
             추천 암장
           </Typography>
-          {/* <Button 
-            variant="text" 
+          {/* <Button
+            variant="text"
             sx={{ color: '#667eea', fontSize: 14, fontWeight: 500 }}
             onClick={handleMoreButtonClick}
           >
             더보기
           </Button> */}
         </Box>
-        
-        {mockGyms.map((gym) => (
+
+        {nearestGyms.map((gym) => (
           <GymCard key={gym.id} gym={gym} />
         ))}
       </Box>

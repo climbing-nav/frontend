@@ -1,9 +1,9 @@
 import { Box, Typography, Chip, Paper, Rating, Skeleton } from '@mui/material'
 import { LocationOn, Star } from '@mui/icons-material'
 
-const crowdednessConfig = {
+const congestionConfig = {
   comfortable: { label: '쾌적', color: '#10b981' },
-  moderate: { label: '보통', color: '#f59e0b' },
+  normal: { label: '보통', color: '#f59e0b' },
   crowded: { label: '혼잡', color: '#ef4444' }
 }
 
@@ -33,7 +33,7 @@ function GymCard({ gym, onClick, loading = false }) {
     )
   }
 
-  const crowdedness = crowdednessConfig[gym.crowdedness] || crowdednessConfig.comfortable
+  const congestion = congestionConfig[gym.congestion] || congestionConfig.comfortable
   
   const handleClick = () => {
     if (onClick) {
@@ -152,7 +152,7 @@ function GymCard({ gym, onClick, loading = false }) {
       </Box>
       
       <Box sx={{
-        bgcolor: crowdedness.color,
+        bgcolor: congestion.color,
         color: 'white',
         px: 1.5,
         py: 1,
@@ -163,7 +163,7 @@ function GymCard({ gym, onClick, loading = false }) {
         minWidth: 60,
         flexShrink: 0
       }}>
-        {crowdedness.label}
+        {congestion.label}
       </Box>
     </Paper>
   )
