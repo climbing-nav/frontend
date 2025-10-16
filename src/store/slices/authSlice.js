@@ -4,10 +4,20 @@ import { authStorage } from '../../utils/authStorage'
 
 // 쿠키에서 JWT 토큰을 읽는 유틸리티 함수
 const getCookieValue = (name) => {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop().split(';').shift()
-  return null
+  // 서버 사이드 렌더링 환경 체크
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  try {
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
+    if (parts.length === 2) return parts.pop().split(';').shift()
+    return null
+  } catch (error) {
+    console.error('쿠키 읽기 실패:', error)
+    return null
+  }
 }
 
 // JWT 토큰 디코딩 함수 (간단한 payload 추출)
@@ -245,13 +255,16 @@ export const initializeAuthAsync = createAsyncThunk(
   }
 )
 
+// 서버 사이드 렌더링 환경에서는 기본값 사용
+const isBrowser = typeof window !== 'undefined'
+
 const initialState = {
-  user: authStorage.getUserData(),
-  isAuthenticated: authStorage.hasValidAuth(),
+  user: isBrowser ? authStorage.getUserData() : null,
+  isAuthenticated: isBrowser ? authStorage.hasValidAuth() : false,
   loading: false,
   error: null,
-  token: authStorage.getToken(),
-  authProvider: authStorage.getAuthProvider(),
+  token: isBrowser ? authStorage.getToken() : null,
+  authProvider: isBrowser ? authStorage.getAuthProvider() : null,
   isInitialized: false,
 }
 
