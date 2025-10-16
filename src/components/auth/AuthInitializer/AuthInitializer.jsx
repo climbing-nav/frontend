@@ -1,13 +1,14 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { initializeAuthAsync, selectIsAuthInitialized, selectAuthLoading } from '../../../store/slices/authSlice'
+import { checkCookieAuthAsync, selectIsAuthInitialized, selectAuthLoading } from '../../../store/slices/authSlice'
 
 /**
  * AuthInitializer Component
- * 앱 시작 시 로컬 스토리지에서 인증 상태를 복원하는 컴포넌트
- * 
+ * 앱 시작 시 쿠키와 로컬 스토리지에서 인증 상태를 복원하는 컴포넌트
+ *
  * 기능:
- * - 로컬 스토리지에서 토큰과 사용자 정보 확인
+ * - 쿠키에서 JWT 토큰 확인 (카카오 로그인 등)
+ * - 로컬 스토리지에서 토큰과 사용자 정보 확인 (fallback)
  * - 토큰 만료 검사 및 자동 갱신 시도
  * - 인증 상태가 복원될 때까지 로딩 표시
  */
@@ -19,7 +20,7 @@ function AuthInitializer({ children }) {
   useEffect(() => {
     // 인증 상태가 아직 초기화되지 않았을 때만 실행
     if (!isInitialized) {
-      dispatch(initializeAuthAsync())
+      dispatch(checkCookieAuthAsync())
     }
   }, [dispatch, isInitialized])
 

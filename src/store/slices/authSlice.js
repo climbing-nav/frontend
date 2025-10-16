@@ -105,33 +105,45 @@ export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
-      // 쿠키에서 JWT 토큰 확인
-      const cookieToken = getCookieValue('APP_SESSION')
+      // 쿠키에서 ACCESS 토큰 확인 (보안: HttpOnly 쿠키 권장)
+      const accessToken = getCookieValue('ACCESS')
+      const refreshToken = getCookieValue('REFRESH')
 
-      if (cookieToken) {
+      if (accessToken) {
         // JWT 토큰 디코딩하여 사용자 정보 추출
-        const decoded = decodeJWT(cookieToken)
+        const decoded = decodeJWT(accessToken)
 
         if (decoded && decoded.exp && Date.now() < decoded.exp * 1000) {
           // 토큰이 유효한 경우 사용자 정보 구성
           const user = {
-            id: decoded.sub,
+            id: decoded.sub || decoded.id || decoded.user_id,
             email: decoded.email || '',
-            nickname: decoded.nickname || '',
-            avatar: decoded.avatar || '',
+            nickname: decoded.nickname || decoded.name || '',
+            avatar: decoded.avatar || decoded.picture || '',
           }
 
-          const provider = decoded.kp || 'email' // 카카오는 'kakao', 일반 로그인은 'email'
+          // 카카오 로그인인지 확인 (provider 필드 또는 토큰 내용으로 판단)
+          const provider = decoded.provider || decoded.kp || 'kakao'
+
+          // [보안] 쿠키 기반 인증 사용 시 LocalStorage 저장 불필요
+          // 쿠키는 HttpOnly로 설정하여 XSS 공격으로부터 보호 가능
+          // LocalStorage는 JavaScript로 접근 가능하여 XSS에 취약
+          // authStorage.setToken(accessToken)
+          // authStorage.setUserData(user)
+          // authStorage.setAuthProvider(provider)
+          // if (refreshToken) {
+          //   authStorage.setRefreshToken(refreshToken)
+          // }
 
           return {
             user,
-            token: cookieToken,
+            token: accessToken,
             provider
           }
         }
       }
 
-      // 로컬 스토리지에서 fallback 체크
+      // 로컬 스토리지에서 fallback 체크 (이메일 로그인 등 쿠키를 사용하지 않는 경우)
       const token = authStorage.getToken()
       const userData = authStorage.getUserData()
       const provider = authStorage.getAuthProvider()
@@ -422,12 +434,13 @@ const authSlice = createSlice({
           state.token = action.payload.token
           state.authProvider = action.payload.provider
 
-          // 카카오 로그인인 경우 로컬 스토리지에도 저장 (선택적)
-          if (action.payload.provider === 'kakao') {
-            authStorage.setToken(action.payload.token)
-            authStorage.setUserData(action.payload.user)
-            authStorage.setAuthProvider('kakao')
-          }
+          // [보안] 쿠키 기반 인증 사용 시 LocalStorage 저장 불필요
+          // 쿠키(HttpOnly)가 XSS 공격으로부터 더 안전함
+          // if (action.payload.provider === 'kakao') {
+          //   authStorage.setToken(action.payload.token)
+          //   authStorage.setUserData(action.payload.user)
+          //   authStorage.setAuthProvider('kakao')
+          // }
         } else {
           state.isAuthenticated = false
           state.user = null
