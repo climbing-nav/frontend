@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
-import { authStorage } from '../../utils/authStorage'
 
 // httpOnly 쿠키 사용 시:
 // - document.cookie로 쿠키 읽기 불가능 (XSS 방어)
@@ -66,15 +65,7 @@ export const registerAsync = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await authService.register(userData)
-      // 회원가입 성공 후 토큰을 로컬 스토리지에 저장
-      if (response.token) {
-        authStorage.setToken(response.token)
-        authStorage.setUserData(response.user)
-        authStorage.setAuthProvider('email')
-        if (response.refresh_token) {
-          authStorage.setRefreshToken(response.refresh_token)
-        }
-      }
+      // 서버가 Set-Cookie로 쿠키 설정 (자동 로그인)
       return response
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || '회원가입에 실패했습니다.')
@@ -84,144 +75,47 @@ export const registerAsync = createAsyncThunk(
 
 // httpOnly 쿠키 기반 인증 상태 확인을 위한 thunk
 // ⚠️ httpOnly 쿠키는 JavaScript로 읽을 수 없음
-// 대신 서버 API(/auth/me)를 호출하여 인증 상태 확인
+// 서버 API(/auth/me)를 호출하여 인증 상태 확인
 export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
-      // 방법 1: httpOnly 쿠키 방식 - 서버 API로 인증 상태 확인
-      try {
-        // 서버가 httpOnly 쿠키를 확인하고 사용자 정보 반환
-        // withCredentials: true로 쿠키가 자동 전송됨
-        const user = await authService.getCurrentUser()
+      // 서버가 httpOnly 쿠키를 확인하고 사용자 정보 반환
+      // withCredentials: true로 쿠키가 자동 전송됨
+      const user = await authService.getCurrentUser()
 
-        if (user && user.id) {
-          // 서버에서 인증 성공
-          const provider = user.provider || 'kakao'
+      if (user && user.id) {
+        // 서버에서 인증 성공
+        const provider = user.provider || 'email'
 
-          return {
-            user,
-            token: null, // httpOnly 쿠키 사용 시 클라이언트에 토큰 노출 안 함
-            provider
-          }
+        return {
+          user,
+          token: null, // httpOnly 쿠키 사용 시 클라이언트에 토큰 노출 안 함
+          provider
         }
-      } catch (apiError) {
-        // 401 또는 서버 에러: 쿠키가 없거나 만료됨
-        console.log('쿠키 인증 실패, localStorage fallback 시도')
       }
 
-      // 방법 2: localStorage fallback (이메일 로그인 등 레거시 지원)
-      const token = authStorage.getToken()
-      const userData = authStorage.getUserData()
-      const provider = authStorage.getAuthProvider()
-
-      if (!token || !userData) {
+      // 사용자 정보가 없으면 미인증 상태
+      return { user: null, token: null, provider: null }
+    } catch (error) {
+      // 401 또는 서버 에러: 쿠키가 없거나 만료됨
+      if (error.response?.status === 401) {
         return { user: null, token: null, provider: null }
       }
-
-      // 토큰이 만료되었는지 확인
-      if (authStorage.isTokenExpired(token)) {
-        const refreshToken = authStorage.getRefreshToken()
-        if (refreshToken) {
-          try {
-            // 토큰 갱신 시도
-            const refreshResponse = await authService.refreshToken()
-            authStorage.setToken(refreshResponse.token)
-            if (refreshResponse.refresh_token) {
-              authStorage.setRefreshToken(refreshResponse.refresh_token)
-            }
-            return {
-              user: userData,
-              token: refreshResponse.token,
-              provider
-            }
-          } catch (refreshError) {
-            // 토큰 갱신 실패시 로그아웃 처리
-            authStorage.clearAuthData()
-            return { user: null, token: null, provider: null }
-          }
-        } else {
-          // Refresh token이 없으면 로그아웃 처리
-          authStorage.clearAuthData()
-          return { user: null, token: null, provider: null }
-        }
-      }
-
-      return {
-        user: userData,
-        token,
-        provider
-      }
-    } catch (error) {
-      authStorage.clearAuthData()
-      return rejectWithValue('인증 상태 초기화에 실패했습니다.')
+      return rejectWithValue('인증 상태 확인에 실패했습니다.')
     }
   }
 )
 
-// 기존 로컬 스토리지 기반 초기화 (호환성을 위해 유지)
-export const initializeAuthAsync = createAsyncThunk(
-  'auth/initializeAuthAsync',
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = authStorage.getToken()
-      const userData = authStorage.getUserData()
-      const provider = authStorage.getAuthProvider()
-
-      if (!token || !userData) {
-        return { user: null, token: null, provider: null }
-      }
-
-      // 토큰이 만료되었는지 확인
-      if (authStorage.isTokenExpired(token)) {
-        const refreshToken = authStorage.getRefreshToken()
-        if (refreshToken) {
-          try {
-            // 토큰 갱신 시도
-            const refreshResponse = await authService.refreshToken()
-            authStorage.setToken(refreshResponse.token)
-            if (refreshResponse.refresh_token) {
-              authStorage.setRefreshToken(refreshResponse.refresh_token)
-            }
-            return {
-              user: userData,
-              token: refreshResponse.token,
-              provider
-            }
-          } catch (refreshError) {
-            // 토큰 갱신 실패시 로그아웃 처리
-            authStorage.clearAuthData()
-            return { user: null, token: null, provider: null }
-          }
-        } else {
-          // Refresh token이 없으면 로그아웃 처리
-          authStorage.clearAuthData()
-          return { user: null, token: null, provider: null }
-        }
-      }
-
-      return {
-        user: userData,
-        token,
-        provider
-      }
-    } catch (error) {
-      authStorage.clearAuthData()
-      return rejectWithValue('인증 상태 초기화에 실패했습니다.')
-    }
-  }
-)
-
-// 서버 사이드 렌더링 환경에서는 기본값 사용
-const isBrowser = typeof window !== 'undefined'
-
+// httpOnly 쿠키 기반 인증에서는 localStorage 불필요
+// 모든 인증 상태는 서버 API로 확인
 const initialState = {
-  user: isBrowser ? authStorage.getUserData() : null,
-  isAuthenticated: isBrowser ? authStorage.hasValidAuth() : false,
+  user: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
-  token: isBrowser ? authStorage.getToken() : null,
-  authProvider: isBrowser ? authStorage.getAuthProvider() : null,
+  token: null, // httpOnly 쿠키 사용 시 항상 null
+  authProvider: null,
   isInitialized: false,
 }
 
@@ -237,14 +131,9 @@ const authSlice = createSlice({
       state.loading = false
       state.isAuthenticated = true
       state.user = action.payload.user
-      state.token = action.payload.token
+      state.token = null // httpOnly 쿠키 사용
       state.authProvider = action.payload.provider || 'email'
       state.error = null
-      
-      // 로컬 스토리지에 저장
-      authStorage.setToken(action.payload.token)
-      authStorage.setUserData(action.payload.user)
-      authStorage.setAuthProvider(action.payload.provider || 'email')
     },
     loginFailure: (state, action) => {
       state.loading = false
@@ -261,9 +150,6 @@ const authSlice = createSlice({
       state.token = null
       state.authProvider = null
       state.loading = false
-      
-      // 로컬 스토리지 정리
-      authStorage.clearAuthData()
     },
     clearError: (state) => {
       state.error = null
@@ -273,7 +159,6 @@ const authSlice = createSlice({
     },
     updateUserProfile: (state, action) => {
       state.user = { ...state.user, ...action.payload }
-      authStorage.setUserData(state.user)
     },
   },
   extraReducers: (builder) => {
@@ -287,17 +172,9 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.user
-        state.token = action.payload.token
+        state.token = null // httpOnly 쿠키 사용
         state.authProvider = 'email'
         state.error = null
-        
-        // 로컬 스토리지에 저장
-        authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
-        authStorage.setAuthProvider('email')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
       })
       .addCase(loginAsync.rejected, (state, action) => {
         state.loading = false
@@ -351,17 +228,9 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.user
-        state.token = action.payload.token
+        state.token = null // httpOnly 쿠키 사용
         state.authProvider = 'google'
         state.error = null
-        
-        // 로컬 스토리지에 저장
-        authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
-        authStorage.setAuthProvider('google')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
       })
       .addCase(googleLoginAsync.rejected, (state, action) => {
         state.loading = false
@@ -379,7 +248,8 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.user
-        state.token = action.payload.token
+        state.token = null // httpOnly 쿠키 사용
+        state.authProvider = 'email'
         state.error = null
       })
       .addCase(registerAsync.rejected, (state, action) => {
@@ -398,7 +268,7 @@ const authSlice = createSlice({
         state.loading = false
         state.isInitialized = true
 
-        if (action.payload.user && action.payload.token) {
+        if (action.payload.user) {
           state.isAuthenticated = true
           state.user = action.payload.user
           state.token = action.payload.token
@@ -420,36 +290,6 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(checkCookieAuthAsync.rejected, (state, action) => {
-        state.loading = false
-        state.isInitialized = true
-        state.isAuthenticated = false
-        state.user = null
-        state.token = null
-        state.authProvider = null
-        state.error = action.payload
-      })
-      // Initialize auth cases (기존 로컬 스토리지 기반)
-      .addCase(initializeAuthAsync.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(initializeAuthAsync.fulfilled, (state, action) => {
-        state.loading = false
-        state.isInitialized = true
-
-        if (action.payload.user && action.payload.token) {
-          state.isAuthenticated = true
-          state.user = action.payload.user
-          state.token = action.payload.token
-          state.authProvider = action.payload.provider
-        } else {
-          state.isAuthenticated = false
-          state.user = null
-          state.token = null
-          state.authProvider = null
-        }
-        state.error = null
-      })
-      .addCase(initializeAuthAsync.rejected, (state, action) => {
         state.loading = false
         state.isInitialized = true
         state.isAuthenticated = false

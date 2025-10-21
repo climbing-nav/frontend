@@ -18,12 +18,9 @@ export const useAuth = () => {
     try {
       dispatch(loginStart())
       const response = await authService.login(credentials)
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token)
-      }
-      
-      dispatch(loginSuccess(response.user))
+      // httpOnly 쿠키가 서버에서 자동으로 설정됨
+
+      dispatch(loginSuccess(response))
       return { success: true, user: response.user }
     } catch (error) {
       const errorMessage = error.response?.data?.message || '로그인에 실패했습니다.'
