@@ -2,38 +2,10 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
 
-// 쿠키에서 JWT 토큰을 읽는 유틸리티 함수
-const getCookieValue = (name) => {
-  // 서버 사이드 렌더링 환경 체크
-  if (typeof document === 'undefined') {
-    return null
-  }
-
-  try {
-    const value = `; ${document.cookie}`
-    const parts = value.split(`; ${name}=`)
-    if (parts.length === 2) return parts.pop().split(';').shift()
-    return null
-  } catch (error) {
-    console.error('쿠키 읽기 실패:', error)
-    return null
-  }
-}
-
-// JWT 토큰 디코딩 함수 (간단한 payload 추출)
-const decodeJWT = (token) => {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''))
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    console.error('JWT 디코딩 실패:', error)
-    return null
-  }
-}
+// httpOnly 쿠키 사용 시:
+// - document.cookie로 쿠키 읽기 불가능 (XSS 방어)
+// - 모든 인증은 서버 API를 통해 확인
+// - 쿠키는 withCredentials: true로 자동 전송됨
 
 // Async thunk for login
 export const loginAsync = createAsyncThunk(
@@ -110,50 +82,35 @@ export const registerAsync = createAsyncThunk(
   }
 )
 
-// 쿠키 기반 인증 상태 확인을 위한 thunk
+// httpOnly 쿠키 기반 인증 상태 확인을 위한 thunk
+// ⚠️ httpOnly 쿠키는 JavaScript로 읽을 수 없음
+// 대신 서버 API(/auth/me)를 호출하여 인증 상태 확인
 export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
-      // 쿠키에서 ACCESS 토큰 확인 (보안: HttpOnly 쿠키 권장)
-      const accessToken = getCookieValue('ACCESS')
-      const refreshToken = getCookieValue('REFRESH')
+      // 방법 1: httpOnly 쿠키 방식 - 서버 API로 인증 상태 확인
+      try {
+        // 서버가 httpOnly 쿠키를 확인하고 사용자 정보 반환
+        // withCredentials: true로 쿠키가 자동 전송됨
+        const user = await authService.getCurrentUser()
 
-      if (accessToken) {
-        // JWT 토큰 디코딩하여 사용자 정보 추출
-        const decoded = decodeJWT(accessToken)
-
-        if (decoded && decoded.exp && Date.now() < decoded.exp * 1000) {
-          // 토큰이 유효한 경우 사용자 정보 구성
-          const user = {
-            id: decoded.sub || decoded.id || decoded.user_id,
-            email: decoded.email || '',
-            nickname: decoded.nickname || decoded.name || '',
-            avatar: decoded.avatar || decoded.picture || '',
-          }
-
-          // 카카오 로그인인지 확인 (provider 필드 또는 토큰 내용으로 판단)
-          const provider = decoded.provider || decoded.kp || 'kakao'
-
-          // [보안] 쿠키 기반 인증 사용 시 LocalStorage 저장 불필요
-          // 쿠키는 HttpOnly로 설정하여 XSS 공격으로부터 보호 가능
-          // LocalStorage는 JavaScript로 접근 가능하여 XSS에 취약
-          // authStorage.setToken(accessToken)
-          // authStorage.setUserData(user)
-          // authStorage.setAuthProvider(provider)
-          // if (refreshToken) {
-          //   authStorage.setRefreshToken(refreshToken)
-          // }
+        if (user && user.id) {
+          // 서버에서 인증 성공
+          const provider = user.provider || 'kakao'
 
           return {
             user,
-            token: accessToken,
+            token: null, // httpOnly 쿠키 사용 시 클라이언트에 토큰 노출 안 함
             provider
           }
         }
+      } catch (apiError) {
+        // 401 또는 서버 에러: 쿠키가 없거나 만료됨
+        console.log('쿠키 인증 실패, localStorage fallback 시도')
       }
 
-      // 로컬 스토리지에서 fallback 체크 (이메일 로그인 등 쿠키를 사용하지 않는 경우)
+      // 방법 2: localStorage fallback (이메일 로그인 등 레거시 지원)
       const token = authStorage.getToken()
       const userData = authStorage.getUserData()
       const provider = authStorage.getAuthProvider()
