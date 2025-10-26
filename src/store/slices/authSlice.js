@@ -83,6 +83,9 @@ export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
+      // 디버깅: 현재 쿠키 확인
+      console.log('현재 쿠키:', document.cookie)
+
       // 서버에 사용자 정보 요청 (브라우저가 자동으로 HttpOnly 쿠키를 포함)
       const user = await authService.getCurrentUser()
 
@@ -100,6 +103,8 @@ export const checkCookieAuthAsync = createAsyncThunk(
     } catch (error) {
       // 인증 실패 (401, 403 등)
       console.log('인증 상태 확인 실패:', error.message)
+      console.log('에러 상세:', error.response?.status, error.response?.data)
+      console.log('요청 헤더 확인:', error.config?.headers)
       return { user: null, token: null, provider: null }
     }
   }
