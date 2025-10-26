@@ -2,39 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
 
-// 쿠키에서 JWT 토큰을 읽는 유틸리티 함수
-const getCookieValue = (name) => {
-  // 서버 사이드 렌더링 환경 체크
-  if (typeof document === 'undefined') {
-    return null
-  }
-
-  try {
-    const value = `; ${document.cookie}`
-    const parts = value.split(`; ${name}=`)
-    if (parts.length === 2) return parts.pop().split(';').shift()
-    return null
-  } catch (error) {
-    console.error('쿠키 읽기 실패:', error)
-    return null
-  }
-}
-
-// JWT 토큰 디코딩 함수 (간단한 payload 추출)
-const decodeJWT = (token) => {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''))
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    console.error('JWT 디코딩 실패:', error)
-    return null
-  }
-}
-
 // Async thunk for login
 export const loginAsync = createAsyncThunk(
   'auth/loginAsync',
@@ -111,93 +78,29 @@ export const registerAsync = createAsyncThunk(
 )
 
 // 쿠키 기반 인증 상태 확인을 위한 thunk
+// 브라우저가 자동으로 쿠키를 요청에 포함시키므로 서버의 /auth/me 엔드포인트를 호출하여 사용자 정보 확인
 export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
-      // 쿠키에서 ACCESS 토큰 확인 (보안: HttpOnly 쿠키 권장)
-      const accessToken = getCookieValue('ACCESS')
-      const refreshToken = getCookieValue('REFRESH')
+      // 서버에 사용자 정보 요청 (브라우저가 자동으로 HttpOnly 쿠키를 포함)
+      const user = await authService.getCurrentUser()
 
-      if (accessToken) {
-        // JWT 토큰 디코딩하여 사용자 정보 추출
-        const decoded = decodeJWT(accessToken)
-
-        if (decoded && decoded.exp && Date.now() < decoded.exp * 1000) {
-          // 토큰이 유효한 경우 사용자 정보 구성
-          const user = {
-            id: decoded.sub || decoded.id || decoded.user_id,
-            email: decoded.email || '',
-            nickname: decoded.nickname || decoded.name || '',
-            avatar: decoded.avatar || decoded.picture || '',
-          }
-
-          // 카카오 로그인인지 확인 (provider 필드 또는 토큰 내용으로 판단)
-          const provider = decoded.provider || decoded.kp || 'kakao'
-
-          // [보안] 쿠키 기반 인증 사용 시 LocalStorage 저장 불필요
-          // 쿠키는 HttpOnly로 설정하여 XSS 공격으로부터 보호 가능
-          // LocalStorage는 JavaScript로 접근 가능하여 XSS에 취약
-          // authStorage.setToken(accessToken)
-          // authStorage.setUserData(user)
-          // authStorage.setAuthProvider(provider)
-          // if (refreshToken) {
-          //   authStorage.setRefreshToken(refreshToken)
-          // }
-
-          return {
-            user,
-            token: accessToken,
-            provider
-          }
+      // 서버에서 유효한 사용자 정보를 반환한 경우
+      if (user) {
+        return {
+          user,
+          token: null, // 쿠키 기반 인증에서는 클라이언트가 토큰을 직접 관리하지 않음
+          provider: user.provider || 'unknown'
         }
       }
 
-      // 로컬 스토리지에서 fallback 체크 (이메일 로그인 등 쿠키를 사용하지 않는 경우)
-      const token = authStorage.getToken()
-      const userData = authStorage.getUserData()
-      const provider = authStorage.getAuthProvider()
-
-      if (!token || !userData) {
-        return { user: null, token: null, provider: null }
-      }
-
-      // 토큰이 만료되었는지 확인
-      if (authStorage.isTokenExpired(token)) {
-        const refreshToken = authStorage.getRefreshToken()
-        if (refreshToken) {
-          try {
-            // 토큰 갱신 시도
-            const refreshResponse = await authService.refreshToken()
-            authStorage.setToken(refreshResponse.token)
-            if (refreshResponse.refresh_token) {
-              authStorage.setRefreshToken(refreshResponse.refresh_token)
-            }
-            return {
-              user: userData,
-              token: refreshResponse.token,
-              provider
-            }
-          } catch (refreshError) {
-            // 토큰 갱신 실패시 로그아웃 처리
-            authStorage.clearAuthData()
-            return { user: null, token: null, provider: null }
-          }
-        } else {
-          // Refresh token이 없으면 로그아웃 처리
-          authStorage.clearAuthData()
-          return { user: null, token: null, provider: null }
-        }
-      }
-
-      return {
-        user: userData,
-        token,
-        provider
-      }
+      // 사용자 정보가 없는 경우
+      return { user: null, token: null, provider: null }
     } catch (error) {
-      authStorage.clearAuthData()
-      return rejectWithValue('인증 상태 초기화에 실패했습니다.')
+      // 인증 실패 (401, 403 등)
+      console.log('인증 상태 확인 실패:', error.message)
+      return { user: null, token: null, provider: null }
     }
   }
 )
@@ -394,17 +297,12 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.user
-        state.token = action.payload.token
+        state.token = null // 쿠키 기반 인증에서는 클라이언트가 토큰을 직접 관리하지 않음
         state.authProvider = 'google'
         state.error = null
-        
-        // 로컬 스토리지에 저장
-        authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
-        authStorage.setAuthProvider('google')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
+
+        // 쿠키 기반 인증 사용 - localStorage 저장 불필요
+        // 서버가 HttpOnly 쿠키로 토큰 관리
       })
       .addCase(googleLoginAsync.rejected, (state, action) => {
         state.loading = false
@@ -441,19 +339,11 @@ const authSlice = createSlice({
         state.loading = false
         state.isInitialized = true
 
-        if (action.payload.user && action.payload.token) {
+        if (action.payload.user) {
           state.isAuthenticated = true
           state.user = action.payload.user
-          state.token = action.payload.token
+          state.token = null // 쿠키 기반 인증에서는 토큰을 클라이언트에서 관리하지 않음
           state.authProvider = action.payload.provider
-
-          // [보안] 쿠키 기반 인증 사용 시 LocalStorage 저장 불필요
-          // 쿠키(HttpOnly)가 XSS 공격으로부터 더 안전함
-          // if (action.payload.provider === 'kakao') {
-          //   authStorage.setToken(action.payload.token)
-          //   authStorage.setUserData(action.payload.user)
-          //   authStorage.setAuthProvider('kakao')
-          // }
         } else {
           state.isAuthenticated = false
           state.user = null
