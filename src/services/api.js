@@ -3,6 +3,7 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://52.78.220.103:8080',
   timeout: 10000,
+  withCredentials: true, // 브라우저가 쿠키를 자동으로 요청에 포함하도록 설정
 })
 
 api.interceptors.request.use(

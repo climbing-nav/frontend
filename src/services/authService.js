@@ -18,7 +18,7 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    const response = await api.get('/auth/me')
+    const response = await api.get('/api/user/me')
     return response.data
   },
 
@@ -50,7 +50,8 @@ export const authService = {
     }
   },
 
-  // Google OAuth 로그인 - JWT credential 방식
+  // Google OAuth 로그인 - 서버 사이드 플로우
+  // 쿠키 기반 인증 사용 - 서버가 HttpOnly 쿠키로 토큰 관리
   async googleLogin(credentialData) {
     let payload
 
@@ -70,22 +71,12 @@ export const authService = {
 
     try {
       const response = await api.post('/auth/google', payload)
-      
-      // 토큰 저장
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token)
-        
-        // Refresh token도 있다면 저장
-        if (response.data.refresh_token) {
-          localStorage.setItem('refresh_token', response.data.refresh_token)
-        }
-      }
-      
+
+      // 쿠키 기반 인증 - localStorage 저장 불필요
+      // 서버가 HttpOnly 쿠키로 토큰을 자동 설정
+
       return response.data
     } catch (error) {
-      // 토큰 저장소 정리 (에러 시)
-      localStorage.removeItem('token')
-      localStorage.removeItem('refresh_token')
       throw error
     }
   },
