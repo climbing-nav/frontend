@@ -1,4 +1,5 @@
 import api from './api'
+import { clearAuthCookies } from '../utils/cookieUtils'
 
 export const authService = {
   async login(credentials) {
@@ -13,7 +14,12 @@ export const authService = {
 
   async logout() {
     const response = await api.post('/auth/logout')
+
+    // localStorage와 쿠키 모두 정리
     localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
+    clearAuthCookies()
+
     return response.data
   },
 

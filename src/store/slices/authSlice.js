@@ -78,22 +78,19 @@ export const registerAsync = createAsyncThunk(
 )
 
 // 쿠키 기반 인증 상태 확인을 위한 thunk
-// 브라우저가 자동으로 쿠키를 요청에 포함시키므로 서버의 /auth/me 엔드포인트를 호출하여 사용자 정보 확인
+// 쿠키에서 ACCESS 토큰을 읽어 Authorization 헤더에 추가하여 /api/user/me 호출
 export const checkCookieAuthAsync = createAsyncThunk(
   'auth/checkCookieAuthAsync',
   async (_, { rejectWithValue }) => {
     try {
-      // 디버깅: 현재 쿠키 확인
-      console.log('현재 쿠키:', document.cookie)
-
-      // 서버에 사용자 정보 요청 (브라우저가 자동으로 HttpOnly 쿠키를 포함)
+      // api.js 인터셉터가 쿠키에서 토큰을 읽어 Authorization 헤더에 추가함
       const user = await authService.getCurrentUser()
 
       // 서버에서 유효한 사용자 정보를 반환한 경우
       if (user) {
         return {
           user,
-          token: null, // 쿠키 기반 인증에서는 클라이언트가 토큰을 직접 관리하지 않음
+          token: null, // 토큰은 쿠키에 저장되어 있음
           provider: user.provider || 'unknown'
         }
       }
@@ -101,10 +98,8 @@ export const checkCookieAuthAsync = createAsyncThunk(
       // 사용자 정보가 없는 경우
       return { user: null, token: null, provider: null }
     } catch (error) {
-      // 인증 실패 (401, 403 등)
+      // 인증 실패 (401, 403 등) - api.js에서 자동으로 토큰 갱신 시도
       console.log('인증 상태 확인 실패:', error.message)
-      console.log('에러 상세:', error.response?.status, error.response?.data)
-      console.log('요청 헤더 확인:', error.config?.headers)
       return { user: null, token: null, provider: null }
     }
   }
