@@ -92,7 +92,7 @@ export const authService = {
   async kakaoLogin(code) {
     try {
       // /api prefix 없이 도메인으로 직접 요청 (백엔드 엔드포인트가 /auth/kakao/exchange)
-      const baseURL = "https://climbing-dev.kro.kr" || window.location.origin
+      const baseURL = import.meta.env.VITE_API_URL || window.location.origin
 
       const response = await axios.post(`${baseURL}/auth/kakao/exchange`, { code }, {
         withCredentials: true,
