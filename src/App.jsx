@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
-import { checkCookieAuthAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
+import { checkCookieAuthAsync, selectIsAuthInitialized, selectIsAuthenticated, loginSuccess } from './store/slices/authSlice'
+import { authService } from './services/authService'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -49,23 +50,37 @@ function App() {
     }
   }, [dispatch, isAuthInitialized])
 
-  // 카카오 로그인 성공 후 리다이렉트 처리
+  // 카카오 OAuth 콜백 처리 - 프론트엔드 주도 플로우
   useEffect(() => {
-    // URL에서 카카오 로그인 성공 여부 확인
-    const urlParams = new URLSearchParams(window.location.search)
-    const loginSuccess = urlParams.get('login')
+    const handleKakaoCallback = async () => {
+      // URL에서 인증 코드 확인
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
 
-    if (loginSuccess === 'success') {
-      // URL 파라미터 제거
-      window.history.replaceState({}, document.title, window.location.pathname)
+      // 카카오 콜백 경로인지 확인
+      if (code && window.location.pathname.includes('/auth/kakao/callback')) {
+        try {
+          // 백엔드로 code 전송하여 토큰 받기
+          const userData = await authService.kakaoLogin(code)
 
-      // 인증 상태 다시 확인
-      dispatch(checkCookieAuthAsync())
+          // Redux 상태 업데이트
+          dispatch(loginSuccess(userData))
 
-      // 홈 페이지로 이동
-      setCurrentPage('home')
-      setCurrentTab('home')
+          // URL 파라미터 제거 및 홈으로 리다이렉트
+          window.history.replaceState({}, document.title, '/')
+          setCurrentPage('home')
+          setCurrentTab('home')
+        } catch (error) {
+          console.error('카카오 로그인 처리 실패:', error)
+          // 에러 발생 시 로그인 페이지로 리다이렉트
+          window.history.replaceState({}, document.title, '/')
+          setCurrentPage('auth')
+          setSelectedAuthType('login')
+        }
+      }
     }
+
+    handleKakaoCallback()
   }, [dispatch])
 
   const renderCurrentPage = () => {

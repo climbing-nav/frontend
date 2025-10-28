@@ -87,6 +87,23 @@ export const authService = {
     }
   },
 
-  // Kakao 로그인은 서버 사이드 플로우로 처리됨
-  // 별도의 클라이언트 사이드 API 호출 불필요
+  // Kakao OAuth 콜백 처리 - 프론트엔드 주도 플로우
+  async kakaoLogin(code) {
+    try {
+      const response = await api.post('/auth/kakao/callback', { code })
+
+      // 응답에서 토큰 추출 및 저장
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token)
+        if (response.data.refresh_token) {
+          localStorage.setItem('refresh_token', response.data.refresh_token)
+        }
+      }
+
+      return response.data
+    } catch (error) {
+      console.error('카카오 로그인 처리 실패:', error)
+      throw error
+    }
+  }
 }

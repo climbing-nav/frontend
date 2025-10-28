@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getAccessToken, getRefreshToken, clearAuthCookies } from '../utils/cookieUtils'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://52.78.220.103:8080',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   withCredentials: true, // REFRESH 쿠키 전송을 위해 필요
 })
