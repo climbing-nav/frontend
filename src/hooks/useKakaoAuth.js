@@ -1,19 +1,21 @@
 import { useCallback } from 'react'
-import api from '../services/api'
 
 export const useKakaoAuth = () => {
-  // 백엔드 카카오 OAuth 시작 후 redirect URL 응답받기
-  const signInWithKakao = useCallback(async () => {
+  // 프론트엔드에서 직접 카카오 OAuth URL 생성 및 리다이렉트
+  const signInWithKakao = useCallback(() => {
     try {
-      // 백엔드의 카카오 OAuth 시작 엔드포인트 호출
-      const response = await api.get('/auth/kakao/login')
+      const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY
+      const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`
 
-      // 백엔드에서 반환된 redirect URL로 이동
-      if (response.data && response.data.redirectUrl) {
-        window.location.href = response.data.redirectUrl
-      } else {
-        throw new Error('Redirect URL을 받지 못했습니다.')
+      if (!KAKAO_REST_API_KEY) {
+        throw new Error('카카오 REST API 키가 설정되지 않았습니다.')
       }
+
+      // 카카오 OAuth URL 생성
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`
+
+      // 카카오 로그인 페이지로 리다이렉트
+      window.location.href = kakaoAuthUrl
     } catch (error) {
       console.error('카카오 로그인 시작 실패:', error)
       throw new Error('카카오 로그인을 시작할 수 없습니다.')
@@ -21,15 +23,15 @@ export const useKakaoAuth = () => {
   }, [])
 
   const signOutWithKakao = useCallback(() => {
-    // 서버 사이드에서 로그아웃 처리
-    // 필요시 백엔드 로그아웃 엔드포인트 호출
-    console.log('카카오 로그아웃은 서버에서 처리됩니다.')
+    // 로컬 토큰 제거 (실제 로그아웃은 authService에서 처리)
+    localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
   }, [])
 
   return {
     signInWithKakao,
     signOutWithKakao,
-    // 서버 사이드 플로우에서는 항상 준비 상태
+    // 프론트엔드 주도 플로우에서는 항상 준비 상태
     isKakaoScriptLoaded: true,
     scriptLoadError: null,
     isInitialized: true
