@@ -1,14 +1,21 @@
 import { useCallback } from 'react'
+import api from '../services/api'
 
 export const useKakaoAuth = () => {
-  // 서버 사이드 OAuth 플로우를 위한 간단한 리다이렉트 함수
-  const signInWithKakao = useCallback(() => {
+  // 백엔드 카카오 OAuth 시작 후 redirect URL 응답받기
+  const signInWithKakao = useCallback(async () => {
     try {
-      // 백엔드의 카카오 OAuth 시작 엔드포인트로 리다이렉트
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://climbing-dev.kro.kr'
-      window.location.href = `${backendUrl}/auth/kakao/login`
+      // 백엔드의 카카오 OAuth 시작 엔드포인트 호출
+      const response = await api.get('/auth/kakao/login')
+
+      // 백엔드에서 반환된 redirect URL로 이동
+      if (response.data && response.data.redirectUrl) {
+        window.location.href = response.data.redirectUrl
+      } else {
+        throw new Error('Redirect URL을 받지 못했습니다.')
+      }
     } catch (error) {
-      console.error('카카오 로그인 리다이렉트 실패:', error)
+      console.error('카카오 로그인 시작 실패:', error)
       throw new Error('카카오 로그인을 시작할 수 없습니다.')
     }
   }, [])
