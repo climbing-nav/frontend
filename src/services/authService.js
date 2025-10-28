@@ -1,4 +1,5 @@
 import api from './api'
+import axios from 'axios'
 import { clearAuthCookies } from '../utils/cookieUtils'
 
 export const authService = {
@@ -90,7 +91,15 @@ export const authService = {
   // Kakao OAuth 콜백 처리 - 프론트엔드 주도 플로우
   async kakaoLogin(code) {
     try {
-      const response = await api.post('/auth/kakao/exchange', { code })
+      // /api prefix 없이 도메인으로 직접 요청 (백엔드 엔드포인트가 /auth/kakao/exchange)
+      const baseURL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '') || window.location.origin
+
+      const response = await axios.post(`${baseURL}/auth/kakao/exchange`, { code }, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
       // 응답에서 토큰 추출 및 저장
       if (response.data.token) {
