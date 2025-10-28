@@ -90,7 +90,7 @@ export const authService = {
   // Kakao OAuth 콜백 처리 - 프론트엔드 주도 플로우
   async kakaoLogin(code) {
     try {
-      const response = await api.post('/auth/kakao/callback', { code })
+      const response = await api.post('/auth/kakao/exchange', { code })
 
       // 응답에서 토큰 추출 및 저장
       if (response.data.token) {
