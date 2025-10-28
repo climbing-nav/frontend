@@ -61,19 +61,19 @@ function SocialLogin({
     }
   }, [dispatch, signInWithGoogle, onSuccess, onError])
 
-  const handleKakaoLogin = useCallback(() => {
+  const handleKakaoLogin = useCallback(async () => {
     dispatch(clearError())
 
     try {
-      // 서버 사이드 OAuth 플로우 시작
-      signInWithKakao()
+      // 서버 사이드 OAuth 플로우 시작 (백엔드로부터 redirect URL 응답받기)
+      await signInWithKakao()
 
       // 성공 콜백 (리다이렉트 전에 호출됨)
       if (onSuccess) {
         onSuccess('kakao')
       }
     } catch (error) {
-      console.error('Kakao 로그인 리다이렉트 실패:', error)
+      console.error('Kakao 로그인 시작 실패:', error)
       const errorMessage = '카카오 로그인을 시작할 수 없습니다.'
 
       // Error callback
