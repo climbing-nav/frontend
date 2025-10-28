@@ -29,7 +29,12 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/climbing_map:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        build-args: VITE_API_URL=${{ secrets.VITE_API_URL }}
+        build-args: |
+          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_KAKAO_REST_API_KEY=${{ secrets.VITE_KAKAO_REST_API_KEY }}
+          VITE_KAKAO_REDIRECT_URI=${{ secrets.VITE_KAKAO_REDIRECT_URI }}
+          REACT_APP_KAKAO_API_KEY=${{ secrets.REACT_APP_KAKAO_API_KEY }}
 
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
