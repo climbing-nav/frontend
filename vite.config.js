@@ -24,10 +24,11 @@ export default defineConfig({
       '.amazonaws.com',      // 모든 AWS 도메인
       '.kro.kr'              // 모든 kro.kr 도메인
     ],
-    // 백엔드 API 프록시 설정
+    // 백엔드 API 프록시 설정 (로컬 개발 환경용)
+    // Docker 환경에서는 nginx가 라우팅하므로 이 설정은 무시됨
     proxy: {
-      '/auth': {
-        target: 'http://localhost:8080',
+      '/api': {
+        target: 'http://backend:8080',
         changeOrigin: true,
         secure: false
       }
