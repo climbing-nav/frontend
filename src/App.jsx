@@ -60,8 +60,11 @@ function App() {
       // 카카오 콜백 경로인지 확인
       if (code && window.location.pathname.includes('/auth/kakao/callback')) {
         try {
-          // 백엔드로 code 전송하여 토큰 받기
-          const userData = await authService.kakaoLogin(code)
+          // redirectUri도 함께 전송 (카카오 OAuth 스펙 요구사항)
+          const redirectUri = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`
+
+          // 백엔드로 code와 redirectUri 전송하여 토큰 받기
+          const userData = await authService.kakaoLogin(code, redirectUri)
 
           // Redux 상태 업데이트
           dispatch(loginSuccess(userData))

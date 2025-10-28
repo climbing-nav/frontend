@@ -89,12 +89,16 @@ export const authService = {
   },
 
   // Kakao OAuth 콜백 처리 - 프론트엔드 주도 플로우
-  async kakaoLogin(code) {
+  async kakaoLogin(code, redirectUri) {
     try {
       // /api prefix 없이 도메인으로 직접 요청 (백엔드 엔드포인트가 /auth/kakao/exchange)
       const baseURL = import.meta.env.VITE_API_URL || window.location.origin
 
-      const response = await axios.post(`${baseURL}/auth/kakao/exchange`, { code }, {
+      // code와 redirectUri를 함께 전송 (카카오 OAuth 스펙 요구사항)
+      const response = await axios.post(`${baseURL}/auth/kakao/exchange`, {
+        code,
+        redirectUri
+      }, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json'
