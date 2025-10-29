@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
-import { checkCookieAuthAsync, selectIsAuthInitialized, selectIsAuthenticated, loginSuccess } from './store/slices/authSlice'
-import { authService } from './services/authService'
+import { initializeAuthAsync, kakaoLoginAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -44,10 +43,10 @@ function App() {
   const [selectedPost, setSelectedPost] = useState(null)
   const [selectedAuthType, setSelectedAuthType] = useState('login') // 'login' or 'signup'
 
-  // 앱 시작 시 쿠키 기반 인증 상태 확인
+  // 앱 시작 시 localStorage 기반 인증 상태 확인
   useEffect(() => {
     if (!isAuthInitialized) {
-      dispatch(checkCookieAuthAsync())
+      dispatch(initializeAuthAsync())
     }
   }, [dispatch, isAuthInitialized])
 
@@ -69,26 +68,25 @@ function App() {
         // ⭐ 처리 시작 표시
         processRef.current = true
 
-        try {
-          // redirectUri도 함께 전송 (카카오 OAuth 스펙 요구사항)
-          const redirectUri = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`
+        // redirectUri도 함께 전송 (카카오 OAuth 스펙 요구사항)
+        const redirectUri = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`
 
-          console.log('카카오 로그인 처리 시작:', { code: code.substring(0, 10) + '...' })
+        console.log('카카오 로그인 처리 시작:', { code: code.substring(0, 10) + '...' })
 
-          // 백엔드로 code와 redirectUri 전송하여 토큰 받기
-          const userData = await authService.kakaoLogin(code, redirectUri)
+        // Redux async thunk로 카카오 로그인 처리
+        const result = await dispatch(kakaoLoginAsync({ code, redirectUri }))
 
-          // Redux 상태 업데이트
-          dispatch(loginSuccess(userData))
+        if (kakaoLoginAsync.fulfilled.match(result)) {
+          // 로그인 성공
+          console.log('카카오 로그인 성공')
 
           // URL 파라미터 제거 및 홈으로 리다이렉트
           window.history.replaceState({}, document.title, '/')
           setCurrentPage('home')
           setCurrentTab('home')
-
-          console.log('카카오 로그인 성공')
-        } catch (error) {
-          console.error('카카오 로그인 처리 실패:', error)
+        } else {
+          // 로그인 실패
+          console.error('카카오 로그인 처리 실패:', result.payload)
 
           // ⭐ 에러 시 다시 시도할 수 있도록 리셋
           processRef.current = false
