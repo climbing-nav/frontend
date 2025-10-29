@@ -105,8 +105,19 @@ export const authService = {
         }
       })
 
-      // Redux thunk에서 localStorage에 저장하므로 여기서는 데이터만 반환
-      return response.data
+      // 응답 헤더에서 Authorization 토큰 추출
+      const authHeader = response.headers['authorization'] || response.headers['Authorization']
+      let token = null
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7) // "Bearer " 제거
+      }
+
+      // response.data와 함께 token 반환
+      return {
+        ...response.data,
+        token
+      }
     } catch (error) {
       console.error('카카오 로그인 처리 실패:', error)
       throw error
