@@ -308,14 +308,21 @@ const authSlice = createSlice({
       .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isAuthenticated = true
-        state.user = action.payload.user
+        // 백엔드 응답이 { nickname, userId, token, ... } 형태이므로 전체 payload를 user로 저장
+        state.user = {
+          id: action.payload.userId,
+          nickname: action.payload.nickname
+        }
         state.token = action.payload.token
         state.authProvider = 'kakao'
         state.error = null
 
-        // localStorage에 토큰 저장
+        // localStorage에 토큰 및 사용자 정보 저장
         authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
+        authStorage.setUserData({
+          id: action.payload.userId,
+          nickname: action.payload.nickname
+        })
         authStorage.setAuthProvider('kakao')
         if (action.payload.refresh_token) {
           authStorage.setRefreshToken(action.payload.refresh_token)
