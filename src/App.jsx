@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
@@ -34,6 +34,7 @@ const theme = createTheme({
 
 function App() {
   const dispatch = useDispatch()
+  const processRef = useRef(false)
   const isAuthInitialized = useSelector(selectIsAuthInitialized)
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
@@ -59,9 +60,20 @@ function App() {
 
       // 카카오 콜백 경로인지 확인
       if (code && window.location.pathname.includes('/auth/kakao/callback')) {
+        // 이미 처리했으면 return
+        if (processRef.current) {
+          console.log('이미 처리된 카카오 콜백, 건너뜀')
+          return
+        }
+
+        // ⭐ 처리 시작 표시
+        processRef.current = true
+
         try {
           // redirectUri도 함께 전송 (카카오 OAuth 스펙 요구사항)
           const redirectUri = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`
+
+          console.log('카카오 로그인 처리 시작:', { code: code.substring(0, 10) + '...' })
 
           // 백엔드로 code와 redirectUri 전송하여 토큰 받기
           const userData = await authService.kakaoLogin(code, redirectUri)
@@ -73,8 +85,14 @@ function App() {
           window.history.replaceState({}, document.title, '/')
           setCurrentPage('home')
           setCurrentTab('home')
+
+          console.log('카카오 로그인 성공')
         } catch (error) {
           console.error('카카오 로그인 처리 실패:', error)
+
+          // ⭐ 에러 시 다시 시도할 수 있도록 리셋
+          processRef.current = false
+
           // 에러 발생 시 로그인 페이지로 리다이렉트
           window.history.replaceState({}, document.title, '/')
           setCurrentPage('auth')
