@@ -41,14 +41,6 @@ export const deleteCookie = (name) => {
 }
 
 /**
- * ACCESS 토큰 가져오기
- * @returns {string|null}
- */
-export const getAccessToken = () => {
-  return getCookie('ACCESS')
-}
-
-/**
  * REFRESH 토큰 가져오기
  * @returns {string|null}
  */
@@ -57,9 +49,9 @@ export const getRefreshToken = () => {
 }
 
 /**
- * 모든 인증 쿠키 삭제
+ * 인증 쿠키 삭제 (REFRESH 토큰만 삭제)
+ * ACCESS 토큰은 localStorage에서 관리
  */
 export const clearAuthCookies = () => {
-  deleteCookie('ACCESS')
   deleteCookie('REFRESH')
 }

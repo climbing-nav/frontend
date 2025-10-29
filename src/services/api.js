@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getAccessToken, getRefreshToken, clearAuthCookies } from '../utils/cookieUtils'
+import { getRefreshToken, clearAuthCookies } from '../utils/cookieUtils'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -24,17 +24,11 @@ const processQueue = (error, token = null) => {
   failedQueue = []
 }
 
-// 요청 인터셉터: 쿠키에서 ACCESS 토큰을 읽어 Authorization 헤더에 추가
+// 요청 인터셉터: localStorage에서 ACCESS 토큰을 읽어 Authorization 헤더에 추가
 api.interceptors.request.use(
   (config) => {
-    // 1. 쿠키에서 ACCESS 토큰 가져오기 (OAuth 로그인 후)
-    const cookieToken = getAccessToken()
-
-    // 2. localStorage에서 토큰 가져오기 (이메일 로그인 fallback)
-    const localToken = localStorage.getItem('token')
-
-    // 3. 우선순위: 쿠키 > localStorage
-    const token = cookieToken || localToken
+    // localStorage에서 ACCESS 토큰 가져오기
+    const token = localStorage.getItem('token')
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -93,10 +87,12 @@ api.interceptors.response.use(
           }
         )
 
-        // 갱신된 ACCESS 토큰은 쿠키로 자동 설정됨
-        const newAccessToken = getAccessToken()
+        // 응답에서 새 ACCESS 토큰 추출하여 localStorage에 저장
+        const newAccessToken = response.data?.token
 
         if (newAccessToken) {
+          localStorage.setItem('token', newAccessToken)
+
           // 대기 중인 요청들 처리
           processQueue(null, newAccessToken)
 
@@ -104,7 +100,7 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
           return api(originalRequest)
         } else {
-          throw new Error('토큰 갱신 실패')
+          throw new Error('토큰 갱신 실패: 새 토큰을 받지 못했습니다')
         }
       } catch (refreshError) {
         // 토큰 갱신 실패 시 로그아웃
