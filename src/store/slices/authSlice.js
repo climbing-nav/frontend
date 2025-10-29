@@ -54,6 +54,18 @@ export const googleLoginAsync = createAsyncThunk(
   }
 )
 
+// Async thunk for Kakao login
+export const kakaoLoginAsync = createAsyncThunk(
+  'auth/kakaoLoginAsync',
+  async ({ code, redirectUri }, { rejectWithValue }) => {
+    try {
+      const response = await authService.kakaoLogin(code, redirectUri)
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message || '카카오 로그인에 실패했습니다.')
+    }
+  }
+)
 
 // Async thunk for registration
 export const registerAsync = createAsyncThunk(
@@ -77,35 +89,7 @@ export const registerAsync = createAsyncThunk(
   }
 )
 
-// 쿠키 기반 인증 상태 확인을 위한 thunk
-// 쿠키에서 ACCESS 토큰을 읽어 Authorization 헤더에 추가하여 /api/user/me 호출
-export const checkCookieAuthAsync = createAsyncThunk(
-  'auth/checkCookieAuthAsync',
-  async (_, { rejectWithValue }) => {
-    try {
-      // api.js 인터셉터가 쿠키에서 토큰을 읽어 Authorization 헤더에 추가함
-      const user = await authService.getCurrentUser()
-
-      // 서버에서 유효한 사용자 정보를 반환한 경우
-      if (user) {
-        return {
-          user,
-          token: null, // 토큰은 쿠키에 저장되어 있음
-          provider: user.provider || 'unknown'
-        }
-      }
-
-      // 사용자 정보가 없는 경우
-      return { user: null, token: null, provider: null }
-    } catch (error) {
-      // 인증 실패 (401, 403 등) - api.js에서 자동으로 토큰 갱신 시도
-      console.log('인증 상태 확인 실패:', error.message)
-      return { user: null, token: null, provider: null }
-    }
-  }
-)
-
-// 기존 로컬 스토리지 기반 초기화 (호환성을 위해 유지)
+// localStorage 기반 인증 상태 초기화
 export const initializeAuthAsync = createAsyncThunk(
   'auth/initializeAuthAsync',
   async (_, { rejectWithValue }) => {
@@ -297,14 +281,47 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.user
-        state.token = null // 쿠키 기반 인증에서는 클라이언트가 토큰을 직접 관리하지 않음
+        state.token = action.payload.token
         state.authProvider = 'google'
         state.error = null
 
-        // 쿠키 기반 인증 사용 - localStorage 저장 불필요
-        // 서버가 HttpOnly 쿠키로 토큰 관리
+        // localStorage에 토큰 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('google')
+        if (action.payload.refresh_token) {
+          authStorage.setRefreshToken(action.payload.refresh_token)
+        }
       })
       .addCase(googleLoginAsync.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+      })
+      // Kakao login cases
+      .addCase(kakaoLoginAsync.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.authProvider = 'kakao'
+        state.error = null
+
+        // localStorage에 토큰 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('kakao')
+        if (action.payload.refresh_token) {
+          authStorage.setRefreshToken(action.payload.refresh_token)
+        }
+      })
+      .addCase(kakaoLoginAsync.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
         state.isAuthenticated = false
@@ -331,37 +348,7 @@ const authSlice = createSlice({
         state.token = null
         state.authProvider = null
       })
-      // Check cookie auth cases
-      .addCase(checkCookieAuthAsync.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(checkCookieAuthAsync.fulfilled, (state, action) => {
-        state.loading = false
-        state.isInitialized = true
-
-        if (action.payload.user) {
-          state.isAuthenticated = true
-          state.user = action.payload.user
-          state.token = null // 쿠키 기반 인증에서는 토큰을 클라이언트에서 관리하지 않음
-          state.authProvider = action.payload.provider
-        } else {
-          state.isAuthenticated = false
-          state.user = null
-          state.token = null
-          state.authProvider = null
-        }
-        state.error = null
-      })
-      .addCase(checkCookieAuthAsync.rejected, (state, action) => {
-        state.loading = false
-        state.isInitialized = true
-        state.isAuthenticated = false
-        state.user = null
-        state.token = null
-        state.authProvider = null
-        state.error = action.payload
-      })
-      // Initialize auth cases (기존 로컬 스토리지 기반)
+      // Initialize auth cases (localStorage 기반)
       .addCase(initializeAuthAsync.pending, (state) => {
         state.loading = true
       })

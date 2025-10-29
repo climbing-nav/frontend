@@ -105,14 +105,7 @@ export const authService = {
         }
       })
 
-      // 응답에서 토큰 추출 및 저장
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token)
-        if (response.data.refresh_token) {
-          localStorage.setItem('refresh_token', response.data.refresh_token)
-        }
-      }
-
+      // Redux thunk에서 localStorage에 저장하므로 여기서는 데이터만 반환
       return response.data
     } catch (error) {
       console.error('카카오 로그인 처리 실패:', error)
