@@ -57,33 +57,38 @@ export const authService = {
     }
   },
 
-  // Google OAuth 로그인 - 서버 사이드 플로우
-  // 쿠키 기반 인증 사용 - 서버가 HttpOnly 쿠키로 토큰 관리
-  async googleLogin(credentialData) {
-    let payload
-
-    // credential 데이터 타입에 따른 처리
-    if (typeof credentialData === 'string') {
-      // JWT credential 토큰인 경우
-      payload = { credential: credentialData }
-    } else if (credentialData.access_token) {
-      // 액세스 토큰 + 사용자 정보인 경우
-      payload = {
-        access_token: credentialData.access_token,
-        user_info: credentialData.user_info
-      }
-    } else {
-      throw new Error('유효하지 않은 Google OAuth 데이터입니다.')
-    }
-
+  // Google OAuth 콜백 처리 - 프론트엔드 주도 플로우
+  async googleLogin(code, redirectUri) {
     try {
-      const response = await api.post('/auth/google', payload)
+      // /api prefix 없이 도메인으로 직접 요청 (백엔드 엔드포인트가 /auth/google/exchange)
+      const baseURL = import.meta.env.VITE_API_URL || window.location.origin
 
-      // 쿠키 기반 인증 - localStorage 저장 불필요
-      // 서버가 HttpOnly 쿠키로 토큰을 자동 설정
+      // code와 redirectUri를 함께 전송 (구글 OAuth 스펙 요구사항)
+      const response = await axios.post(`${baseURL}/auth/google/exchange`, {
+        code,
+        redirectUri
+      }, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
-      return response.data
+      // 응답 헤더에서 Authorization 토큰 추출
+      const authHeader = response.headers['authorization'] || response.headers['Authorization']
+      let token = null
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7) // "Bearer " 제거
+      }
+
+      // response.data와 함께 token 반환
+      return {
+        ...response.data,
+        token
+      }
     } catch (error) {
+      console.error('구글 로그인 처리 실패:', error)
       throw error
     }
   },
