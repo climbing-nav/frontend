@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
-import { initializeAuthAsync, kakaoLoginAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
+import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -65,6 +65,7 @@ function App() {
           return
         }
 
+        
         // ⭐ 처리 시작 표시
         processRef.current = true
 
@@ -100,6 +101,59 @@ function App() {
     }
 
     handleKakaoCallback()
+  }, [dispatch])
+
+  // 구글 OAuth 콜백 처리 - 프론트엔드 주도 플로우
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      // URL에서 인증 코드 확인
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
+
+      // 구글 콜백 경로인지 확인
+      if (code && window.location.pathname.includes('/auth/google/callback')) {
+        // 이미 처리했으면 return
+        if (processRef.current) {
+          console.log('이미 처리된 구글 콜백, 건너뜀')
+          return
+        }
+
+
+        // ⭐ 처리 시작 표시
+        processRef.current = true
+
+        // redirectUri도 함께 전송 (구글 OAuth 스펙 요구사항)
+        const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`
+
+        console.log('구글 로그인 처리 시작:', { code: code.substring(0, 10) + '...' })
+
+        // Redux async thunk로 구글 로그인 처리
+        const result = await dispatch(googleLoginAsync({ code, redirectUri }))
+
+        if (googleLoginAsync.fulfilled.match(result)) {
+          // 로그인 성공
+          console.log('구글 로그인 성공')
+
+          // URL 파라미터 제거 및 홈으로 리다이렉트
+          window.history.replaceState({}, document.title, '/')
+          setCurrentPage('home')
+          setCurrentTab('home')
+        } else {
+          // 로그인 실패
+          console.error('구글 로그인 처리 실패:', result.payload)
+
+          // ⭐ 에러 시 다시 시도할 수 있도록 리셋
+          processRef.current = false
+
+          // 에러 발생 시 로그인 페이지로 리다이렉트
+          window.history.replaceState({}, document.title, '/')
+          setCurrentPage('auth')
+          setSelectedAuthType('login')
+        }
+      }
+    }
+
+    handleGoogleCallback()
   }, [dispatch])
 
   const renderCurrentPage = () => {
