@@ -39,12 +39,12 @@ function SocialLogin({
   const { signInWithGoogle } = useGoogleAuth()
   const { signInWithKakao } = useKakaoAuth()
 
-  const handleGoogleLogin = useCallback(() => {
+  const handleGoogleLogin = useCallback(async () => {
     dispatch(clearError())
 
     try {
       // 서버 사이드 OAuth 플로우 시작
-      signInWithGoogle()
+      await signInWithGoogle()
 
       // 성공 콜백 (리다이렉트 전에 호출됨)
       if (onSuccess) {
