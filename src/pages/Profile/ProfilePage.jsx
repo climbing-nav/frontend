@@ -121,7 +121,7 @@ function ProfilePage({ onNavigateToAuth }) {
             }}>
               {user?.nickname || user?.email || '사용자'}
             </Typography>
-            <Typography variant="body2" sx={{
+            <Typography variant="body2" component="div" sx={{
               color: '#6b7280',
               display: 'flex',
               alignItems: 'center',
