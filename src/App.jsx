@@ -6,6 +6,7 @@ import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthIni
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
+import OAuthCallbackLoading from './components/common/OAuthCallbackLoading/OAuthCallbackLoading'
 import HomePage from './pages/Home/HomePage'
 import CommunityPage from './pages/Community/CommunityPage'
 import MapPage from './pages/Map/MapPage'
@@ -42,6 +43,8 @@ function App() {
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
   const [selectedAuthType, setSelectedAuthType] = useState('login') // 'login' or 'signup'
+  const [isOAuthProcessing, setIsOAuthProcessing] = useState(false) // OAuth 콜백 처리 중 상태
+  const [oauthProvider, setOauthProvider] = useState(null) // 'kakao' | 'google'
 
   // 앱 시작 시 localStorage 기반 인증 상태 확인
   useEffect(() => {
@@ -65,7 +68,10 @@ function App() {
           return
         }
 
-        
+        // ⭐ 로딩 상태 시작
+        setIsOAuthProcessing(true)
+        setOauthProvider('kakao')
+
         // ⭐ 처리 시작 표시
         processRef.current = true
 
@@ -83,6 +89,11 @@ function App() {
 
           // URL 파라미터 제거 및 홈으로 리다이렉트
           window.history.replaceState({}, document.title, '/')
+
+          // ⭐ 로딩 상태 종료
+          setIsOAuthProcessing(false)
+          setOauthProvider(null)
+
           setCurrentPage('home')
           setCurrentTab('home')
         } else {
@@ -91,6 +102,10 @@ function App() {
 
           // ⭐ 에러 시 다시 시도할 수 있도록 리셋
           processRef.current = false
+
+          // ⭐ 로딩 상태 종료
+          setIsOAuthProcessing(false)
+          setOauthProvider(null)
 
           // 에러 발생 시 로그인 페이지로 리다이렉트
           window.history.replaceState({}, document.title, '/')
@@ -118,6 +133,9 @@ function App() {
           return
         }
 
+        // ⭐ 로딩 상태 시작
+        setIsOAuthProcessing(true)
+        setOauthProvider('google')
 
         // ⭐ 처리 시작 표시
         processRef.current = true
@@ -136,6 +154,11 @@ function App() {
 
           // URL 파라미터 제거 및 홈으로 리다이렉트
           window.history.replaceState({}, document.title, '/')
+
+          // ⭐ 로딩 상태 종료
+          setIsOAuthProcessing(false)
+          setOauthProvider(null)
+
           setCurrentPage('home')
           setCurrentTab('home')
         } else {
@@ -144,6 +167,10 @@ function App() {
 
           // ⭐ 에러 시 다시 시도할 수 있도록 리셋
           processRef.current = false
+
+          // ⭐ 로딩 상태 종료
+          setIsOAuthProcessing(false)
+          setOauthProvider(null)
 
           // 에러 발생 시 로그인 페이지로 리다이렉트
           window.history.replaceState({}, document.title, '/')
@@ -250,16 +277,19 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ 
-        maxWidth: 393, 
+      <Box sx={{
+        maxWidth: 393,
         width: '100%',
-        margin: '0 auto', 
-        minHeight: '100vh', 
+        margin: '0 auto',
+        minHeight: '100vh',
         bgcolor: 'white',
         boxShadow: '0 0 30px rgba(0,0,0,0.1)',
         position: 'relative',
       }}>
-        {currentPage === 'auth' ? (
+        {/* OAuth 콜백 처리 중 로딩 페이지 */}
+        {isOAuthProcessing ? (
+          <OAuthCallbackLoading provider={oauthProvider} />
+        ) : currentPage === 'auth' ? (
           <AuthPage initialTab={selectedAuthType} onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
