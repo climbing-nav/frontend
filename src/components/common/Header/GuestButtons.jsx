@@ -8,13 +8,12 @@ import {
 } from '@mui/material'
 import {
   Person,
-  Login,
-  PersonAdd
+  Login
 } from '@mui/icons-material'
 
 /**
  * GuestButtons Component
- * 비로그인 사용자를 위한 로그인/회원가입 버튼
+ * 비로그인 사용자를 위한 로그인 버튼
  */
 function GuestButtons({ onNavigateToAuth }) {
   const [anchorEl, setAnchorEl] = useState(null)
@@ -31,13 +30,6 @@ function GuestButtons({ onNavigateToAuth }) {
   const handleLogin = useCallback(() => {
     if (onNavigateToAuth) {
       onNavigateToAuth('login')
-    }
-    handleClose()
-  }, [onNavigateToAuth, handleClose])
-
-  const handleSignup = useCallback(() => {
-    if (onNavigateToAuth) {
-      onNavigateToAuth('signup')
     }
     handleClose()
   }, [onNavigateToAuth, handleClose])
@@ -97,15 +89,6 @@ function GuestButtons({ onNavigateToAuth }) {
           </ListItemIcon>
           <Typography variant="inherit" sx={{ color: '#1f2937' }}>
             로그인
-          </Typography>
-        </MenuItem>
-
-        <MenuItem onClick={handleSignup}>
-          <ListItemIcon sx={{ minWidth: 36 }}>
-            <PersonAdd sx={{ fontSize: 20, color: '#667eea' }} />
-          </ListItemIcon>
-          <Typography variant="inherit" sx={{ color: '#1f2937' }}>
-            회원가입
           </Typography>
         </MenuItem>
       </Menu>

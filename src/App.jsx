@@ -42,7 +42,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
-  const [selectedAuthType, setSelectedAuthType] = useState('login') // 'login' or 'signup'
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false) // OAuth 콜백 처리 중 상태
   const [oauthProvider, setOauthProvider] = useState(null) // 'kakao' | 'google'
 
@@ -213,8 +212,7 @@ function App() {
     setCurrentPage(tab)
   }
 
-  const handleNavigateToAuth = (type = 'login') => {
-    setSelectedAuthType(type) // 'login' 또는 'signup'
+  const handleNavigateToAuth = () => {
     setCurrentPage('auth')
   }
 
@@ -290,7 +288,7 @@ function App() {
         {isOAuthProcessing ? (
           <OAuthCallbackLoading provider={oauthProvider} />
         ) : currentPage === 'auth' ? (
-          <AuthPage initialTab={selectedAuthType} onNavigateToHome={handleNavigateToHome} />
+          <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
             {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (

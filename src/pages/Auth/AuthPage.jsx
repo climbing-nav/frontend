@@ -1,17 +1,9 @@
-import { useState } from 'react'
-import { Box, Typography, Tabs, Tab, Paper, IconButton } from '@mui/material'
+import { Box, Typography, Paper, IconButton } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 import LoginForm from '../../components/auth/LoginForm/LoginForm'
-import RegisterForm from '../../components/auth/RegisterForm/RegisterForm'
 
-function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
-  const [tabValue, setTabValue] = useState(initialTab === 'signup' ? 1 : 0)
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue)
-  }
-
+function AuthPage({ onNavigateToHome }) {
   const handleBackToHome = () => {
     if (onNavigateToHome) {
       onNavigateToHome()
@@ -20,23 +12,6 @@ function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
 
   return (
     <Box sx={{ width: '393px', minHeight: '100vh', bgcolor: '#f8f9fa' }}>
-      {/* Status Bar */}
-      {/* <Box sx={{
-        height: 44,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        px: 2.5,
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 600
-      }}>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>9:41</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>{import.meta.env.VITE_APP_NAME || '클밍여지도'}</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>100%🔋</Typography>
-      </Box> */}
-
       {/* Auth Header */}
       <Box sx={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -89,43 +64,24 @@ function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           overflow: 'hidden'
         }}>
-          {/* Tab Header */}
+          {/* Header */}
           <Box sx={{
             borderBottom: '1px solid #e5e7eb',
-            bgcolor: 'white'
+            bgcolor: 'white',
+            py: 2.5,
+            textAlign: 'center'
           }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              variant="fullWidth"
-              sx={{
-                '& .MuiTab-root': {
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  py: 2.5,
-                  color: '#6b7280',
-                  textTransform: 'none'
-                },
-                '& .MuiTab-root.Mui-selected': {
-                  color: '#667eea',
-                  fontWeight: 700
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#667eea',
-                  height: 3,
-                  borderRadius: '3px 3px 0 0'
-                }
-              }}
-            >
-              <Tab label="로그인" />
-              <Tab label="회원가입" />
-            </Tabs>
+            <Typography variant="h6" sx={{
+              fontWeight: 700,
+              color: '#667eea'
+            }}>
+              로그인
+            </Typography>
           </Box>
 
-          {/* Tab Content */}
+          {/* Content */}
           <Box sx={{ bgcolor: 'white', p: 3 }}>
-            {tabValue === 0 && <LoginForm />}
-            {tabValue === 1 && <RegisterForm />}
+            <LoginForm />
           </Box>
         </Paper>
 
@@ -165,8 +121,7 @@ function AuthPage({ onNavigateToHome, initialTab = 'login' }) {
 }
 
 AuthPage.propTypes = {
-  onNavigateToHome: PropTypes.func,
-  initialTab: PropTypes.oneOf(['login', 'signup'])
+  onNavigateToHome: PropTypes.func
 }
 
 export default AuthPage
