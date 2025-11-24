@@ -2,19 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
 
-// Async thunk for login
-export const loginAsync = createAsyncThunk(
-  'auth/loginAsync',
-  async (credentials, { rejectWithValue }) => {
-    try {
-      const response = await authService.login(credentials)
-      return response
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || '로그인에 실패했습니다.')
-    }
-  }
-)
-
 // Async thunk for logout
 export const logoutAsync = createAsyncThunk(
   'auth/logoutAsync',
@@ -63,28 +50,6 @@ export const kakaoLoginAsync = createAsyncThunk(
       return response
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message || '카카오 로그인에 실패했습니다.')
-    }
-  }
-)
-
-// Async thunk for registration
-export const registerAsync = createAsyncThunk(
-  'auth/registerAsync',
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await authService.register(userData)
-      // 회원가입 성공 후 토큰을 로컬 스토리지에 저장
-      if (response.token) {
-        authStorage.setToken(response.token)
-        authStorage.setUserData(response.user)
-        authStorage.setAuthProvider('email')
-        if (response.refresh_token) {
-          authStorage.setRefreshToken(response.refresh_token)
-        }
-      }
-      return response
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || '회원가입에 실패했습니다.')
     }
   }
 )
@@ -208,34 +173,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login cases
-      .addCase(loginAsync.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(loginAsync.fulfilled, (state, action) => {
-        state.loading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
-        state.authProvider = 'email'
-        state.error = null
-        
-        // 로컬 스토리지에 저장
-        authStorage.setToken(action.payload.token)
-        authStorage.setUserData(action.payload.user)
-        authStorage.setAuthProvider('email')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
-      })
-      .addCase(loginAsync.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload
-        state.isAuthenticated = false
-        state.user = null
-        state.token = null
-      })
       // Logout cases
       .addCase(logoutAsync.pending, (state) => {
         state.loading = true
@@ -341,26 +278,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false
         state.user = null
         state.token = null
-      })
-      // Registration cases
-      .addCase(registerAsync.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(registerAsync.fulfilled, (state, action) => {
-        state.loading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
-        state.error = null
-      })
-      .addCase(registerAsync.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload
-        state.isAuthenticated = false
-        state.user = null
-        state.token = null
-        state.authProvider = null
       })
       // Initialize auth cases (localStorage 기반)
       .addCase(initializeAuthAsync.pending, (state) => {
