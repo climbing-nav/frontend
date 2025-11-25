@@ -217,10 +217,10 @@ const authSlice = createSlice({
       .addCase(googleLoginAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isAuthenticated = true
-        // 백엔드 응답이 { nickname, userId, token, ... } 형태이므로 전체 payload를 user로 저장
+        // 백엔드 응답이 { data: { userId, nickname }, token, ... } 형태로 변경됨
         state.user = {
-          id: action.payload.userId,
-          nickname: action.payload.nickname
+          id: action.payload.data.userId,
+          nickname: action.payload.data.nickname
         }
         state.token = action.payload.token
         state.authProvider = 'google'
@@ -229,8 +229,8 @@ const authSlice = createSlice({
         // localStorage에 토큰 및 사용자 정보 저장
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
-          id: action.payload.userId,
-          nickname: action.payload.nickname
+          id: action.payload.data.userId,
+          nickname: action.payload.data.nickname
         })
         authStorage.setAuthProvider('google')
         if (action.payload.refresh_token) {
@@ -252,10 +252,10 @@ const authSlice = createSlice({
       .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isAuthenticated = true
-        // 백엔드 응답이 { nickname, userId, token, ... } 형태이므로 전체 payload를 user로 저장
+        // 백엔드 응답이 { data: { userId, nickname }, token, ... } 형태로 변경됨
         state.user = {
-          id: action.payload.userId,
-          nickname: action.payload.nickname
+          id: action.payload.data.userId,
+          nickname: action.payload.data.nickname
         }
         state.token = action.payload.token
         state.authProvider = 'kakao'
@@ -264,8 +264,8 @@ const authSlice = createSlice({
         // localStorage에 토큰 및 사용자 정보 저장
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
-          id: action.payload.userId,
-          nickname: action.payload.nickname
+          id: action.payload.data.userId,
+          nickname: action.payload.data.nickname
         })
         authStorage.setAuthProvider('kakao')
         if (action.payload.refresh_token) {
