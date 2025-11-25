@@ -23,9 +23,8 @@ export const useGoogleAuth = () => {
   }, [])
 
   const signOutWithGoogle = useCallback(() => {
-    // 로컬 토큰 제거 (실제 로그아웃은 authService에서 처리)
+    // 로컬 ACCESS 토큰 제거 (실제 로그아웃은 authService에서 처리, REFRESH 토큰은 HttpOnly 쿠키)
     localStorage.removeItem('token')
-    localStorage.removeItem('refresh_token')
   }, [])
 
   return {

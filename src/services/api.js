@@ -72,7 +72,6 @@ api.interceptors.response.use(
         isRefreshing = false
         clearAuthCookies()
         localStorage.removeItem('token')
-        localStorage.removeItem('refresh_token')
         window.location.href = '/'
         return Promise.reject(error)
       }
@@ -107,7 +106,6 @@ api.interceptors.response.use(
         processQueue(refreshError, null)
         clearAuthCookies()
         localStorage.removeItem('token')
-        localStorage.removeItem('refresh_token')
         window.location.href = '/'
         return Promise.reject(refreshError)
       } finally {

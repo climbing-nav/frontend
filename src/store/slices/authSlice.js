@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
+import { getRefreshToken } from '../../utils/cookieUtils'
 
 // Async thunk for logout
 export const logoutAsync = createAsyncThunk(
@@ -69,15 +70,13 @@ export const initializeAuthAsync = createAsyncThunk(
 
       // 토큰이 만료되었는지 확인
       if (authStorage.isTokenExpired(token)) {
-        const refreshToken = authStorage.getRefreshToken()
+        // REFRESH 토큰은 HttpOnly 쿠키로 관리됨
+        const refreshToken = getRefreshToken()
         if (refreshToken) {
           try {
-            // 토큰 갱신 시도
+            // 토큰 갱신 시도 (쿠키는 자동으로 전송됨)
             const refreshResponse = await authService.refreshToken()
             authStorage.setToken(refreshResponse.token)
-            if (refreshResponse.refresh_token) {
-              authStorage.setRefreshToken(refreshResponse.refresh_token)
-            }
             return {
               user: userData,
               token: refreshResponse.token,
@@ -226,16 +225,13 @@ const authSlice = createSlice({
         state.authProvider = 'google'
         state.error = null
 
-        // localStorage에 토큰 및 사용자 정보 저장
+        // localStorage에 ACCESS 토큰 및 사용자 정보 저장 (REFRESH 토큰은 HttpOnly 쿠키로 관리)
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
           id: action.payload.data.userId,
           nickname: action.payload.data.nickname
         })
         authStorage.setAuthProvider('google')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
       })
       .addCase(googleLoginAsync.rejected, (state, action) => {
         state.loading = false
@@ -261,16 +257,13 @@ const authSlice = createSlice({
         state.authProvider = 'kakao'
         state.error = null
 
-        // localStorage에 토큰 및 사용자 정보 저장
+        // localStorage에 ACCESS 토큰 및 사용자 정보 저장 (REFRESH 토큰은 HttpOnly 쿠키로 관리)
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
           id: action.payload.data.userId,
           nickname: action.payload.data.nickname
         })
         authStorage.setAuthProvider('kakao')
-        if (action.payload.refresh_token) {
-          authStorage.setRefreshToken(action.payload.refresh_token)
-        }
       })
       .addCase(kakaoLoginAsync.rejected, (state, action) => {
         state.loading = false
