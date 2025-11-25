@@ -2,7 +2,7 @@
 
 const AUTH_TOKEN_KEY = 'token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
-const USER_DATA_KEY = 'user_data'
+const USER_DATA_KEY = 'data'
 const AUTH_PROVIDER_KEY = 'auth_provider' // google, kakao, email
 
 // 서버 사이드 렌더링 환경 체크
