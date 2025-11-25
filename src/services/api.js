@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getRefreshToken, clearAuthCookies } from '../utils/cookieUtils'
+import { clearAuthCookies } from '../utils/cookieUtils'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -64,25 +64,15 @@ api.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
 
-      // REFRESH 토큰 확인
-      const refreshToken = getRefreshToken()
-
-      if (!refreshToken) {
-        // REFRESH 토큰이 없으면 로그아웃 처리
-        isRefreshing = false
-        clearAuthCookies()
-        localStorage.removeItem('token')
-        window.location.href = '/'
-        return Promise.reject(error)
-      }
-
       try {
-        // 토큰 갱신 요청
+        // HttpOnly 쿠키는 JavaScript로 읽을 수 없으므로 바로 토큰 갱신 요청
+        // 브라우저가 자동으로 REFRESH 쿠키를 전송함
+        // 백엔드가 쿠키 없거나 만료되었으면 401 에러 반환
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://52.78.220.103:8080'}/api/token/refresh`,
           {},
           {
-            withCredentials: true // REFRESH 쿠키 전송
+            withCredentials: true // REFRESH 쿠키 자동 전송
           }
         )
 

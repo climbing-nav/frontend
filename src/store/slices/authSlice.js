@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
-import { getRefreshToken } from '../../utils/cookieUtils'
 
 // Async thunk for logout
 export const logoutAsync = createAsyncThunk(
@@ -70,25 +69,19 @@ export const initializeAuthAsync = createAsyncThunk(
 
       // 토큰이 만료되었는지 확인
       if (authStorage.isTokenExpired(token)) {
-        // REFRESH 토큰은 HttpOnly 쿠키로 관리됨
-        const refreshToken = getRefreshToken()
-        if (refreshToken) {
-          try {
-            // 토큰 갱신 시도 (쿠키는 자동으로 전송됨)
-            const refreshResponse = await authService.refreshToken()
-            authStorage.setToken(refreshResponse.token)
-            return {
-              user: userData,
-              token: refreshResponse.token,
-              provider
-            }
-          } catch (refreshError) {
-            // 토큰 갱신 실패시 로그아웃 처리
-            authStorage.clearAuthData()
-            return { user: null, token: null, provider: null }
+        try {
+          // HttpOnly 쿠키는 JavaScript로 확인할 수 없으므로 바로 토큰 갱신 시도
+          // 브라우저가 자동으로 REFRESH 쿠키를 전송함
+          // 백엔드가 쿠키 없거나 만료되었으면 에러 반환
+          const refreshResponse = await authService.refreshToken()
+          authStorage.setToken(refreshResponse.token)
+          return {
+            user: userData,
+            token: refreshResponse.token,
+            provider
           }
-        } else {
-          // Refresh token이 없으면 로그아웃 처리
+        } catch (refreshError) {
+          // 토큰 갱신 실패시 (쿠키 없음 or 만료) 로그아웃 처리
           authStorage.clearAuthData()
           return { user: null, token: null, provider: null }
         }
