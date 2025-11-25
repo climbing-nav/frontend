@@ -42,6 +42,12 @@ export const deleteCookie = (name) => {
 
 /**
  * REFRESH 토큰 가져오기
+ *
+ * ⚠️ 주의: HttpOnly 쿠키는 JavaScript(document.cookie)로 읽을 수 없습니다!
+ * 이 함수는 HttpOnly가 아닌 일반 쿠키에만 작동합니다.
+ * HttpOnly 쿠키는 브라우저가 자동으로 전송하므로 확인할 필요가 없습니다.
+ *
+ * @deprecated HttpOnly 쿠키 사용 시 이 함수는 항상 null을 반환합니다.
  * @returns {string|null}
  */
 export const getRefreshToken = () => {
