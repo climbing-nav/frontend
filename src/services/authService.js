@@ -8,7 +8,6 @@ export const authService = {
 
     // localStorage와 쿠키 모두 정리
     localStorage.removeItem('token')
-    localStorage.removeItem('refresh_token')
     clearAuthCookies()
 
     return response.data
@@ -20,29 +19,20 @@ export const authService = {
   },
 
   async refreshToken() {
-    const refreshToken = localStorage.getItem('refresh_token')
-    if (!refreshToken) {
-      throw new Error('Refresh token이 없습니다.')
-    }
-
+    // REFRESH 토큰은 HttpOnly 쿠키로 관리되므로 withCredentials: true로 자동 전송됨
     try {
-      const response = await api.post('/auth/refresh', {
-        refresh_token: refreshToken
-      })
-      
-      // 새로운 토큰 저장
+      const response = await api.post('/api/token/refresh', {})
+
+      // 새로운 ACCESS 토큰 저장
       if (response.data.token) {
         localStorage.setItem('token', response.data.token)
-        if (response.data.refresh_token) {
-          localStorage.setItem('refresh_token', response.data.refresh_token)
-        }
       }
-      
+
       return response.data
     } catch (error) {
       // Refresh 실패시 토큰 정리
       localStorage.removeItem('token')
-      localStorage.removeItem('refresh_token')
+      clearAuthCookies()
       throw error
     }
   },
