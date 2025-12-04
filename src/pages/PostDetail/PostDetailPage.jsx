@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import PropTypes from 'prop-types'
 import {
   Box,
   AppBar,
@@ -15,7 +16,8 @@ import {
   List,
   ListItem,
   ListItemAvatar,
-  ListItemText
+  ListItemText,
+  CircularProgress
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -29,45 +31,27 @@ import {
   Comment as CommentIcon,
   Send as SendIcon
 } from '@mui/icons-material'
-import PropTypes from 'prop-types'
-import { likePost, unlikePost, bookmarkPost, unbookmarkPost } from '../../store/slices/communitySlice'
+import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync } from '../../store/slices/communitySlice'
+import { getBoardName } from '../../constants/boardCodes'
 
-// 카테고리 라벨 매핑
-const CATEGORY_LABELS = {
-  'general': '일반',
-  'climbing-tips': '클라이밍 팁',
-  'gear-review': '장비 리뷰',
-  'route-info': '루트 정보',
-  'gym-review': '짐 리뷰',
-  'technique': '기술 공유',
-  'safety': '안전 수칙',
-  'community': '커뮤니티',
-  '자유게시판': '자유게시판',
-  '팁&노하우': '팁&노하우',
-  '메이트모집': '메이트모집',
-  '중고거래': '중고거래',
-  '후기': '후기'
+// boardCode별 색상
+const BOARD_CODE_COLORS = {
+  'FREE': '#667eea',
+  'REVIEW': '#4facfe',
+  'TIP': '#f093fb',
+  'TRADE': '#fa709a',
+  'RECRUIT': '#43e97b'
 }
 
-// 카테고리 색상
-const CATEGORY_COLORS = {
-  'general': '#667eea',
-  'climbing-tips': '#f093fb',
-  'gear-review': '#4facfe',
-  'route-info': '#43e97b',
-  'gym-review': '#fa709a',
-  'technique': '#ffecd2',
-  'safety': '#ff9a9e',
-  'community': '#a8edea',
-  '자유게시판': '#667eea',
-  '팁&노하우': '#f093fb',
-  '메이트모집': '#43e97b',
-  '중고거래': '#fa709a',
-  '후기': '#4facfe'
-}
-
-function PostDetailPage({ post, onBack }) {
+function PostDetailPage({ post: propPost, onBack }) {
   const dispatch = useDispatch()
+
+  // Redux store에서 게시글 데이터 가져오기
+  const { selectedPost: reduxPost, loading, error } = useSelector(state => state.community)
+
+  // props로 받은 post 또는 Redux의 selectedPost 사용
+  const post = reduxPost || propPost
+
   const [comment, setComment] = useState('')
   const [comments, setComments] = useState([
     {
@@ -84,6 +68,44 @@ function PostDetailPage({ post, onBack }) {
     }
   ])
 
+  // 게시글 로드 (props에 post.id만 있고 전체 데이터가 없는 경우 API 조회)
+  useEffect(() => {
+    if (propPost?.id && !propPost?.content) {
+      dispatch(fetchPostAsync(propPost.id))
+    }
+  }, [dispatch, propPost])
+
+  // 로딩 상태 처리
+  if (loading && !post) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // 에러 처리
+  if (error && !post) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 3 }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          게시글을 불러올 수 없습니다
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+        <Button variant="contained" onClick={onBack}>
+          돌아가기
+        </Button>
+      </Box>
+    )
+  }
+
+  // 게시글이 없는 경우
+  if (!post) {
+    return null
+  }
+
   const {
     id,
     title,
@@ -92,6 +114,7 @@ function PostDetailPage({ post, onBack }) {
     author,
     createdAt,
     time,
+    boardCode,
     category,
     tags = [],
     likes = 0,
@@ -271,12 +294,12 @@ function PostDetailPage({ post, onBack }) {
                 >
                   {author?.name || '익명'}
                 </Typography>
-                {category && (
+                {(boardCode || category) && (
                   <Chip
-                    label={CATEGORY_LABELS[category] || category}
+                    label={getBoardName(boardCode || category)}
                     size="small"
                     sx={{
-                      bgcolor: CATEGORY_COLORS[category] || '#667eea',
+                      bgcolor: BOARD_CODE_COLORS[boardCode] || BOARD_CODE_COLORS[category] || '#667eea',
                       color: 'white',
                       fontSize: '0.7rem',
                       height: 20,
@@ -589,8 +612,8 @@ function PostDetailPage({ post, onBack }) {
 
 PostDetailPage.propTypes = {
   post: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    title: PropTypes.string.isRequired,
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    title: PropTypes.string,
     content: PropTypes.string,
     preview: PropTypes.string,
     author: PropTypes.shape({
@@ -600,6 +623,7 @@ PostDetailPage.propTypes = {
     }),
     createdAt: PropTypes.string,
     time: PropTypes.string,
+    boardCode: PropTypes.string,
     category: PropTypes.string,
     tags: PropTypes.arrayOf(PropTypes.string),
     likes: PropTypes.number,
@@ -607,7 +631,7 @@ PostDetailPage.propTypes = {
     views: PropTypes.number,
     isLiked: PropTypes.bool,
     isBookmarked: PropTypes.bool
-  }).isRequired,
+  }),
   onBack: PropTypes.func.isRequired
 }
 

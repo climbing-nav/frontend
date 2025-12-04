@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { communityService } from '../../services/communityService'
 
 const initialState = {
   posts: [],
@@ -6,6 +7,7 @@ const initialState = {
   comments: [],
   loading: false,
   error: null,
+  success: null,
   pagination: {
     page: 1,
     totalPages: 1,
@@ -30,6 +32,36 @@ const communitySlice = createSlice({
       }
     },
     fetchPostsFailure: (state, action) => {
+      state.loading = false
+      state.error = action.payload
+    },
+
+    // 게시글 생성 액션
+    createPostStart: (state) => {
+      state.loading = true
+      state.error = null
+      state.success = null
+    },
+    createPostSuccess: (state, action) => {
+      state.loading = false
+      state.posts.unshift(action.payload) // 새 게시글을 맨 위에 추가
+      state.success = '게시글이 작성되었습니다'
+    },
+    createPostFailure: (state, action) => {
+      state.loading = false
+      state.error = action.payload
+    },
+
+    // 게시글 단건 조회 액션
+    fetchPostStart: (state) => {
+      state.loading = true
+      state.error = null
+    },
+    fetchPostSuccess: (state, action) => {
+      state.loading = false
+      state.selectedPost = action.payload
+    },
+    fetchPostFailure: (state, action) => {
       state.loading = false
       state.error = action.payload
     },
@@ -71,6 +103,9 @@ const communitySlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    clearSuccess: (state) => {
+      state.success = null
+    },
     resetCommunity: (state) => {
       return initialState
     },
@@ -109,8 +144,14 @@ const communitySlice = createSlice({
 
 export const {
   fetchPostsStart,
-  fetchPostsSuccess, 
+  fetchPostsSuccess,
   fetchPostsFailure,
+  createPostStart,
+  createPostSuccess,
+  createPostFailure,
+  fetchPostStart,
+  fetchPostSuccess,
+  fetchPostFailure,
   addPost,
   updatePost,
   deletePost,
@@ -121,11 +162,45 @@ export const {
   addComment,
   deleteComment,
   clearError,
+  clearSuccess,
   resetCommunity,
   likePost,
   unlikePost,
   bookmarkPost,
   unbookmarkPost
 } = communitySlice.actions
+
+// Thunk Actions (비동기 액션)
+/**
+ * 게시글 생성 Thunk
+ */
+export const createPostAsync = (postData) => async (dispatch) => {
+  try {
+    dispatch(createPostStart())
+    const newPost = await communityService.createPost(postData)
+    dispatch(createPostSuccess(newPost))
+    return newPost
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '게시글 작성에 실패했습니다'
+    dispatch(createPostFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * 게시글 조회 Thunk
+ */
+export const fetchPostAsync = (postId) => async (dispatch) => {
+  try {
+    dispatch(fetchPostStart())
+    const post = await communityService.getPostById(postId)
+    dispatch(fetchPostSuccess(post))
+    return post
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '게시글을 불러오는데 실패했습니다'
+    dispatch(fetchPostFailure(errorMessage))
+    throw error
+  }
+}
 
 export default communitySlice.reducer

@@ -27,12 +27,13 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
-import { addPost, updatePost, fetchPostsStart, fetchPostsSuccess, fetchPostsFailure } from '../../../store/slices/communitySlice'
+import { addPost, updatePost, fetchPostsStart, fetchPostsSuccess, fetchPostsFailure, createPostAsync } from '../../../store/slices/communitySlice'
+import { BOARD_CODE_LIST } from '../../../constants/boardCodes'
 
 /**
  * PostForm Component
  * Creates and edits posts with comprehensive form functionality
- * 
+ *
  * @param {Object} props
  * @param {Object} props.post - Existing post data for editing (optional)
  * @param {Function} props.onSubmit - Form submission handler
@@ -40,17 +41,6 @@ import { addPost, updatePost, fetchPostsStart, fetchPostsSuccess, fetchPostsFail
  * @param {Function} props.onSaveDraft - Save draft handler
  * @param {boolean} props.isLoading - Loading state
  */
-// Category options for dropdown
-const CATEGORY_OPTIONS = [
-  { value: 'general', label: '일반' },
-  { value: 'climbing-tips', label: '클라이밍 팁' },
-  { value: 'gear-review', label: '장비 리뷰' },
-  { value: 'route-info', label: '루트 정보' },
-  { value: 'gym-review', label: '짐 리뷰' },
-  { value: 'technique', label: '기술 공유' },
-  { value: 'safety', label: '안전 수칙' },
-  { value: 'community', label: '커뮤니티' }
-]
 
 // Form validation constants
 const VALIDATION_RULES = {
@@ -76,8 +66,8 @@ const VALIDATION_RULES = {
       message: '내용은 10자 이상 입력해주세요'
     }
   },
-  category: {
-    required: '카테고리를 선택해주세요'
+  boardCode: {
+    required: '게시판을 선택해주세요'
   }
 }
 
@@ -118,7 +108,7 @@ function PostForm({
     defaultValues: {
       title: post?.title || '',
       content: post?.content || '',
-      category: post?.category || '',
+      boardCode: post?.boardCode || 'FREE',
       tags: post?.tags || [],
       images: post?.images || []
     }
@@ -181,7 +171,7 @@ function PostForm({
       reset({
         title: post.title || '',
         content: post.content || '',
-        category: post.category || '',
+        boardCode: post.boardCode || 'FREE',
         tags: post.tags || [],
         images: post.images || []
       })
@@ -335,51 +325,37 @@ function PostForm({
 
   const onFormSubmit = async (data) => {
     try {
-      dispatch(fetchPostsStart())
-      
+      // 백엔드 API 스펙에 맞는 데이터 구조
       const postData = {
-        id: isEditing ? post.id : Date.now(),
         title: data.title,
         content: data.content,
-        category: data.category,
-        tags: data.tags,
-        images: imageFiles, // Include actual files
-        author: {
-          id: 'current-user-id', // Replace with actual user ID from auth
-          name: '사용자', // Replace with actual user name
-          avatar: null
-        },
-        createdAt: isEditing ? post.createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        likes: isEditing ? post.likes : 0,
-        comments: isEditing ? post.comments : 0,
-        views: isEditing ? post.views : 0
+        boardCode: data.boardCode
       }
 
       if (isEditing) {
+        // TODO: 백엔드에 수정 API가 추가되면 구현
         dispatch(updatePost(postData))
       } else {
-        dispatch(addPost(postData))
+        // Redux Thunk를 통한 게시글 생성
+        const createdPost = await dispatch(createPostAsync(postData)).unwrap()
+
         // Clear draft after successful submission
         localStorage.removeItem(draftKey)
         setLastSaved(null)
-      }
 
-      dispatch(fetchPostsSuccess([postData]))
-      
-      // Call parent onSubmit if provided
-      onSubmit(postData)
-      
-      // Reset form after successful submission
-      if (!isEditing) {
+        // Call parent onSubmit if provided
+        onSubmit(createdPost)
+
+        // Reset form after successful submission
         reset()
         setImageFiles([])
         setImagePreviews([])
         setTagInput('')
       }
-      
+
     } catch (error) {
-      dispatch(fetchPostsFailure(error.message || 'Failed to submit post'))
+      console.error('게시글 작성 실패:', error)
+      // 에러는 Redux에서 처리됨
     }
   }
 
@@ -387,7 +363,7 @@ function PostForm({
     const currentValues = {
       title: watchedTitle,
       content: watchedContent,
-      category: watch('category'),
+      boardCode: watch('boardCode'),
       tags: watch('tags'),
       images: watch('images')
     }
@@ -576,31 +552,31 @@ function PostForm({
             </Box>
           </Box>
 
-          {/* Category Selection */}
+          {/* Board Code Selection */}
           <Box>
             <Controller
-              name="category"
+              name="boardCode"
               control={control}
-              rules={VALIDATION_RULES.category}
+              rules={VALIDATION_RULES.boardCode}
               render={({ field }) => (
-                <FormControl fullWidth error={!!errors.category}>
-                  <InputLabel id="category-label">카테고리</InputLabel>
+                <FormControl fullWidth error={!!errors.boardCode}>
+                  <InputLabel id="boardCode-label">게시판</InputLabel>
                   <Select
                     {...field}
-                    labelId="category-label"
-                    label="카테고리"
+                    labelId="boardCode-label"
+                    label="게시판"
                     sx={{
                       borderRadius: 2,
                     }}
                   >
-                    {CATEGORY_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                    {BOARD_CODE_LIST.map((board) => (
+                      <MenuItem key={board.code} value={board.code}>
+                        {board.name}
                       </MenuItem>
                     ))}
                   </Select>
-                  {errors.category && (
-                    <FormHelperText>{errors.category.message}</FormHelperText>
+                  {errors.boardCode && (
+                    <FormHelperText>{errors.boardCode.message}</FormHelperText>
                   )}
                 </FormControl>
               )}
@@ -916,7 +892,7 @@ PostForm.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     title: PropTypes.string,
     content: PropTypes.string,
-    category: PropTypes.string,
+    boardCode: PropTypes.string,
     tags: PropTypes.arrayOf(PropTypes.string),
     images: PropTypes.arrayOf(PropTypes.string),
     createdAt: PropTypes.string,
