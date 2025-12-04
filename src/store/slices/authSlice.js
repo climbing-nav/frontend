@@ -155,6 +155,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    setAuthError: (state, action) => {
+      state.error = action.payload
+    },
     setLoading: (state, action) => {
       state.loading = action.payload
     },
@@ -298,12 +301,13 @@ const authSlice = createSlice({
   },
 })
 
-export const { 
-  loginStart, 
-  loginSuccess, 
-  loginFailure, 
-  logout, 
-  clearError, 
+export const {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+  logout,
+  clearError,
+  setAuthError,
   setLoading,
   updateUserProfile
 } = authSlice.actions

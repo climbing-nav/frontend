@@ -1,6 +1,9 @@
 import api from './api'
 
 export const communityService = {
+  /**
+   * 게시글 목록 조회 (TODO: 백엔드 API 확인 필요)
+   */
   async getPosts(page = 1, limit = 10) {
     const response = await api.get('/posts', {
       params: { page, limit }
@@ -8,13 +11,28 @@ export const communityService = {
     return response.data
   },
 
-  async getPostById(id) {
-    const response = await api.get(`/posts/${id}`)
+  /**
+   * 게시글 조회
+   * @param {number|string} postId - 게시글 ID
+   */
+  async getPostById(postId) {
+    const response = await api.get(`/api/posts/${postId}`)
     return response.data
   },
 
-  async createPost(postData) {
-    const response = await api.post('/posts', postData)
+  /**
+   * 게시글 생성
+   * @param {Object} postData
+   * @param {string} postData.title - 제목
+   * @param {string} postData.content - 내용
+   * @param {string} postData.boardCode - 게시판 코드 (FREE, REVIEW, TIP, TRADE, RECRUIT)
+   */
+  async createPost({ title, content, boardCode }) {
+    const response = await api.post('/api/posts/save', {
+      title,
+      content,
+      boardCode
+    })
     return response.data
   },
 

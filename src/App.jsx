@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
-import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated } from './store/slices/authSlice'
+import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated, setAuthError } from './store/slices/authSlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
 import OAuthCallbackLoading from './components/common/OAuthCallbackLoading/OAuthCallbackLoading'
+import GlobalSnackbar from './components/common/Snackbar/GlobalSnackbar'
 import HomePage from './pages/Home/HomePage'
 import CommunityPage from './pages/Community/CommunityPage'
 import MapPage from './pages/Map/MapPage'
@@ -238,6 +239,17 @@ function App() {
   }
 
   const handleNavigateToPostCreate = () => {
+    // 로그인 체크
+    if (!isAuthenticated) {
+      // Snackbar로 에러 메시지 표시
+      dispatch(setAuthError('로그인이 필요한 기능입니다.'))
+      // 잠시 후 로그인 페이지로 이동
+      setTimeout(() => {
+        setCurrentPage('auth')
+      }, 1500)
+      return
+    }
+
     setCurrentPage('postCreate')
   }
 
@@ -304,6 +316,8 @@ function App() {
             {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
+        {/* 전역 Snackbar */}
+        <GlobalSnackbar />
       </Box>
     </ThemeProvider>
   )
