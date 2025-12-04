@@ -16,7 +16,7 @@ export const communityService = {
    * @param {number|string} postId - 게시글 ID
    */
   async getPostById(postId) {
-    const response = await api.get(`/api/posts/${postId}`)
+    const response = await api.get(`/posts/${postId}`)
     return response.data
   },
 
@@ -28,7 +28,7 @@ export const communityService = {
    * @param {string} postData.boardCode - 게시판 코드 (FREE, REVIEW, TIP, TRADE, RECRUIT)
    */
   async createPost({ title, content, boardCode }) {
-    const response = await api.post('/api/posts/save', {
+    const response = await api.post('/posts/save', {
       title,
       content,
       boardCode
