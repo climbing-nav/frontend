@@ -172,6 +172,22 @@ export const {
 
 // Thunk Actions (비동기 액션)
 /**
+ * 게시글 목록 조회 Thunk
+ */
+export const fetchPostsAsync = (page = 1, limit = 10) => async (dispatch) => {
+  try {
+    dispatch(fetchPostsStart())
+    const data = await communityService.getPosts(page, limit)
+    dispatch(fetchPostsSuccess(data))
+    return data
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '게시글 목록을 불러오는데 실패했습니다'
+    dispatch(fetchPostsFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
  * 게시글 생성 Thunk
  */
 export const createPostAsync = (postData) => async (dispatch) => {
