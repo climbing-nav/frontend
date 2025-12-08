@@ -212,10 +212,11 @@ const authSlice = createSlice({
       .addCase(googleLoginAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isAuthenticated = true
-        // 백엔드 응답이 { data: { userId, nickname }, token, ... } 형태로 변경됨
+        // 백엔드 응답이 { data: { email, nickname, avatar }, token, ... } 형태
         state.user = {
-          id: action.payload.data.userId,
-          nickname: action.payload.data.nickname
+          email: action.payload.data.email,
+          nickname: action.payload.data.nickname,
+          avatar: action.payload.data.avatar
         }
         state.token = action.payload.token
         state.authProvider = 'google'
@@ -224,8 +225,9 @@ const authSlice = createSlice({
         // localStorage에 ACCESS 토큰 및 사용자 정보 저장 (REFRESH 토큰은 HttpOnly 쿠키로 관리)
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
-          id: action.payload.data.userId,
-          nickname: action.payload.data.nickname
+          email: action.payload.data.email,
+          nickname: action.payload.data.nickname,
+          avatar: action.payload.data.avatar
         })
         authStorage.setAuthProvider('google')
       })
@@ -244,10 +246,11 @@ const authSlice = createSlice({
       .addCase(kakaoLoginAsync.fulfilled, (state, action) => {
         state.loading = false
         state.isAuthenticated = true
-        // 백엔드 응답이 { data: { userId, nickname }, token, ... } 형태로 변경됨
+        // 백엔드 응답이 { data: { email, nickname, avatar }, token, ... } 형태
         state.user = {
-          id: action.payload.data.userId,
-          nickname: action.payload.data.nickname
+          email: action.payload.data.email,
+          nickname: action.payload.data.nickname,
+          avatar: action.payload.data.avatar
         }
         state.token = action.payload.token
         state.authProvider = 'kakao'
@@ -256,8 +259,9 @@ const authSlice = createSlice({
         // localStorage에 ACCESS 토큰 및 사용자 정보 저장 (REFRESH 토큰은 HttpOnly 쿠키로 관리)
         authStorage.setToken(action.payload.token)
         authStorage.setUserData({
-          id: action.payload.data.userId,
-          nickname: action.payload.data.nickname
+          email: action.payload.data.email,
+          nickname: action.payload.data.nickname,
+          avatar: action.payload.data.avatar
         })
         authStorage.setAuthProvider('kakao')
       })

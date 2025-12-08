@@ -178,15 +178,17 @@ function PostCard({
       <CardHeader
         avatar={
           <Avatar
-            src={author?.avatar}
-            alt={author?.name}
+            src={avatarUrl}
+            alt={typeof author === 'string' ? author : author?.name}
             sx={{
               bgcolor: '#667eea',
               width: 40,
               height: 40
             }}
           >
-            {author?.name?.charAt(0)?.toUpperCase() || 'U'}
+            {typeof author === 'string'
+              ? author?.charAt(0)?.toUpperCase()
+              : author?.name?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
         }
         title={
