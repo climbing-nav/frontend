@@ -9,7 +9,10 @@ function PostCreatePage({ onNavigateBack, onPostCreated }) {
     // PostForm 내부에서 Redux 처리가 완료되면
     // 성공 시 커뮤니티 페이지로 돌아가기
     if (onPostCreated) {
+      console.log('Navigating back to community page...')
       onPostCreated()
+    } else {
+      console.warn('onPostCreated callback not provided')
     }
   }
 
