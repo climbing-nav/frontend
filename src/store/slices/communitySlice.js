@@ -26,9 +26,18 @@ const communitySlice = createSlice({
     },
     fetchPostsSuccess: (state, action) => {
       state.loading = false
-      state.posts = action.payload.posts || action.payload
-      if (action.payload.pagination) {
-        state.pagination = action.payload.pagination
+      // API 응답 구조: { data: { posts: [], hasNext, nextCursorId } }
+      const responseData = action.payload.data || action.payload
+      const posts = responseData.posts || []
+      state.posts = Array.isArray(posts) ? posts : []
+
+      // 페이지네이션 정보 업데이트
+      if (responseData.hasNext !== undefined) {
+        state.pagination = {
+          ...state.pagination,
+          hasNextPage: responseData.hasNext,
+          nextCursorId: responseData.nextCursorId
+        }
       }
     },
     fetchPostsFailure: (state, action) => {
