@@ -112,6 +112,7 @@ function PostDetailPage({ post: propPost, onBack }) {
     content,
     preview,
     author,
+    avatarUrl,
     createdAt,
     time,
     boardCode,
@@ -272,8 +273,8 @@ function PostDetailPage({ post: propPost, onBack }) {
             mb: 2
           }}>
             <Avatar
-              src={author?.avatar}
-              alt={author?.name}
+              src={avatarUrl}
+              alt={typeof author === 'string' ? author : author?.name}
               sx={{
                 bgcolor: '#667eea',
                 width: 44,
@@ -281,7 +282,9 @@ function PostDetailPage({ post: propPost, onBack }) {
                 mr: 1.5
               }}
             >
-              {author?.name?.charAt(0)?.toUpperCase() || 'U'}
+              {typeof author === 'string'
+                ? author?.charAt(0)?.toUpperCase()
+                : author?.name?.charAt(0)?.toUpperCase() || 'U'}
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -292,7 +295,7 @@ function PostDetailPage({ post: propPost, onBack }) {
                     color: '#333'
                   }}
                 >
-                  {author?.name || '익명'}
+                  {typeof author === 'string' ? author : author?.name || '익명'}
                 </Typography>
                 {(boardCode || category) && (
                   <Chip
