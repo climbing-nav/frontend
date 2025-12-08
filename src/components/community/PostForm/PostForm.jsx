@@ -337,20 +337,23 @@ function PostForm({
         dispatch(updatePost(postData))
       } else {
         // Redux Thunk를 통한 게시글 생성
-        const createdPost = await dispatch(createPostAsync(postData)).unwrap()
+        const createdPost = await dispatch(createPostAsync(postData))
 
-        // Clear draft after successful submission
-        localStorage.removeItem(draftKey)
-        setLastSaved(null)
+        // createdPost가 성공적으로 반환되면 처리
+        if (createdPost) {
+          // Clear draft after successful submission
+          localStorage.removeItem(draftKey)
+          setLastSaved(null)
 
-        // Call parent onSubmit if provided
-        onSubmit(createdPost)
+          // Call parent onSubmit if provided
+          onSubmit(createdPost)
 
-        // Reset form after successful submission
-        reset()
-        setImageFiles([])
-        setImagePreviews([])
-        setTagInput('')
+          // Reset form after successful submission
+          reset()
+          setImageFiles([])
+          setImagePreviews([])
+          setTagInput('')
+        }
       }
 
     } catch (error) {
