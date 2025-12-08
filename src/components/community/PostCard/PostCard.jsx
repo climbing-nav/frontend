@@ -198,7 +198,7 @@ function PostCard({
                 color: '#333'
               }}
             >
-              {author?.name || '익명'}
+              {typeof author === 'string' ? author : author?.name || '익명'}
             </Typography>
             {category && (
               <Chip

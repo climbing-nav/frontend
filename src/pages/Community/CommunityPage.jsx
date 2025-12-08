@@ -20,10 +20,11 @@ function CommunityPage({ onNavigateToPostDetail }) {
   const { posts, loading, error } = useSelector(state => state.community)
   const [activeTab, setActiveTab] = useState(0)
 
-  // 게시글 목록 로드
+  // 게시글 목록 로드 (탭 변경 시마다 재요청)
   useEffect(() => {
-    dispatch(fetchPostsAsync())
-  }, [dispatch])
+    const selectedBoardCode = tabs[activeTab].boardCode
+    dispatch(fetchPostsAsync(1, 10, selectedBoardCode))
+  }, [dispatch, activeTab])
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -36,13 +37,9 @@ function CommunityPage({ onNavigateToPostDetail }) {
     }
   }
 
-  // 선택된 탭에 따라 게시물 필터링
-  const selectedBoardCode = tabs[activeTab].boardCode
   // posts가 배열인지 확인 (방어적 코드)
   const postsArray = Array.isArray(posts) ? posts : []
-  const filteredPosts = selectedBoardCode === null
-    ? postsArray // '전체' 탭인 경우 모든 게시물 표시
-    : postsArray.filter(post => post.boardCode === selectedBoardCode)
+  // 서버 사이드 필터링이므로 클라이언트 필터링 불필요
 
   // 로딩 상태
   if (loading && postsArray.length === 0) {
@@ -100,8 +97,8 @@ function CommunityPage({ onNavigateToPostDetail }) {
       </Tabs>
 
       <Box sx={{ py: 2, px: 2.5 }}>
-        {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => (
+        {postsArray.length > 0 ? (
+          postsArray.map((post) => (
             <PostCard
               key={post.id}
               post={post}
