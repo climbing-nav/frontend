@@ -213,10 +213,14 @@ function PostDetailPage({ post: propPost, onBack }) {
 
   return (
     <Box sx={{
+      width: '100%',
+      maxWidth: '393px',
+      minWidth: '393px',
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      bgcolor: '#f8f9fa'
+      bgcolor: '#f8f9fa',
+      margin: '0 auto'
     }}>
       {/* 헤더 */}
       <AppBar
