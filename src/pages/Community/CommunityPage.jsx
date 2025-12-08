@@ -47,7 +47,7 @@ function CommunityPage({ onNavigateToPostDetail }) {
   // 로딩 상태
   if (loading && postsArray.length === 0) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', width: '100%', minWidth: '393px' }}>
         <CircularProgress />
       </Box>
     )
@@ -56,7 +56,7 @@ function CommunityPage({ onNavigateToPostDetail }) {
   // 에러 상태
   if (error && postsArray.length === 0) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', p: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', width: '100%', minWidth: '393px', p: 3 }}>
         <Typography variant="h6" color="error" gutterBottom>
           게시글을 불러올 수 없습니다
         </Typography>

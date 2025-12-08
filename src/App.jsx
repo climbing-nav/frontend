@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
 import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated, setAuthError } from './store/slices/authSlice'
+import { fetchPostsAsync } from './store/slices/communitySlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -259,9 +260,18 @@ function App() {
   }
 
   const handlePostCreated = () => {
+    // 임시저장 데이터 정리
+    try {
+      localStorage.removeItem('post-draft-new')
+    } catch (error) {
+      console.error('Failed to clear draft:', error)
+    }
+
     // 포스트 생성 완료 후 커뮤니티 페이지로 이동
     setCurrentPage('community')
     setCurrentTab('community')
+    // 게시글 목록 새로고침
+    dispatch(fetchPostsAsync())
   }
 
   const handleNavigateToGymList = () => {
