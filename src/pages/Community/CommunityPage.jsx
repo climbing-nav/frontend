@@ -38,12 +38,14 @@ function CommunityPage({ onNavigateToPostDetail }) {
 
   // 선택된 탭에 따라 게시물 필터링
   const selectedBoardCode = tabs[activeTab].boardCode
+  // posts가 배열인지 확인 (방어적 코드)
+  const postsArray = Array.isArray(posts) ? posts : []
   const filteredPosts = selectedBoardCode === null
-    ? posts // '전체' 탭인 경우 모든 게시물 표시
-    : posts.filter(post => post.boardCode === selectedBoardCode)
+    ? postsArray // '전체' 탭인 경우 모든 게시물 표시
+    : postsArray.filter(post => post.boardCode === selectedBoardCode)
 
   // 로딩 상태
-  if (loading && posts.length === 0) {
+  if (loading && postsArray.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
         <CircularProgress />
@@ -52,7 +54,7 @@ function CommunityPage({ onNavigateToPostDetail }) {
   }
 
   // 에러 상태
-  if (error && posts.length === 0) {
+  if (error && postsArray.length === 0) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', p: 3 }}>
         <Typography variant="h6" color="error" gutterBottom>
@@ -98,13 +100,21 @@ function CommunityPage({ onNavigateToPostDetail }) {
       </Tabs>
 
       <Box sx={{ py: 2, px: 2.5 }}>
-        {filteredPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onCardClick={handlePostClick}
-          />
-        ))}
+        {filteredPosts.length > 0 ? (
+          filteredPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onCardClick={handlePostClick}
+            />
+          ))
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+            <Typography variant="body1" color="text.secondary">
+              게시글이 없습니다
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   )

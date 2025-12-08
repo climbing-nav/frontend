@@ -72,9 +72,9 @@ function PostCard({
     likes = 0,
     comments = 0,
     views = 0,
-    isLiked = false,
-    isBookmarked = false,
-    images = []
+    likeCount = false,
+    images = [],
+    avatarUrl
   } = post
 
   // Format date
@@ -114,7 +114,7 @@ function PostCard({
   // Handle like toggle
   const handleLikeToggle = (e) => {
     e.stopPropagation()
-    if (isLiked) {
+    if (likeCount) {
       dispatch(unlikePost(id))
     } else {
       dispatch(likePost(id))
@@ -357,15 +357,15 @@ function PostCard({
             onClick={handleLikeToggle}
             size="small"
             sx={{
-              color: isLiked ? '#f44336' : '#666',
+              color: likeCount ? '#f44336' : '#666',
               '&:hover': {
-                bgcolor: isLiked 
+                bgcolor: likeCount 
                   ? 'rgba(244, 67, 54, 0.04)' 
                   : 'rgba(0, 0, 0, 0.04)'
               }
             }}
           >
-            {isLiked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+            {likeCount ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
           </IconButton>
           <Typography
             variant="caption"
@@ -453,7 +453,7 @@ PostCard.propTypes = {
     likes: PropTypes.number,
     comments: PropTypes.number,
     views: PropTypes.number,
-    isLiked: PropTypes.bool,
+    likeCount: PropTypes.bool,
     isBookmarked: PropTypes.bool,
     images: PropTypes.array
   }).isRequired,
