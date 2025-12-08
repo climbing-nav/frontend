@@ -2,12 +2,20 @@ import api from './api'
 
 export const communityService = {
   /**
-   * 게시글 목록 조회 (TODO: 백엔드 API 확인 필요)
+   * 게시글 목록 조회
+   * @param {number} page - 페이지 번호
+   * @param {number} limit - 페이지당 게시글 수
+   * @param {string} boardCode - 게시판 코드 (FREE, REVIEW, TIP, TRADE, RECRUIT) - null이면 전체 조회
    */
-  async getPosts(page = 1, limit = 10) {
-    const response = await api.get('/posts', {
-      params: { page, limit }
-    })
+  async getPosts(page = 1, limit = 10, boardCode = null) {
+    const params = { page, limit }
+
+    // boardCode가 있으면 파라미터에 추가
+    if (boardCode) {
+      params.code = boardCode
+    }
+
+    const response = await api.get('/posts', { params })
     return response.data
   },
 

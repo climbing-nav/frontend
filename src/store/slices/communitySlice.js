@@ -53,7 +53,7 @@ const communitySlice = createSlice({
     },
     createPostSuccess: (state, action) => {
       state.loading = false
-      state.posts.unshift(action.payload) // 새 게시글을 맨 위에 추가
+      // 게시글 목록은 fetchPostsAsync로 새로고침하므로 여기서는 추가하지 않음
       state.success = '게시글이 작성되었습니다'
     },
     createPostFailure: (state, action) => {
@@ -182,11 +182,14 @@ export const {
 // Thunk Actions (비동기 액션)
 /**
  * 게시글 목록 조회 Thunk
+ * @param {number} page - 페이지 번호
+ * @param {number} limit - 페이지당 게시글 수
+ * @param {string} boardCode - 게시판 코드 (null이면 전체 조회)
  */
-export const fetchPostsAsync = (page = 1, limit = 10) => async (dispatch) => {
+export const fetchPostsAsync = (page = 1, limit = 10, boardCode = null) => async (dispatch) => {
   try {
     dispatch(fetchPostsStart())
-    const data = await communityService.getPosts(page, limit)
+    const data = await communityService.getPosts(page, limit, boardCode)
     dispatch(fetchPostsSuccess(data))
     return data
   } catch (error) {
