@@ -69,12 +69,13 @@ function PostCard({
     time,
     category,
     tags = [],
-    likes = 0,
-    comments = 0,
+    likeCount = 0,
+    commentsCount = 0,
     views = 0,
-    likeCount = false,
     images = [],
-    avatarUrl
+    avatarUrl,
+    isLiked = false,
+    isBookmarked = false
   } = post
 
   // Format date
@@ -114,7 +115,7 @@ function PostCard({
   // Handle like toggle
   const handleLikeToggle = (e) => {
     e.stopPropagation()
-    if (likeCount) {
+    if (isLiked) {
       dispatch(unlikePost(id))
     } else {
       dispatch(likePost(id))
@@ -357,22 +358,22 @@ function PostCard({
             onClick={handleLikeToggle}
             size="small"
             sx={{
-              color: likeCount ? '#f44336' : '#666',
+              color: isLiked ? '#f44336' : '#666',
               '&:hover': {
-                bgcolor: likeCount 
-                  ? 'rgba(244, 67, 54, 0.04)' 
+                bgcolor: isLiked
+                  ? 'rgba(244, 67, 54, 0.04)'
                   : 'rgba(0, 0, 0, 0.04)'
               }
             }}
           >
-            {likeCount ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+            {isLiked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
           </IconButton>
           <Typography
             variant="caption"
             color="text.secondary"
             sx={{ minWidth: 20 }}
           >
-            {likes}
+            {likeCount}
           </Typography>
 
           {/* Comment Button */}
@@ -394,7 +395,7 @@ function PostCard({
             color="text.secondary"
             sx={{ minWidth: 20 }}
           >
-            {comments}
+            {commentsCount}
           </Typography>
         </Box>
 
@@ -450,10 +451,11 @@ PostCard.propTypes = {
     time: PropTypes.string,
     category: PropTypes.string,
     tags: PropTypes.arrayOf(PropTypes.string),
-    likes: PropTypes.number,
-    comments: PropTypes.number,
+    likeCount: PropTypes.number,
+    commentsCount: PropTypes.number,
     views: PropTypes.number,
-    likeCount: PropTypes.bool,
+    avatarUrl: PropTypes.string,
+    isLiked: PropTypes.bool,
     isBookmarked: PropTypes.bool,
     images: PropTypes.array
   }).isRequired,
