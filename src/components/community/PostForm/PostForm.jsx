@@ -93,6 +93,7 @@ function PostForm({
   // Draft save state
   const [lastSaved, setLastSaved] = useState(null)
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   // React Hook Form setup
   const {
@@ -184,12 +185,13 @@ function PostForm({
   // Auto-save on form changes
   useEffect(() => {
     const subscription = watch((data) => {
-      if (!isEditing && (data.title?.trim() || data.content?.trim())) {
+      // 제출 완료 후에는 auto-save 비활성화
+      if (!isEditing && !isSubmitted && (data.title?.trim() || data.content?.trim())) {
         debouncedSaveDraft(data)
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, debouncedSaveDraft, isEditing])
+  }, [watch, debouncedSaveDraft, isEditing, isSubmitted])
 
   // Debounce utility function
   function debounce(func, wait) {
@@ -341,18 +343,21 @@ function PostForm({
 
         // createdPost가 성공적으로 반환되면 처리
         if (createdPost) {
+          // 제출 완료 플래그 설정 (auto-save 비활성화)
+          setIsSubmitted(true)
+
           // Clear draft after successful submission
           localStorage.removeItem(draftKey)
           setLastSaved(null)
-
-          // Call parent onSubmit if provided
-          onSubmit(createdPost)
 
           // Reset form after successful submission
           reset()
           setImageFiles([])
           setImagePreviews([])
           setTagInput('')
+
+          // Call parent onSubmit if provided
+          onSubmit(createdPost)
         }
       }
 
