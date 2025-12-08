@@ -182,14 +182,12 @@ export const {
 // Thunk Actions (비동기 액션)
 /**
  * 게시글 목록 조회 Thunk
- * @param {number} page - 페이지 번호
- * @param {number} limit - 페이지당 게시글 수
  * @param {string} boardCode - 게시판 코드 (null이면 전체 조회)
  */
-export const fetchPostsAsync = (page = 1, limit = 10, boardCode = null) => async (dispatch) => {
+export const fetchPostsAsync = (boardCode = null) => async (dispatch) => {
   try {
     dispatch(fetchPostsStart())
-    const data = await communityService.getPosts(page, limit, boardCode)
+    const data = await communityService.getPosts(boardCode)
     dispatch(fetchPostsSuccess(data))
     return data
   } catch (error) {

@@ -23,7 +23,7 @@ function CommunityPage({ onNavigateToPostDetail }) {
   // 게시글 목록 로드 (탭 변경 시마다 재요청)
   useEffect(() => {
     const selectedBoardCode = tabs[activeTab].boardCode
-    dispatch(fetchPostsAsync(1, 10, selectedBoardCode))
+    dispatch(fetchPostsAsync(selectedBoardCode))
   }, [dispatch, activeTab])
 
   const handleTabChange = (event, newValue) => {
