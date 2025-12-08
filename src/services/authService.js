@@ -4,7 +4,7 @@ import { clearAuthCookies } from '../utils/cookieUtils'
 
 export const authService = {
   async logout() {
-    const response = await api.post('/auth/logout')
+    const response = await api.post('/token/logout')
 
     // localStorage와 쿠키 모두 정리
     localStorage.removeItem('token')
