@@ -1,15 +1,17 @@
 import { useSelector } from 'react-redux'
 import PostForm from '../../components/community/PostForm/PostForm'
+import PropTypes from 'prop-types'
 
-function PostCreatePage({ onNavigateBack, onPostCreated }) {
+function PostCreatePage({ post, onNavigateBack, onPostCreated }) {
   const { loading } = useSelector(state => state.community)
+  const isEditing = Boolean(post)
 
   const handleSubmit = (postData) => {
-    console.log('Post submitted:', postData)
+    console.log(isEditing ? 'Post updated:' : 'Post submitted:', postData)
     // PostForm 내부에서 Redux 처리가 완료되면
     // 성공 시 커뮤니티 페이지로 돌아가기
     if (onPostCreated) {
-      console.log('Navigating back to community page...')
+      console.log(`Navigating back to ${isEditing ? 'post detail' : 'community'} page...`)
       onPostCreated()
     } else {
       console.warn('onPostCreated callback not provided')
@@ -29,12 +31,19 @@ function PostCreatePage({ onNavigateBack, onPostCreated }) {
 
   return (
     <PostForm
+      post={post}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onSaveDraft={handleSaveDraft}
       isLoading={loading}
     />
   )
+}
+
+PostCreatePage.propTypes = {
+  post: PropTypes.object,
+  onNavigateBack: PropTypes.func,
+  onPostCreated: PropTypes.func
 }
 
 export default PostCreatePage
