@@ -40,7 +40,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material'
-import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync, deletePost } from '../../store/slices/communitySlice'
+import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync, deletePostAsync } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
 
 // boardCode별 색상
@@ -245,12 +245,17 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
     setDeleteDialogOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    dispatch(deletePost(id))
-    setDeleteDialogOpen(false)
-    // 삭제 후 목록으로 돌아가기
-    if (onBack) {
-      onBack()
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deletePostAsync(id))
+      setDeleteDialogOpen(false)
+      // 삭제 후 목록으로 돌아가기
+      if (onBack) {
+        onBack()
+      }
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error)
+      // 에러는 Redux에서 처리됨
     }
   }
 

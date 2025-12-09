@@ -229,4 +229,19 @@ export const fetchPostAsync = (postId) => async (dispatch) => {
   }
 }
 
+/**
+ * 게시글 삭제 Thunk
+ */
+export const deletePostAsync = (postId) => async (dispatch) => {
+  try {
+    await communityService.deletePost(postId)
+    dispatch(deletePost(postId))
+    return postId
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '게시글 삭제에 실패했습니다'
+    dispatch(fetchPostsFailure(errorMessage))
+    throw error
+  }
+}
+
 export default communitySlice.reducer
