@@ -25,29 +25,15 @@ import {
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 import { likePost, unlikePost, bookmarkPost, unbookmarkPost } from '../../../store/slices/communitySlice'
+import { getBoardName } from '../../../constants/boardCodes'
 
-// Category labels mapping
-const CATEGORY_LABELS = {
-  'general': '일반',
-  'climbing-tips': '클라이밍 팁',
-  'gear-review': '장비 리뷰',
-  'route-info': '루트 정보',
-  'gym-review': '짐 리뷰',
-  'technique': '기술 공유',
-  'safety': '안전 수칙',
-  'community': '커뮤니티'
-}
-
-// Category colors
-const CATEGORY_COLORS = {
-  'general': '#667eea',
-  'climbing-tips': '#f093fb',
-  'gear-review': '#4facfe',
-  'route-info': '#43e97b',
-  'gym-review': '#fa709a',
-  'technique': '#ffecd2',
-  'safety': '#ff9a9e',
-  'community': '#a8edea'
+// boardCode별 색상
+const BOARD_CODE_COLORS = {
+  'FREE': '#667eea',
+  'REVIEW': '#4facfe',
+  'TIP': '#f093fb',
+  'TRADE': '#fa709a',
+  'RECRUIT': '#43e97b'
 }
 
 function PostCard({ 
@@ -67,7 +53,7 @@ function PostCard({
     author,
     createdAt,
     time,
-    category,
+    boardCode,
     tags = [],
     likeCount = 0,
     commentsCount = 0,
@@ -202,15 +188,16 @@ function PostCard({
             >
               {typeof author === 'string' ? author : author?.name || '익명'}
             </Typography>
-            {category && (
+            {boardCode && (
               <Chip
-                label={CATEGORY_LABELS[category] || category}
+                label={getBoardName(boardCode)}
                 size="small"
                 sx={{
-                  bgcolor: CATEGORY_COLORS[category] || '#667eea',
+                  bgcolor: BOARD_CODE_COLORS[boardCode] || '#667eea',
                   color: 'white',
                   fontSize: '0.7rem',
                   height: 20,
+                  fontWeight: 500,
                   '& .MuiChip-label': {
                     px: 1
                   }
