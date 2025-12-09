@@ -25,15 +25,14 @@ import {
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 import { likePost, unlikePost, bookmarkPost, unbookmarkPost } from '../../../store/slices/communitySlice'
-import { getBoardName } from '../../../constants/boardCodes'
 
-// boardCode별 색상
-const BOARD_CODE_COLORS = {
-  'FREE': '#667eea',
-  'REVIEW': '#4facfe',
-  'TIP': '#f093fb',
-  'TRADE': '#fa709a',
-  'RECRUIT': '#43e97b'
+// categoryName별 색상 매핑
+const CATEGORY_COLORS = {
+  '자유게시판': '#667eea',
+  '후기': '#4facfe',
+  '팁&노하우': '#f093fb',
+  '중고거래': '#fa709a',
+  '메이트 모집': '#43e97b'
 }
 
 function PostCard({ 
@@ -53,7 +52,7 @@ function PostCard({
     author,
     createdAt,
     time,
-    boardCode,
+    categoryName,
     tags = [],
     likeCount = 0,
     commentsCount = 0,
@@ -188,12 +187,12 @@ function PostCard({
             >
               {typeof author === 'string' ? author : author?.name || '익명'}
             </Typography>
-            {boardCode && (
+            {categoryName && (
               <Chip
-                label={getBoardName(boardCode)}
+                label={categoryName}
                 size="small"
                 sx={{
-                  bgcolor: BOARD_CODE_COLORS[boardCode] || '#667eea',
+                  bgcolor: CATEGORY_COLORS[categoryName] || '#667eea',
                   color: 'white',
                   fontSize: '0.7rem',
                   height: 20,
