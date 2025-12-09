@@ -263,8 +263,8 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
     setDeleteDialogOpen(false)
   }
 
-  // 작성자 확인
-  const isAuthor = currentUser && post?.author && currentUser.id === post.author.id
+  // 작성자 확인 (nickname 비교)
+  const isAuthor = currentUser && post?.author && currentUser.nickname === post.author
 
   const displayContent = content || preview || ''
 
