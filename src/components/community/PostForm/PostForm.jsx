@@ -339,8 +339,8 @@ function PostForm({
         // 게시글 수정
         const updatedPost = await communityService.updatePost(post.id, postData)
 
-        // Redux store 업데이트
-        dispatch(updatePost(updatedPost))
+        // Redux store 업데이트는 하지 않음 (App.jsx에서 fetchPostAsync로 다시 조회)
+        // dispatch(updatePost(updatedPost))
 
         // 제출 완료 플래그 설정
         setIsSubmitted(true)

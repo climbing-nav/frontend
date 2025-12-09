@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
 import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated, setAuthError } from './store/slices/authSlice'
-import { fetchPostsAsync } from './store/slices/communitySlice'
+import { fetchPostsAsync, fetchPostAsync } from './store/slices/communitySlice'
 import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
@@ -307,12 +307,20 @@ function App() {
     setCurrentPage('postDetail')
   }
 
-  const handlePostUpdated = () => {
+  const handlePostUpdated = async () => {
     // 게시글 수정 완료 후 상세 페이지로 돌아가기
+    try {
+      // 수정된 게시글 다시 조회하여 Redux 업데이트
+      if (selectedPost?.id) {
+        await dispatch(fetchPostAsync(selectedPost.id))
+      }
+      // 게시글 목록도 새로고침
+      dispatch(fetchPostsAsync())
+    } catch (error) {
+      console.error('게시글 새로고침 실패:', error)
+    }
     setEditingPost(null)
     setCurrentPage('postDetail')
-    // 게시글 목록 새로고침
-    dispatch(fetchPostsAsync())
   }
 
   return (
