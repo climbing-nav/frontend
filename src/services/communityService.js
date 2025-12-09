@@ -43,7 +43,7 @@ export const communityService = {
   },
 
   async updatePost(id, postData) {
-    const response = await api.put(`/posts/${id}`, postData)
+    const response = await api.patch(`/posts/${id}`, postData)
     return response.data
   },
 
