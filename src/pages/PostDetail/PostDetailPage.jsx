@@ -46,7 +46,7 @@ import { getBoardName } from '../../constants/boardCodes'
 // boardCode별 색상
 const BOARD_CODE_COLORS = {
   'FREE': '#667eea',
-  'REVIEW': '#4facfe',
+  'REVIEW': '#4facfe', 
   'TIP': '#f093fb',
   'TRADE': '#fa709a',
   'RECRUIT': '#43e97b'
@@ -326,13 +326,19 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
           vertical: 'top',
           horizontal: 'right',
         }}
+        PaperProps={{
+          sx: {
+            minWidth: 120,
+            mt: 0.5
+          }
+        }}
       >
-        <MenuItem onClick={handleEdit}>
-          <EditIcon sx={{ mr: 1, fontSize: 20 }} />
+        <MenuItem onClick={handleEdit} sx={{ px: 2, py: 1.2 }}>
+          <EditIcon sx={{ mr: 1.2, fontSize: 20 }} />
           수정
         </MenuItem>
-        <MenuItem onClick={handleDeleteClick} sx={{ color: '#f44336' }}>
-          <DeleteIcon sx={{ mr: 1, fontSize: 20 }} />
+        <MenuItem onClick={handleDeleteClick} sx={{ color: '#f44336', px: 2, py: 1.2 }}>
+          <DeleteIcon sx={{ mr: 1.2, fontSize: 20 }} />
           삭제
         </MenuItem>
       </Menu>
