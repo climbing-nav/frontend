@@ -83,12 +83,12 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const menuOpen = Boolean(anchorEl)
 
-  // 게시글 로드 (props에 post.id만 있고 전체 데이터가 없는 경우 API 조회)
+  // 게시글 로드 (항상 백엔드에서 최신 데이터 조회)
   useEffect(() => {
-    if (propPost?.id && !propPost?.content) {
+    if (propPost?.id) {
       dispatch(fetchPostAsync(propPost.id))
     }
-  }, [dispatch, propPost])
+  }, [dispatch, propPost?.id])
 
   // 로딩 상태 처리
   if (loading && !post) {
