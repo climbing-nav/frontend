@@ -28,6 +28,7 @@ import {
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 import { addPost, updatePost, fetchPostsStart, fetchPostsSuccess, fetchPostsFailure, createPostAsync } from '../../../store/slices/communitySlice'
+import { communityService } from '../../../services/communityService'
 import { BOARD_CODE_LIST } from '../../../constants/boardCodes'
 
 /**
@@ -335,8 +336,23 @@ function PostForm({
       }
 
       if (isEditing) {
-        // TODO: 백엔드에 수정 API가 추가되면 구현
-        dispatch(updatePost(postData))
+        // 게시글 수정
+        const updatedPost = await communityService.updatePost(post.id, postData)
+
+        // Redux store 업데이트
+        dispatch(updatePost(updatedPost))
+
+        // 제출 완료 플래그 설정
+        setIsSubmitted(true)
+
+        // Reset form after successful update
+        reset()
+        setImageFiles([])
+        setImagePreviews([])
+        setTagInput('')
+
+        // Call parent onSubmit if provided
+        onSubmit(updatedPost)
       } else {
         // Redux Thunk를 통한 게시글 생성
         const createdPost = await dispatch(createPostAsync(postData))
@@ -362,7 +378,7 @@ function PostForm({
       }
 
     } catch (error) {
-      console.error('게시글 작성 실패:', error)
+      console.error(isEditing ? '게시글 수정 실패:' : '게시글 작성 실패:', error)
       // 에러는 Redux에서 처리됨
     }
   }

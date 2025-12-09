@@ -17,7 +17,14 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -29,9 +36,11 @@ import {
   Share as ShareIcon,
   Visibility as VisibilityIcon,
   Comment as CommentIcon,
-  Send as SendIcon
+  Send as SendIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material'
-import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync } from '../../store/slices/communitySlice'
+import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync, deletePost } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
 
 // boardCode별 색상
@@ -43,11 +52,12 @@ const BOARD_CODE_COLORS = {
   'RECRUIT': '#43e97b'
 }
 
-function PostDetailPage({ post: propPost, onBack }) {
+function PostDetailPage({ post: propPost, onBack, onEdit }) {
   const dispatch = useDispatch()
 
-  // Redux store에서 게시글 데이터 가져오기
+  // Redux store에서 게시글 데이터 및 현재 사용자 정보 가져오기
   const { selectedPost: reduxPost, loading, error } = useSelector(state => state.community)
+  const currentUser = useSelector(state => state.auth.user)
 
   // props로 받은 post 또는 Redux의 selectedPost 사용
   const post = reduxPost || propPost
@@ -67,6 +77,11 @@ function PostDetailPage({ post: propPost, onBack }) {
       createdAt: '2024-01-10T11:15:00'
     }
   ])
+
+  // 메뉴 관련 state
+  const [anchorEl, setAnchorEl] = useState(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const menuOpen = Boolean(anchorEl)
 
   // 게시글 로드 (props에 post.id만 있고 전체 데이터가 없는 경우 API 조회)
   useEffect(() => {
@@ -209,6 +224,43 @@ function PostDetailPage({ post: propPost, onBack }) {
     }
   }
 
+  // 메뉴 핸들러
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleEdit = () => {
+    handleMenuClose()
+    if (onEdit) {
+      onEdit(post)
+    }
+  }
+
+  const handleDeleteClick = () => {
+    handleMenuClose()
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    dispatch(deletePost(id))
+    setDeleteDialogOpen(false)
+    // 삭제 후 목록으로 돌아가기
+    if (onBack) {
+      onBack()
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+  }
+
+  // 작성자 확인
+  const isAuthor = currentUser && post?.author && currentUser.id === post.author.id
+
   const displayContent = content || preview || ''
 
   return (
@@ -250,11 +302,40 @@ function PostDetailPage({ post: propPost, onBack }) {
           >
             게시글
           </Typography>
-          <IconButton sx={{ color: '#333' }}>
-            <MoreVertIcon />
-          </IconButton>
+          {isAuthor && (
+            <IconButton
+              sx={{ color: '#333' }}
+              onClick={handleMenuOpen}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          )}
         </Toolbar>
       </AppBar>
+
+      {/* 메뉴 */}
+      <Menu
+        anchorEl={anchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleEdit}>
+          <EditIcon sx={{ mr: 1, fontSize: 20 }} />
+          수정
+        </MenuItem>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: '#f44336' }}>
+          <DeleteIcon sx={{ mr: 1, fontSize: 20 }} />
+          삭제
+        </MenuItem>
+      </Menu>
 
       {/* 본문 컨텐츠 */}
       <Box sx={{
@@ -613,6 +694,50 @@ function PostDetailPage({ post: propPost, onBack }) {
           </Button>
         </Box>
       </Paper>
+
+      {/* 삭제 확인 Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxWidth: 340
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          게시글 삭제
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            정말로 이 게시글을 삭제하시겠습니까?
+            <br />
+            삭제된 게시글은 복구할 수 없습니다.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleDeleteCancel}
+            sx={{ color: '#666' }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            sx={{
+              bgcolor: '#f44336',
+              '&:hover': {
+                bgcolor: '#d32f2f'
+              }
+            }}
+            autoFocus
+          >
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
@@ -639,7 +764,8 @@ PostDetailPage.propTypes = {
     isLiked: PropTypes.bool,
     isBookmarked: PropTypes.bool
   }),
-  onBack: PropTypes.func.isRequired
+  onBack: PropTypes.func.isRequired,
+  onEdit: PropTypes.func
 }
 
 export default PostDetailPage

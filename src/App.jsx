@@ -41,9 +41,10 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail'
+  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
+  const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false) // OAuth 콜백 처리 중 상태
   const [oauthProvider, setOauthProvider] = useState(null) // 'kakao' | 'google'
 
@@ -200,10 +201,12 @@ function App() {
         return <GymDetailPage gym={selectedGym} onBack={handleBackFromGymDetail} />
       case 'postCreate':
         return <PostCreatePage onNavigateBack={handleBackFromPostCreate} onPostCreated={handlePostCreated} />
+      case 'postEdit':
+        return <PostCreatePage post={editingPost} onNavigateBack={handleBackFromPostEdit} onPostCreated={handlePostUpdated} />
       case 'gymList':
         return <GymListPage onNavigateToGymDetail={handleNavigateToGymDetail} onBack={handleBackFromGymList} />
       case 'postDetail':
-        return <PostDetailPage post={selectedPost} onBack={handleBackFromPostDetail} />
+        return <PostDetailPage post={selectedPost} onBack={handleBackFromPostDetail} onEdit={handleNavigateToPostEdit} />
       default:
         return <HomePage onNavigateToGymList={handleNavigateToGymList} />
     }
@@ -294,6 +297,24 @@ function App() {
     setCurrentTab('community')
   }
 
+  const handleNavigateToPostEdit = (post) => {
+    setEditingPost(post)
+    setCurrentPage('postEdit')
+  }
+
+  const handleBackFromPostEdit = () => {
+    setEditingPost(null)
+    setCurrentPage('postDetail')
+  }
+
+  const handlePostUpdated = () => {
+    // 게시글 수정 완료 후 상세 페이지로 돌아가기
+    setEditingPost(null)
+    setCurrentPage('postDetail')
+    // 게시글 목록 새로고침
+    dispatch(fetchPostsAsync())
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -313,17 +334,17 @@ function App() {
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : (
           <>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'postEdit' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
               <Header
                 onNavigateToAuth={handleNavigateToAuth}
                 onNavigateToProfile={handleNavigateToProfile}
               />
             )}
-            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'gymList' || currentPage === 'postDetail') ? 0 : 10 }}>
+            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'postEdit' || currentPage === 'gymList' || currentPage === 'postDetail') ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            {!['gymDetail', 'postCreate', 'gymList', 'postDetail', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'gymList' && currentPage !== 'postDetail' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
+            {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'postEdit' && currentPage !== 'gymList' && currentPage !== 'postDetail' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
         {/* 전역 Snackbar */}
