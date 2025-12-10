@@ -18,6 +18,7 @@ import GymDetailPage from './pages/GymDetail/GymDetailPage'
 import PostCreatePage from './pages/PostCreate/PostCreatePage'
 import GymListPage from './pages/GymList/GymListPage'
 import PostDetailPage from './pages/PostDetail/PostDetailPage'
+import LandingPage from './pages/LandingPage'
 
 const theme = createTheme({
   palette: {
@@ -41,7 +42,7 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
   const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('home') // 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
+  const [currentPage, setCurrentPage] = useState('landing') // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
   const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
@@ -187,6 +188,22 @@ function App() {
 
   const renderCurrentPage = () => {
     switch (currentPage) {
+      case 'landing':
+        return (
+          <LandingPage
+            onNavigateToMap={() => {
+              setCurrentPage('map')
+              setCurrentTab('map')
+            }}
+            onNavigateToAuth={() => {
+              setCurrentPage('auth')
+            }}
+            onNavigateToCommunity={() => {
+              setCurrentPage('community')
+              setCurrentTab('community')
+            }}
+          />
+        )
       case 'home':
         return <HomePage onNavigateToGymList={handleNavigateToGymList} />
       case 'map':
@@ -340,6 +357,8 @@ function App() {
           <OAuthCallbackLoading provider={oauthProvider} />
         ) : currentPage === 'auth' ? (
           <AuthPage onNavigateToHome={handleNavigateToHome} />
+        ) : currentPage === 'landing' ? (
+          renderCurrentPage()
         ) : (
           <>
             {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'postEdit' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
