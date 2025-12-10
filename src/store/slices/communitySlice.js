@@ -65,10 +65,13 @@ const communitySlice = createSlice({
     fetchPostStart: (state) => {
       state.loading = true
       state.error = null
+      state.selectedPost = null  // 새 게시글 로드 시 이전 데이터 초기화
     },
     fetchPostSuccess: (state, action) => {
       state.loading = false
-      state.selectedPost = action.payload
+      // API 응답 구조: { code, message, data }
+      // data 부분만 저장
+      state.selectedPost = action.payload.data || action.payload
     },
     fetchPostFailure: (state, action) => {
       state.loading = false
