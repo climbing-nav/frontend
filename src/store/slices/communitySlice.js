@@ -248,25 +248,6 @@ export const deletePostAsync = (postId) => async (dispatch) => {
 }
 
 /**
- * 댓글 조회 Thunk
- * @param {number|string} postId - 게시글 ID
- */
-export const fetchCommentsAsync = (postId) => async (dispatch) => {
-  try {
-    dispatch(fetchCommentsStart())
-    const data = await communityService.getComments(postId)
-    // API 응답 구조: { code, message, data }
-    const comments = data.data || data
-    dispatch(fetchCommentsSuccess(comments))
-    return comments
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || '댓글을 불러오는데 실패했습니다'
-    dispatch(fetchCommentsFailure(errorMessage))
-    throw error
-  }
-}
-
-/**
  * 댓글 작성 Thunk
  * @param {Object} commentData
  * @param {number|string} commentData.postId - 게시글 ID
