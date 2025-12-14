@@ -603,15 +603,15 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
                   >
                     <ListItemAvatar>
                       <Avatar
-                        src={commentItem.author?.avatar}
-                        alt={commentItem.author?.name}
+                        src={commentItem.avatarUrl}
+                        alt={commentItem.author}
                         sx={{
                           bgcolor: '#667eea',
                           width: 36,
                           height: 36
                         }}
                       >
-                        {commentItem.author?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        {commentItem.author?.charAt(0)?.toUpperCase() || 'U'}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
@@ -626,7 +626,7 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
                               mr: 1
                             }}
                           >
-                            {commentItem.author?.name || '익명'}
+                            {commentItem.author || '익명'}
                           </Typography>
                           <Typography
                             variant="caption"
