@@ -40,7 +40,16 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material'
-import { likePost, unlikePost, bookmarkPost, unbookmarkPost, fetchPostAsync, deletePostAsync } from '../../store/slices/communitySlice'
+import {
+  bookmarkPost,
+  unbookmarkPost,
+  fetchPostAsync,
+  deletePostAsync,
+  fetchCommentsAsync,
+  createCommentAsync,
+  likePostAsync,
+  unlikePostAsync
+} from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
 
 // boardCode별 색상
@@ -55,28 +64,14 @@ const BOARD_CODE_COLORS = {
 function PostDetailPage({ post: propPost, onBack, onEdit }) {
   const dispatch = useDispatch()
 
-  // Redux store에서 게시글 데이터 및 현재 사용자 정보 가져오기
-  const { selectedPost: reduxPost, loading, error } = useSelector(state => state.community)
+  // Redux store에서 게시글 데이터, 댓글, 현재 사용자 정보 가져오기
+  const { selectedPost: reduxPost, comments, loading, error } = useSelector(state => state.community)
   const currentUser = useSelector(state => state.auth.user)
 
   // props로 받은 post 또는 Redux의 selectedPost 사용
   const post = reduxPost || propPost
 
   const [comment, setComment] = useState('')
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: { name: '클라이머A', avatar: '' },
-      content: '좋은 정보 감사합니다!',
-      createdAt: '2024-01-10T10:30:00'
-    },
-    {
-      id: 2,
-      author: { name: '클라이머B', avatar: '' },
-      content: '저도 이 암장 다녀왔는데 정말 좋더라구요.',
-      createdAt: '2024-01-10T11:15:00'
-    }
-  ])
 
   // 메뉴 관련 state
   const [anchorEl, setAnchorEl] = useState(null)
@@ -89,6 +84,13 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
       dispatch(fetchPostAsync(propPost.id))
     }
   }, [dispatch, propPost?.id])
+
+  // 댓글 로드
+  useEffect(() => {
+    if (post?.id) {
+      dispatch(fetchCommentsAsync(post.id))
+    }
+  }, [dispatch, post?.id])
 
   // 로딩 상태 처리
   if (loading && !post) {
@@ -167,11 +169,16 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
   }
 
   // 좋아요 토글 처리
-  const handleLikeToggle = () => {
-    if (isLiked) {
-      dispatch(unlikePost(id))
-    } else {
-      dispatch(likePost(id))
+  const handleLikeToggle = async () => {
+    try {
+      if (isLiked) {
+        await dispatch(unlikePostAsync(id))
+      } else {
+        await dispatch(likePostAsync(id))
+      }
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error)
+      // 에러 처리 (필요시 사용자에게 알림)
     }
   }
 
@@ -203,16 +210,19 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
   }
 
   // 댓글 전송 처리
-  const handleCommentSubmit = () => {
-    if (comment.trim()) {
-      const newComment = {
-        id: comments.length + 1,
-        author: { name: '현재 사용자', avatar: '' },
-        content: comment,
-        createdAt: new Date().toISOString()
+  const handleCommentSubmit = async () => {
+    if (comment.trim() && post?.id && currentUser) {
+      try {
+        await dispatch(createCommentAsync({
+          postId: post.id,
+          author: currentUser.nickname,
+          content: comment.trim()
+        }))
+        setComment('')
+      } catch (error) {
+        console.error('댓글 작성 실패:', error)
+        // 에러 처리 (필요시 사용자에게 알림)
       }
-      setComments([...comments, newComment])
-      setComment('')
     }
   }
 

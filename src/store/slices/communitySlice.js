@@ -247,4 +247,89 @@ export const deletePostAsync = (postId) => async (dispatch) => {
   }
 }
 
+/**
+ * 댓글 조회 Thunk
+ * @param {number|string} postId - 게시글 ID
+ */
+export const fetchCommentsAsync = (postId) => async (dispatch) => {
+  try {
+    dispatch(fetchCommentsStart())
+    const data = await communityService.getComments(postId)
+    // API 응답 구조: { code, message, data }
+    const comments = data.data || data
+    dispatch(fetchCommentsSuccess(comments))
+    return comments
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '댓글을 불러오는데 실패했습니다'
+    dispatch(fetchCommentsFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * 댓글 작성 Thunk
+ * @param {Object} commentData
+ * @param {number|string} commentData.postId - 게시글 ID
+ * @param {string} commentData.author - 작성자
+ * @param {string} commentData.content - 댓글 내용
+ */
+export const createCommentAsync = (commentData) => async (dispatch) => {
+  try {
+    const data = await communityService.createComment(commentData)
+    // API 응답 구조: { code, message, data }
+    const newComment = data.data || data
+    dispatch(addComment(newComment))
+    return newComment
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '댓글 작성에 실패했습니다'
+    throw new Error(errorMessage)
+  }
+}
+
+/**
+ * 댓글 삭제 Thunk
+ * @param {number|string} postId - 게시글 ID
+ * @param {number|string} commentId - 댓글 ID
+ */
+export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
+  try {
+    await communityService.deleteComment(postId, commentId)
+    dispatch(deleteComment(commentId))
+    return commentId
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '댓글 삭제에 실패했습니다'
+    throw new Error(errorMessage)
+  }
+}
+
+/**
+ * 게시글 좋아요 Thunk
+ * @param {number|string} postId - 게시글 ID
+ */
+export const likePostAsync = (postId) => async (dispatch) => {
+  try {
+    await communityService.likePost(postId)
+    dispatch(likePost(postId))
+    return postId
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '좋아요 처리에 실패했습니다'
+    throw new Error(errorMessage)
+  }
+}
+
+/**
+ * 게시글 좋아요 취소 Thunk
+ * @param {number|string} postId - 게시글 ID
+ */
+export const unlikePostAsync = (postId) => async (dispatch) => {
+  try {
+    await communityService.unlikePost(postId)
+    dispatch(unlikePost(postId))
+    return postId
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '좋아요 취소에 실패했습니다'
+    throw new Error(errorMessage)
+  }
+}
+
 export default communitySlice.reducer

@@ -57,13 +57,42 @@ export const communityService = {
     return response.data
   },
 
-  async createComment(postId, commentData) {
-    const response = await api.post(`/posts/${postId}/comments`, commentData)
+  /**
+   * 댓글 작성
+   * @param {Object} commentData
+   * @param {number|string} commentData.postId - 게시글 ID
+   * @param {string} commentData.author - 작성자
+   * @param {string} commentData.content - 댓글 내용
+   */
+  async createComment({ postId, author, content }) {
+    const response = await api.post('/comments/save', {
+      postId,
+      author,
+      content
+    })
     return response.data
   },
 
   async deleteComment(postId, commentId) {
     const response = await api.delete(`/posts/${postId}/comments/${commentId}`)
+    return response.data
+  },
+
+  /**
+   * 게시글 좋아요
+   * @param {number|string} postId - 게시글 ID
+   */
+  async likePost(postId) {
+    const response = await api.post(`/posts/${postId}/like`)
+    return response.data
+  },
+
+  /**
+   * 게시글 좋아요 취소
+   * @param {number|string} postId - 게시글 ID
+   */
+  async unlikePost(postId) {
+    const response = await api.delete(`/posts/${postId}/like`)
     return response.data
   }
 }
