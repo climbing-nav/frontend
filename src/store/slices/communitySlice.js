@@ -124,17 +124,35 @@ const communitySlice = createSlice({
     
     // Like functionality
     likePost: (state, action) => {
-      const post = state.posts.find(post => post.id === action.payload)
+      const { postId, liked, likeCount } = action.payload
+
+      // posts 배열 업데이트
+      const post = state.posts.find(p => p.id === postId)
       if (post) {
-        post.likes = (post.likes || 0) + 1
-        post.isLiked = true
+        post.likeCount = likeCount
+        post.liked = liked
+      }
+
+      // selectedPost 업데이트
+      if (state.selectedPost && state.selectedPost.id === postId) {
+        state.selectedPost.likeCount = likeCount
+        state.selectedPost.liked = liked
       }
     },
     unlikePost: (state, action) => {
-      const post = state.posts.find(post => post.id === action.payload)
+      const { postId, liked, likeCount } = action.payload
+
+      // posts 배열 업데이트
+      const post = state.posts.find(p => p.id === postId)
       if (post) {
-        post.likes = Math.max((post.likes || 0) - 1, 0)
-        post.isLiked = false
+        post.likeCount = likeCount
+        post.liked = liked
+      }
+
+      // selectedPost 업데이트
+      if (state.selectedPost && state.selectedPost.id === postId) {
+        state.selectedPost.likeCount = likeCount
+        state.selectedPost.liked = liked
       }
     },
     
@@ -289,9 +307,11 @@ export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
  */
 export const likePostAsync = (postId) => async (dispatch) => {
   try {
-    await communityService.likePost(postId)
-    dispatch(likePost(postId))
-    return postId
+    const response = await communityService.likePost(postId)
+    // API 응답 구조: { code, message, data: { liked, likeCount } }
+    const { liked, likeCount } = response.data
+    dispatch(likePost({ postId, liked, likeCount }))
+    return response.data
   } catch (error) {
     const errorMessage = error.response?.data?.message || '좋아요 처리에 실패했습니다'
     throw new Error(errorMessage)
@@ -304,9 +324,11 @@ export const likePostAsync = (postId) => async (dispatch) => {
  */
 export const unlikePostAsync = (postId) => async (dispatch) => {
   try {
-    await communityService.unlikePost(postId)
-    dispatch(unlikePost(postId))
-    return postId
+    const response = await communityService.unlikePost(postId)
+    // API 응답 구조: { code, message, data: { liked, likeCount } }
+    const { liked, likeCount } = response.data
+    dispatch(unlikePost({ postId, liked, likeCount }))
+    return response.data
   } catch (error) {
     const errorMessage = error.response?.data?.message || '좋아요 취소에 실패했습니다'
     throw new Error(errorMessage)
