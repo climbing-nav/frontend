@@ -130,9 +130,9 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
     boardCode,
     category,
     tags = [],
-    likes = 0,
+    likeCount = 0,
     views = 0,
-    isLiked = false,
+    liked = false,
     isBookmarked = false
   } = post
 
@@ -166,7 +166,7 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
   // 좋아요 토글 처리
   const handleLikeToggle = async () => {
     try {
-      if (isLiked) {
+      if (liked) {
         await dispatch(unlikePostAsync(id))
       } else {
         await dispatch(likePostAsync(id))
@@ -512,18 +512,18 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
                   onClick={handleLikeToggle}
                   size="small"
                   sx={{
-                    color: isLiked ? '#f44336' : '#666',
+                    color: liked ? '#f44336' : '#666',
                     '&:hover': {
-                      bgcolor: isLiked
+                      bgcolor: liked
                         ? 'rgba(244, 67, 54, 0.04)'
                         : 'rgba(0, 0, 0, 0.04)'
                     }
                   }}
                 >
-                  {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                 </IconButton>
                 <Typography variant="body2" color="text.secondary">
-                  {likes}
+                  {likeCount}
                 </Typography>
               </Box>
 
@@ -776,10 +776,10 @@ PostDetailPage.propTypes = {
     boardCode: PropTypes.string,
     category: PropTypes.string,
     tags: PropTypes.arrayOf(PropTypes.string),
-    likes: PropTypes.number,
+    likeCount: PropTypes.number,
     comments: PropTypes.number,
     views: PropTypes.number,
-    isLiked: PropTypes.bool,
+    liked: PropTypes.bool,
     isBookmarked: PropTypes.bool
   }),
   onBack: PropTypes.func.isRequired,
