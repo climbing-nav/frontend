@@ -52,11 +52,6 @@ export const communityService = {
     return response.data
   },
 
-  async getComments(postId) {
-    const response = await api.get(`/posts/${postId}/comments`)
-    return response.data
-  },
-
   /**
    * 댓글 작성
    * @param {Object} commentData

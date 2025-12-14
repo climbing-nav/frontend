@@ -45,7 +45,6 @@ import {
   unbookmarkPost,
   fetchPostAsync,
   deletePostAsync,
-  fetchCommentsAsync,
   createCommentAsync,
   likePostAsync,
   unlikePostAsync
@@ -64,12 +63,15 @@ const BOARD_CODE_COLORS = {
 function PostDetailPage({ post: propPost, onBack, onEdit }) {
   const dispatch = useDispatch()
 
-  // Redux store에서 게시글 데이터, 댓글, 현재 사용자 정보 가져오기
-  const { selectedPost: reduxPost, comments, loading, error } = useSelector(state => state.community)
+  // Redux store에서 게시글 데이터 및 현재 사용자 정보 가져오기
+  const { selectedPost: reduxPost, loading, error } = useSelector(state => state.community)
   const currentUser = useSelector(state => state.auth.user)
 
   // props로 받은 post 또는 Redux의 selectedPost 사용
   const post = reduxPost || propPost
+
+  // 게시글의 댓글 목록 (게시글 상세 조회 시 comments 배열 포함)
+  const comments = post?.comments || []
 
   const [comment, setComment] = useState('')
 
@@ -84,13 +86,6 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
       dispatch(fetchPostAsync(propPost.id))
     }
   }, [dispatch, propPost?.id])
-
-  // 댓글 로드
-  useEffect(() => {
-    if (post?.id) {
-      dispatch(fetchCommentsAsync(post.id))
-    }
-  }, [dispatch, post?.id])
 
   // 로딩 상태 처리
   if (loading && !post) {
@@ -219,6 +214,8 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
           content: comment.trim()
         }))
         setComment('')
+        // 댓글 작성 후 게시글 다시 조회하여 업데이트된 댓글 목록 가져오기
+        await dispatch(fetchPostAsync(post.id))
       } catch (error) {
         console.error('댓글 작성 실패:', error)
         // 에러 처리 (필요시 사용자에게 알림)
