@@ -304,7 +304,16 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           <IconButton
             edge="start"
             onClick={onBack}
-            sx={{ color: '#333' }}
+            sx={{
+              color: '#333',
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
+              }
+            }}
           >
             <ArrowBackIcon />
           </IconButton>
@@ -321,7 +330,16 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           </Typography>
           {isAuthor && (
             <IconButton
-              sx={{ color: '#333' }}
+              sx={{
+                color: '#333',
+                '&:focus': {
+                  outline: 'none'
+                },
+                '&:focus-visible': {
+                  outline: '2px solid #667eea',
+                  outlineOffset: '2px'
+                }
+              }}
               onClick={handleMenuOpen}
             >
               <MoreVertIcon />
@@ -522,6 +540,13 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                       bgcolor: isLiked
                         ? 'rgba(244, 67, 54, 0.04)'
                         : 'rgba(0, 0, 0, 0.04)'
+                    },
+                    '&:focus': {
+                      outline: 'none'
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid #667eea',
+                      outlineOffset: '2px'
                     }
                   }}
                 >
@@ -545,7 +570,16 @@ function PostDetailPage({ postId, onBack, onEdit }) {
               <IconButton
                 onClick={handleShare}
                 size="small"
-                sx={{ color: '#666' }}
+                sx={{
+                  color: '#666',
+                  '&:focus': {
+                    outline: 'none'
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid #667eea',
+                    outlineOffset: '2px'
+                  }
+                }}
               >
                 <ShareIcon />
               </IconButton>
@@ -558,6 +592,13 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                     bgcolor: isBookmarked
                       ? 'rgba(102, 126, 234, 0.04)'
                       : 'rgba(0, 0, 0, 0.04)'
+                  },
+                  '&:focus': {
+                    outline: 'none'
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid #667eea',
+                    outlineOffset: '2px'
                   }
                 }}
               >

@@ -275,6 +275,13 @@ function PostCard({
                   color: '#667eea',
                   '&:hover': {
                     bgcolor: 'rgba(102, 126, 234, 0.04)'
+                  },
+                  '&:focus': {
+                    outline: 'none'
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid #667eea',
+                    outlineOffset: '2px'
                   }
                 }}
               >
@@ -352,6 +359,13 @@ function PostCard({
                 bgcolor: isLiked
                   ? 'rgba(244, 67, 54, 0.04)'
                   : 'rgba(0, 0, 0, 0.04)'
+              },
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
               }
             }}
           >
@@ -374,6 +388,13 @@ function PostCard({
               ml: 1,
               '&:hover': {
                 bgcolor: 'rgba(0, 0, 0, 0.04)'
+              },
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
               }
             }}
           >
@@ -398,6 +419,13 @@ function PostCard({
               color: '#666',
               '&:hover': {
                 bgcolor: 'rgba(0, 0, 0, 0.04)'
+              },
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
               }
             }}
           >
@@ -411,9 +439,16 @@ function PostCard({
             sx={{
               color: isBookmarked ? '#667eea' : '#666',
               '&:hover': {
-                bgcolor: isBookmarked 
-                  ? 'rgba(102, 126, 234, 0.04)' 
+                bgcolor: isBookmarked
+                  ? 'rgba(102, 126, 234, 0.04)'
                   : 'rgba(0, 0, 0, 0.04)'
+              },
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
               }
             }}
           >
