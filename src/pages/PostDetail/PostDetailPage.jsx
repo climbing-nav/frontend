@@ -59,15 +59,15 @@ const BOARD_CODE_COLORS = {
   'RECRUIT': '#43e97b'
 }
 
-function PostDetailPage({ post: propPost, onBack, onEdit }) {
+function PostDetailPage({ postId, onBack, onEdit }) {
   const dispatch = useDispatch()
 
   // Redux store에서 게시글 데이터 및 현재 사용자 정보 가져오기
-  const { selectedPost: reduxPost, loading, error } = useSelector(state => state.community)
+  const { selectedPost, loading, error } = useSelector(state => state.community)
   const currentUser = useSelector(state => state.auth.user)
 
-  // props로 받은 post 또는 Redux의 selectedPost 사용
-  const post = reduxPost || propPost
+  // Redux의 selectedPost만 사용
+  const post = selectedPost
 
   // 게시글의 댓글 목록 (게시글 상세 조회 시 comments 배열 포함)
   const comments = post?.comments || []
@@ -81,10 +81,10 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
 
   // 게시글 로드 (항상 백엔드에서 최신 데이터 조회)
   useEffect(() => {
-    if (propPost?.id) {
-      dispatch(fetchPostAsync(propPost.id))
+    if (postId) {
+      dispatch(fetchPostAsync(postId))
     }
-  }, [dispatch, propPost?.id])
+  }, [dispatch, postId])
 
   // 로딩 상태 처리
   if (loading && !post) {
@@ -756,27 +756,7 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
 }
 
 PostDetailPage.propTypes = {
-  post: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    title: PropTypes.string,
-    content: PropTypes.string,
-    preview: PropTypes.string,
-    author: PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      name: PropTypes.string,
-      avatar: PropTypes.string
-    }),
-    createdAt: PropTypes.string,
-    time: PropTypes.string,
-    boardCode: PropTypes.string,
-    category: PropTypes.string,
-    tags: PropTypes.arrayOf(PropTypes.string),
-    likeCount: PropTypes.number,
-    comments: PropTypes.number,
-    views: PropTypes.number,
-    isLiked: PropTypes.bool,
-    isBookmarked: PropTypes.bool
-  }),
+  postId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onBack: PropTypes.func.isRequired,
   onEdit: PropTypes.func
 }
