@@ -71,7 +71,11 @@ const communitySlice = createSlice({
       state.loading = false
       // API 응답 구조: { code, message, data }
       // data 부분만 저장
-      state.selectedPost = action.payload.data || action.payload
+      const postData = action.payload.data || action.payload
+      console.log('📄 게시글 상세 조회 응답:', postData)
+      console.log('📋 boardCode:', postData?.boardCode)
+      console.log('📋 category:', postData?.category)
+      state.selectedPost = postData
     },
     fetchPostFailure: (state, action) => {
       state.loading = false

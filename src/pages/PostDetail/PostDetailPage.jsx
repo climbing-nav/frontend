@@ -135,6 +135,10 @@ function PostDetailPage({ postId, onBack, onEdit }) {
     isBookmarked = false
   } = post
 
+  console.log('🔍 PostDetailPage - post 전체:', post)
+  console.log('🔍 boardCode:', boardCode, 'category:', category)
+  console.log('🔍 getBoardName 결과:', getBoardName(boardCode || category))
+
   // 날짜 포맷팅
   const formatDate = (dateString) => {
     if (!dateString) return time || '방금 전'
