@@ -44,7 +44,7 @@ function App() {
   const [currentTab, setCurrentTab] = useState('home')
   const [currentPage, setCurrentPage] = useState('landing') // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
   const [selectedGym, setSelectedGym] = useState(null)
-  const [selectedPost, setSelectedPost] = useState(null)
+  const [selectedPostId, setSelectedPostId] = useState(null)
   const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false) // OAuth 콜백 처리 중 상태
   const [oauthProvider, setOauthProvider] = useState(null) // 'kakao' | 'google'
@@ -223,7 +223,7 @@ function App() {
       case 'gymList':
         return <GymListPage onNavigateToGymDetail={handleNavigateToGymDetail} onBack={handleBackFromGymList} />
       case 'postDetail':
-        return <PostDetailPage post={selectedPost} onBack={handleBackFromPostDetail} onEdit={handleNavigateToPostEdit} />
+        return <PostDetailPage postId={selectedPostId} onBack={handleBackFromPostDetail} onEdit={handleNavigateToPostEdit} />
       default:
         return <HomePage onNavigateToGymList={handleNavigateToGymList} />
     }
@@ -304,12 +304,13 @@ function App() {
   }
 
   const handleNavigateToPostDetail = (post) => {
-    setSelectedPost(post)
+    setSelectedPostId(post.id)
+    dispatch(fetchPostAsync(post.id))
     setCurrentPage('postDetail')
   }
 
   const handleBackFromPostDetail = () => {
-    setSelectedPost(null)
+    setSelectedPostId(null)
     setCurrentPage('community')
     setCurrentTab('community')
   }
@@ -328,8 +329,8 @@ function App() {
     // 게시글 수정 완료 후 상세 페이지로 돌아가기
     try {
       // 수정된 게시글 다시 조회하여 Redux 업데이트
-      if (selectedPost?.id) {
-        await dispatch(fetchPostAsync(selectedPost.id))
+      if (selectedPostId) {
+        await dispatch(fetchPostAsync(selectedPostId))
       }
       // 게시글 목록도 새로고침
       dispatch(fetchPostsAsync())
