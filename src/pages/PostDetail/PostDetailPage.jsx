@@ -50,13 +50,19 @@ import {
 } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
 
-// boardCode별 색상
+// boardCode별 색상 (영문 코드 + 한글 이름 지원)
 const BOARD_CODE_COLORS = {
   'FREE': '#667eea',
-  'REVIEW': '#4facfe', 
+  '자유게시판': '#667eea',
+  'REVIEW': '#4facfe',
+  '후기': '#4facfe',
   'TIP': '#f093fb',
+  '팁&노하우': '#f093fb',
   'TRADE': '#fa709a',
-  'RECRUIT': '#43e97b'
+  '중고거래': '#fa709a',
+  'RECRUIT': '#43e97b',
+  '메이트 모집': '#43e97b',
+  '메이트모집': '#43e97b'
 }
 
 function PostDetailPage({ postId, onBack, onEdit }) {
