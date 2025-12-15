@@ -32,7 +32,8 @@ const CATEGORY_COLORS = {
   '후기': '#4facfe',
   '팁&노하우': '#f093fb',
   '중고거래': '#fa709a',
-  '메이트 모집': '#43e97b'
+  '메이트 모집': '#43e97b',
+  '메이트모집': '#43e97b'
 }
 
 function PostCard({ 
