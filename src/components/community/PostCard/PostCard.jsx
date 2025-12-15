@@ -24,7 +24,7 @@ import {
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
-import { likePost, unlikePost, bookmarkPost, unbookmarkPost } from '../../../store/slices/communitySlice'
+import { toggleLikeAsync, bookmarkPost, unbookmarkPost } from '../../../store/slices/communitySlice'
 
 // categoryName별 색상 매핑
 const CATEGORY_COLORS = {
@@ -98,12 +98,12 @@ function PostCard({
   }
 
   // Handle like toggle
-  const handleLikeToggle = (e) => {
+  const handleLikeToggle = async (e) => {
     e.stopPropagation()
-    if (isLiked) {
-      dispatch(unlikePost(id))
-    } else {
-      dispatch(likePost(id))
+    try {
+      await dispatch(toggleLikeAsync(id))
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error)
     }
   }
 

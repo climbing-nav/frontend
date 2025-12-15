@@ -123,36 +123,20 @@ const communitySlice = createSlice({
     },
     
     // Like functionality
-    likePost: (state, action) => {
-      const { postId, liked, likeCount } = action.payload
+    toggleLike: (state, action) => {
+      const { postId, isLiked, likeCount } = action.payload
 
       // posts 배열 업데이트
       const post = state.posts.find(p => p.id === postId)
       if (post) {
         post.likeCount = likeCount
-        post.liked = liked
+        post.isLiked = isLiked
       }
 
       // selectedPost 업데이트
       if (state.selectedPost && state.selectedPost.id === postId) {
         state.selectedPost.likeCount = likeCount
-        state.selectedPost.liked = liked
-      }
-    },
-    unlikePost: (state, action) => {
-      const { postId, liked, likeCount } = action.payload
-
-      // posts 배열 업데이트
-      const post = state.posts.find(p => p.id === postId)
-      if (post) {
-        post.likeCount = likeCount
-        post.liked = liked
-      }
-
-      // selectedPost 업데이트
-      if (state.selectedPost && state.selectedPost.id === postId) {
-        state.selectedPost.likeCount = likeCount
-        state.selectedPost.liked = liked
+        state.selectedPost.isLiked = isLiked
       }
     },
     
@@ -194,8 +178,7 @@ export const {
   clearError,
   clearSuccess,
   resetCommunity,
-  likePost,
-  unlikePost,
+  toggleLike,
   bookmarkPost,
   unbookmarkPost
 } = communitySlice.actions
@@ -302,35 +285,18 @@ export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
 }
 
 /**
- * 게시글 좋아요 Thunk
+ * 게시글 좋아요 토글 Thunk
  * @param {number|string} postId - 게시글 ID
  */
-export const likePostAsync = (postId) => async (dispatch) => {
+export const toggleLikeAsync = (postId) => async (dispatch) => {
   try {
     const response = await communityService.likePost(postId)
-    // API 응답 구조: { code, message, data: { liked, likeCount } }
-    const { liked, likeCount } = response.data
-    dispatch(likePost({ postId, liked, likeCount }))
+    // API 응답 구조: { code, message, data: { isLiked, likeCount } }
+    const { isLiked, likeCount } = response.data
+    dispatch(toggleLike({ postId, isLiked, likeCount }))
     return response.data
   } catch (error) {
     const errorMessage = error.response?.data?.message || '좋아요 처리에 실패했습니다'
-    throw new Error(errorMessage)
-  }
-}
-
-/**
- * 게시글 좋아요 취소 Thunk
- * @param {number|string} postId - 게시글 ID
- */
-export const unlikePostAsync = (postId) => async (dispatch) => {
-  try {
-    const response = await communityService.unlikePost(postId)
-    // API 응답 구조: { code, message, data: { liked, likeCount } }
-    const { liked, likeCount } = response.data
-    dispatch(unlikePost({ postId, liked, likeCount }))
-    return response.data
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || '좋아요 취소에 실패했습니다'
     throw new Error(errorMessage)
   }
 }

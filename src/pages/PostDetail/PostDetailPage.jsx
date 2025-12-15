@@ -46,8 +46,7 @@ import {
   fetchPostAsync,
   deletePostAsync,
   createCommentAsync,
-  likePostAsync,
-  unlikePostAsync
+  toggleLikeAsync
 } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
 
@@ -132,7 +131,7 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
     tags = [],
     likeCount = 0,
     views = 0,
-    liked = false,
+    isLiked = false,
     isBookmarked = false
   } = post
 
@@ -166,11 +165,7 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
   // 좋아요 토글 처리
   const handleLikeToggle = async () => {
     try {
-      if (liked) {
-        await dispatch(unlikePostAsync(id))
-      } else {
-        await dispatch(likePostAsync(id))
-      }
+      await dispatch(toggleLikeAsync(id))
     } catch (error) {
       console.error('좋아요 처리 실패:', error)
       // 에러 처리 (필요시 사용자에게 알림)
@@ -512,15 +507,15 @@ function PostDetailPage({ post: propPost, onBack, onEdit }) {
                   onClick={handleLikeToggle}
                   size="small"
                   sx={{
-                    color: liked ? '#f44336' : '#666',
+                    color: isLiked ? '#f44336' : '#666',
                     '&:hover': {
-                      bgcolor: liked
+                      bgcolor: isLiked
                         ? 'rgba(244, 67, 54, 0.04)'
                         : 'rgba(0, 0, 0, 0.04)'
                     }
                   }}
                 >
-                  {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                 </IconButton>
                 <Typography variant="body2" color="text.secondary">
                   {likeCount}
@@ -779,7 +774,7 @@ PostDetailPage.propTypes = {
     likeCount: PropTypes.number,
     comments: PropTypes.number,
     views: PropTypes.number,
-    liked: PropTypes.bool,
+    isLiked: PropTypes.bool,
     isBookmarked: PropTypes.bool
   }),
   onBack: PropTypes.func.isRequired,
