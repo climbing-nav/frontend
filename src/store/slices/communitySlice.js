@@ -291,10 +291,11 @@ export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
 export const toggleLikeAsync = (postId) => async (dispatch) => {
   try {
     const response = await communityService.likePost(postId)
-    // API 응답 구조: { code, message, data: { isLiked, likeCount } }
-    const { isLiked, likeCount } = response.data
-    dispatch(toggleLike({ postId, isLiked, likeCount }))
-    return response.data
+    // API 응답 구조: { code: "OK", message: "success", data: { liked, likeCount } }
+    const { liked, likeCount } = response.data.data
+    // liked를 isLiked로 매핑하여 Redux 상태 업데이트
+    dispatch(toggleLike({ postId, isLiked: liked, likeCount }))
+    return response.data.data
   } catch (error) {
     const errorMessage = error.response?.data?.message || '좋아요 처리에 실패했습니다'
     throw new Error(errorMessage)
