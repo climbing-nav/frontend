@@ -41,7 +41,14 @@ function BottomNavigation({ currentTab, onTabChange }) {
               gap: 0.5,
               py: 1,
               color: isActive ? '#667eea' : '#9ca3af',
-              transition: 'color 0.3s'
+              transition: 'color 0.3s',
+              '&:focus': {
+                outline: 'none'
+              },
+              '&:focus-visible': {
+                outline: '2px solid #667eea',
+                outlineOffset: '2px'
+              }
             }}
           >
             <Icon sx={{ fontSize: 24 }} />

@@ -18,7 +18,14 @@ function FloatingActionButton({ onClick }) {
           boxShadow: '0 6px 16px rgba(102, 126, 234, 0.5)'
         },
         transition: 'all 0.3s',
-        zIndex: 100
+        zIndex: 100,
+        '&:focus': {
+          outline: 'none'
+        },
+        '&:focus-visible': {
+          outline: '2px solid #667eea',
+          outlineOffset: '2px'
+        }
       }}
     >
       <Edit />
