@@ -126,17 +126,20 @@ const communitySlice = createSlice({
     toggleLike: (state, action) => {
       const { postId, isLiked, likeCount } = action.payload
 
-      // posts 배열 업데이트
-      const post = state.posts.find(p => p.id === postId)
-      if (post) {
-        post.likeCount = likeCount
-        post.isLiked = isLiked
-      }
+      // posts 배열을 새로운 배열로 교체하여 참조 변경
+      state.posts = state.posts.map(p =>
+        p.id === postId
+          ? { ...p, likeCount, isLiked }
+          : p
+      )
 
-      // selectedPost 업데이트
+      // selectedPost를 새로운 객체로 교체
       if (state.selectedPost && state.selectedPost.id === postId) {
-        state.selectedPost.likeCount = likeCount
-        state.selectedPost.isLiked = isLiked
+        state.selectedPost = {
+          ...state.selectedPost,
+          likeCount,
+          isLiked
+        }
       }
     },
     
