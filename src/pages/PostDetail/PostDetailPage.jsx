@@ -244,8 +244,11 @@ function PostDetailPage({ postId, onBack, onEdit }) {
 
   // 댓글 삭제 다이얼로그 열기
   const handleCommentDeleteClick = (commentId) => {
+    console.log('🔴 handleCommentDeleteClick 호출됨, commentId:', commentId)
+    console.log('🔴 commentId 타입:', typeof commentId)
     setCommentToDelete(commentId)
     setCommentDeleteDialogOpen(true)
+    console.log('🔴 state 업데이트 완료')
   }
 
   // 댓글 삭제 다이얼로그 닫기
@@ -686,7 +689,13 @@ function PostDetailPage({ postId, onBack, onEdit }) {
             </Box>
           ) : (
             <List sx={{ p: 0 }}>
-              {comments.map((commentItem, index) => (
+              {comments.map((commentItem, index) => {
+                console.log('💬 댓글 렌더링:', {
+                  id: commentItem.id,
+                  author: commentItem.author,
+                  content: commentItem.content?.substring(0, 20)
+                })
+                return (
                 <Box key={commentItem.id}>
                   <ListItem
                     alignItems="flex-start"
@@ -748,7 +757,11 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                     {currentUser && commentItem.author === currentUser.nickname && (
                       <IconButton
                         size="small"
-                        onClick={() => handleCommentDeleteClick(commentItem.id)}
+                        onClick={() => {
+                          console.log('❌ X 버튼 클릭됨, commentItem:', commentItem)
+                          console.log('❌ commentItem.id:', commentItem.id)
+                          handleCommentDeleteClick(commentItem.id)
+                        }}
                         sx={{
                           position: 'absolute',
                           top: 16,
@@ -767,7 +780,8 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                   </ListItem>
                   {index < comments.length - 1 && <Divider />}
                 </Box>
-              ))}
+                )
+              })}
             </List>
           )}
         </Paper>
