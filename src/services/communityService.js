@@ -69,6 +69,9 @@ export const communityService = {
       author,
       content
     })
+    console.log('✍️ 댓글 생성 응답:', response)
+    console.log('✍️ response.data:', response.data)
+    console.log('✍️ response.data.data:', response.data?.data)
     return response.data
   },
 
