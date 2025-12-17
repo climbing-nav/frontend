@@ -23,6 +23,10 @@ export const communityService = {
    */
   async getPostById(postId) {
     const response = await api.get(`/posts/${postId}`)
+    console.log('📋 getPostById 전체 응답:', response)
+    console.log('📋 response.data:', response.data)
+    console.log('📋 response.data.data:', response.data?.data)
+    console.log('📋 댓글 목록:', response.data?.data?.comments || response.data?.comments)
     return response.data
   },
 

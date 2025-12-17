@@ -75,6 +75,11 @@ const communitySlice = createSlice({
       console.log('📄 게시글 상세 조회 응답:', postData)
       console.log('📋 boardCode:', postData?.boardCode)
       console.log('📋 category:', postData?.category)
+      console.log('💬 댓글 목록 구조:', postData?.comments)
+      if (postData?.comments && postData.comments.length > 0) {
+        console.log('💬 첫 번째 댓글:', postData.comments[0])
+        console.log('💬 첫 번째 댓글의 모든 키:', Object.keys(postData.comments[0]))
+      }
       state.selectedPost = postData
     },
     fetchPostFailure: (state, action) => {
