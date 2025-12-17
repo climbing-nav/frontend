@@ -256,15 +256,30 @@ function PostDetailPage({ postId, onBack, onEdit }) {
 
   // 댓글 삭제 확인
   const handleCommentDeleteConfirm = async () => {
-    if (!commentToDelete) return
+    console.log('🔍 handleCommentDeleteConfirm 호출됨')
+    console.log('🔍 commentToDelete:', commentToDelete)
+    console.log('🔍 post.id:', post?.id)
+
+    if (!commentToDelete) {
+      console.log('❌ commentToDelete가 없어서 리턴')
+      return
+    }
 
     try {
-      await dispatch(deleteCommentAsync(commentToDelete))
+      console.log('📤 deleteCommentAsync 호출 시작:', commentToDelete)
+      const result = await dispatch(deleteCommentAsync(commentToDelete))
+      console.log('✅ deleteCommentAsync 완료:', result)
+
       // 댓글 삭제 후 게시글 다시 조회하여 업데이트된 댓글 목록 가져오기
+      console.log('📤 fetchPostAsync 호출 시작:', post.id)
       await dispatch(fetchPostAsync(post.id))
+      console.log('✅ fetchPostAsync 완료')
+
       handleCommentDeleteDialogClose()
+      console.log('✅ Dialog 닫기 완료')
     } catch (error) {
-      console.error('댓글 삭제 실패:', error)
+      console.error('❌ 댓글 삭제 실패:', error)
+      console.error('❌ 에러 상세:', error.message, error.response)
       // 에러 처리 (필요시 사용자에게 알림)
     }
   }
@@ -879,13 +894,19 @@ function PostDetailPage({ postId, onBack, onEdit }) {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
-            onClick={handleCommentDeleteDialogClose}
+            onClick={() => {
+              console.log('🔘 취소 버튼 클릭됨')
+              handleCommentDeleteDialogClose()
+            }}
             sx={{ color: '#666' }}
           >
             취소
           </Button>
           <Button
-            onClick={handleCommentDeleteConfirm}
+            onClick={() => {
+              console.log('🔘 삭제 버튼 클릭됨')
+              handleCommentDeleteConfirm()
+            }}
             variant="contained"
             sx={{
               bgcolor: '#f44336',

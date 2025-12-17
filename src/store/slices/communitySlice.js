@@ -280,11 +280,20 @@ export const createCommentAsync = (commentData) => async (dispatch) => {
  * @param {number|string} commentId - 댓글 ID
  */
 export const deleteCommentAsync = (commentId) => async (dispatch) => {
+  console.log('🔧 deleteCommentAsync Thunk 시작, commentId:', commentId)
   try {
-    await communityService.deleteComment(commentId)
+    console.log('📡 communityService.deleteComment 호출 중...')
+    const response = await communityService.deleteComment(commentId)
+    console.log('✅ API 응답:', response)
+
     dispatch(deleteComment(commentId))
+    console.log('✅ Redux deleteComment action dispatched')
+
     return commentId
   } catch (error) {
+    console.error('❌ deleteCommentAsync 에러:', error)
+    console.error('❌ error.response:', error.response)
+    console.error('❌ error.message:', error.message)
     const errorMessage = error.response?.data?.message || '댓글 삭제에 실패했습니다'
     throw new Error(errorMessage)
   }

@@ -73,8 +73,17 @@ export const communityService = {
    * @param {number|string} commentId - 댓글 ID
    */
   async deleteComment(commentId) {
-    const response = await api.delete(`/comments/${commentId}`)
-    return response.data
+    console.log('🌐 API 호출: DELETE /comments/' + commentId)
+    try {
+      const response = await api.delete(`/comments/${commentId}`)
+      console.log('✅ API 응답 성공:', response)
+      return response.data
+    } catch (error) {
+      console.error('❌ API 호출 실패:', error)
+      console.error('❌ error.response:', error.response)
+      console.error('❌ URL:', `/comments/${commentId}`)
+      throw error
+    }
   },
 
   /**
