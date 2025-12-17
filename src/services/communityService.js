@@ -68,8 +68,12 @@ export const communityService = {
     return response.data
   },
 
-  async deleteComment(postId, commentId) {
-    const response = await api.delete(`/posts/${postId}/comments/${commentId}`)
+  /**
+   * 댓글 삭제
+   * @param {number|string} commentId - 댓글 ID
+   */
+  async deleteComment(commentId) {
+    const response = await api.delete(`/comments/${commentId}/`)
     return response.data
   },
 

@@ -277,12 +277,11 @@ export const createCommentAsync = (commentData) => async (dispatch) => {
 
 /**
  * 댓글 삭제 Thunk
- * @param {number|string} postId - 게시글 ID
  * @param {number|string} commentId - 댓글 ID
  */
-export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
+export const deleteCommentAsync = (commentId) => async (dispatch) => {
   try {
-    await communityService.deleteComment(postId, commentId)
+    await communityService.deleteComment(commentId)
     dispatch(deleteComment(commentId))
     return commentId
   } catch (error) {
