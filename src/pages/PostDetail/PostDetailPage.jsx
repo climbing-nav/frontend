@@ -38,7 +38,8 @@ import {
   Comment as CommentIcon,
   Send as SendIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Close as CloseIcon
 } from '@mui/icons-material'
 import {
   bookmarkPost,
@@ -46,6 +47,7 @@ import {
   fetchPostAsync,
   deletePostAsync,
   createCommentAsync,
+  deleteCommentAsync,
   toggleLikeAsync
 } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
@@ -84,6 +86,10 @@ function PostDetailPage({ postId, onBack, onEdit }) {
   const [anchorEl, setAnchorEl] = useState(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const menuOpen = Boolean(anchorEl)
+
+  // 댓글 삭제 관련 state
+  const [commentDeleteDialogOpen, setCommentDeleteDialogOpen] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState(null)
 
   // 게시글 로드 (항상 백엔드에서 최신 데이터 조회)
   useEffect(() => {
@@ -233,6 +239,33 @@ function PostDetailPage({ postId, onBack, onEdit }) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleCommentSubmit()
+    }
+  }
+
+  // 댓글 삭제 다이얼로그 열기
+  const handleCommentDeleteClick = (commentId) => {
+    setCommentToDelete(commentId)
+    setCommentDeleteDialogOpen(true)
+  }
+
+  // 댓글 삭제 다이얼로그 닫기
+  const handleCommentDeleteDialogClose = () => {
+    setCommentDeleteDialogOpen(false)
+    setCommentToDelete(null)
+  }
+
+  // 댓글 삭제 확인
+  const handleCommentDeleteConfirm = async () => {
+    if (!commentToDelete) return
+
+    try {
+      await dispatch(deleteCommentAsync(commentToDelete))
+      // 댓글 삭제 후 게시글 다시 조회하여 업데이트된 댓글 목록 가져오기
+      await dispatch(fetchPostAsync(post.id))
+      handleCommentDeleteDialogClose()
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error)
+      // 에러 처리 (필요시 사용자에게 알림)
     }
   }
 
@@ -644,7 +677,8 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                     alignItems="flex-start"
                     sx={{
                       px: 0,
-                      py: 2
+                      py: 2,
+                      position: 'relative'
                     }}
                   >
                     <ListItemAvatar>
@@ -696,6 +730,25 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                         </Typography>
                       }
                     />
+                    {currentUser && commentItem.author === currentUser.nickname && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleCommentDeleteClick(commentItem.id)}
+                        sx={{
+                          position: 'absolute',
+                          top: 16,
+                          right: 0,
+                          padding: '4px',
+                          color: '#999',
+                          '&:hover': {
+                            color: '#f44336',
+                            bgcolor: 'rgba(244, 67, 54, 0.04)'
+                          }
+                        }}
+                      >
+                        <CloseIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    )}
                   </ListItem>
                   {index < comments.length - 1 && <Divider />}
                 </Box>
@@ -759,7 +812,7 @@ function PostDetailPage({ postId, onBack, onEdit }) {
         </Box>
       </Paper>
 
-      {/* 삭제 확인 Dialog */}
+      {/* 게시글 삭제 확인 Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
@@ -789,6 +842,50 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           </Button>
           <Button
             onClick={handleDeleteConfirm}
+            variant="contained"
+            sx={{
+              bgcolor: '#f44336',
+              '&:hover': {
+                bgcolor: '#d32f2f'
+              }
+            }}
+            autoFocus
+          >
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 댓글 삭제 확인 Dialog */}
+      <Dialog
+        open={commentDeleteDialogOpen}
+        onClose={handleCommentDeleteDialogClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxWidth: 340
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          댓글 삭제
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            정말로 이 댓글을 삭제하시겠습니까?
+            <br />
+            삭제된 댓글은 복구할 수 없습니다.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCommentDeleteDialogClose}
+            sx={{ color: '#666' }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleCommentDeleteConfirm}
             variant="contained"
             sx={{
               bgcolor: '#f44336',
