@@ -35,14 +35,43 @@ const theme = createTheme({
   }
 })
 
+// URL 기반으로 초기 페이지 결정
+const getInitialPageFromURL = () => {
+  const path = window.location.pathname
+  const params = new URLSearchParams(window.location.search)
+
+  // OAuth 콜백 처리 중이면 landing
+  if (path.includes('/auth/kakao/callback') || path.includes('/auth/google/callback')) {
+    return 'landing'
+  }
+
+  // URL 경로에서 페이지 결정
+  if (path === '/' || path === '') {
+    // localStorage에 토큰이 있으면 home, 없으면 landing
+    const token = localStorage.getItem('token')
+    return token ? 'home' : 'landing'
+  }
+  if (path.includes('/community')) return 'community'
+  if (path.includes('/map')) return 'map'
+  if (path.includes('/mypage') || path.includes('/profile')) return 'mypage'
+  if (path.includes('/auth')) return 'auth'
+
+  // 기본값
+  const token = localStorage.getItem('token')
+  return token ? 'home' : 'landing'
+}
+
 function App() {
   const dispatch = useDispatch()
   const processRef = useRef(false)
   const isAuthInitialized = useSelector(selectIsAuthInitialized)
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
-  const [currentTab, setCurrentTab] = useState('home')
-  const [currentPage, setCurrentPage] = useState('landing') // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
+  const [currentTab, setCurrentTab] = useState(() => {
+    const initialPage = getInitialPageFromURL()
+    return ['home', 'map', 'community', 'mypage'].includes(initialPage) ? initialPage : 'home'
+  })
+  const [currentPage, setCurrentPage] = useState(getInitialPageFromURL) // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPostId, setSelectedPostId] = useState(null)
   const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
@@ -55,6 +84,20 @@ function App() {
       dispatch(initializeAuthAsync())
     }
   }, [dispatch, isAuthInitialized])
+
+  // 브라우저 뒤로가기/앞으로가기 지원
+  useEffect(() => {
+    const handlePopState = () => {
+      const newPage = getInitialPageFromURL()
+      setCurrentPage(newPage)
+      if (['home', 'map', 'community', 'mypage'].includes(newPage)) {
+        setCurrentTab(newPage)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // 카카오 OAuth 콜백 처리 - 프론트엔드 주도 플로우
   useEffect(() => {
@@ -232,20 +275,26 @@ function App() {
   const handleTabChange = (tab) => {
     setCurrentTab(tab)
     setCurrentPage(tab)
+    // URL 업데이트
+    const path = tab === 'home' ? '/' : `/${tab}`
+    window.history.pushState({}, '', path)
   }
 
   const handleNavigateToAuth = () => {
     setCurrentPage('auth')
+    window.history.pushState({}, '', '/auth')
   }
 
   const handleNavigateToProfile = () => {
     setCurrentPage('mypage')
     setCurrentTab('mypage')
+    window.history.pushState({}, '', '/mypage')
   }
 
   const handleNavigateToHome = () => {
     setCurrentPage('home')
     setCurrentTab('home')
+    window.history.pushState({}, '', '/')
   }
 
   const handleNavigateToGymDetail = (gym) => {
