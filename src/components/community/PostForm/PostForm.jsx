@@ -191,13 +191,17 @@ function PostForm({
         debouncedSaveDraft(data)
       }
     })
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      // ⭐ 컴포넌트 unmount 시 pending된 auto-save 취소
+      debouncedSaveDraft.cancel?.()
+    }
   }, [watch, debouncedSaveDraft, isEditing, isSubmitted])
 
-  // Debounce utility function
+  // Debounce utility function with cancel method
   function debounce(func, wait) {
     let timeout
-    return function executedFunction(...args) {
+    const executedFunction = function(...args) {
       const later = () => {
         clearTimeout(timeout)
         func(...args)
@@ -205,6 +209,10 @@ function PostForm({
       clearTimeout(timeout)
       timeout = setTimeout(later, wait)
     }
+    executedFunction.cancel = function() {
+      clearTimeout(timeout)
+    }
+    return executedFunction
   }
 
   // Tag management functions
@@ -328,6 +336,13 @@ function PostForm({
 
   const onFormSubmit = async (data) => {
     try {
+      // ⭐ 제출 시작 시 즉시 auto-save 비활성화 및 draft 삭제
+      setIsSubmitted(true)
+      if (!isEditing) {
+        localStorage.removeItem(draftKey)
+        setLastSaved(null)
+      }
+
       // 백엔드 API 스펙에 맞는 데이터 구조
       const postData = {
         title: data.title,
@@ -341,9 +356,6 @@ function PostForm({
 
         // Redux store 업데이트는 하지 않음 (App.jsx에서 fetchPostAsync로 다시 조회)
         // dispatch(updatePost(updatedPost))
-
-        // 제출 완료 플래그 설정
-        setIsSubmitted(true)
 
         // Reset form after successful update
         reset()
@@ -359,13 +371,6 @@ function PostForm({
 
         // createdPost가 성공적으로 반환되면 처리
         if (createdPost) {
-          // 제출 완료 플래그 설정 (auto-save 비활성화)
-          setIsSubmitted(true)
-
-          // Clear draft after successful submission
-          localStorage.removeItem(draftKey)
-          setLastSaved(null)
-
           // Reset form after successful submission
           reset()
           setImageFiles([])
@@ -374,11 +379,16 @@ function PostForm({
 
           // Call parent onSubmit if provided
           onSubmit(createdPost)
+        } else {
+          // 제출 실패 시 플래그 리셋 (다시 auto-save 활성화)
+          setIsSubmitted(false)
         }
       }
 
     } catch (error) {
       console.error(isEditing ? '게시글 수정 실패:' : '게시글 작성 실패:', error)
+      // 에러 발생 시 플래그 리셋 (다시 auto-save 활성화)
+      setIsSubmitted(false)
       // 에러는 Redux에서 처리됨
     }
   }
