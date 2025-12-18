@@ -147,10 +147,6 @@ function PostDetailPage({ postId, onBack, onEdit }) {
     isBookmarked = false
   } = post
 
-  console.log('🔍 PostDetailPage - post 전체:', post)
-  console.log('🔍 boardCode:', boardCode, 'category:', category)
-  console.log('🔍 getBoardName 결과:', getBoardName(boardCode || category))
-
   // 날짜 포맷팅
   const formatDate = (dateString) => {
     if (!dateString) return time || '방금 전'
@@ -244,11 +240,8 @@ function PostDetailPage({ postId, onBack, onEdit }) {
 
   // 댓글 삭제 다이얼로그 열기
   const handleCommentDeleteClick = (commentId) => {
-    console.log('🔴 handleCommentDeleteClick 호출됨, commentId:', commentId)
-    console.log('🔴 commentId 타입:', typeof commentId)
     setCommentToDelete(commentId)
     setCommentDeleteDialogOpen(true)
-    console.log('🔴 state 업데이트 완료')
   }
 
   // 댓글 삭제 다이얼로그 닫기
@@ -259,27 +252,19 @@ function PostDetailPage({ postId, onBack, onEdit }) {
 
   // 댓글 삭제 확인
   const handleCommentDeleteConfirm = async () => {
-    console.log('🔍 handleCommentDeleteConfirm 호출됨')
-    console.log('🔍 commentToDelete:', commentToDelete)
-    console.log('🔍 post.id:', post?.id)
 
     if (!commentToDelete) {
-      console.log('❌ commentToDelete가 없어서 리턴')
       return
     }
 
     try {
-      console.log('📤 deleteCommentAsync 호출 시작:', commentToDelete)
       const result = await dispatch(deleteCommentAsync(commentToDelete))
-      console.log('✅ deleteCommentAsync 완료:', result)
 
       // 댓글 삭제 후 게시글 다시 조회하여 업데이트된 댓글 목록 가져오기
-      console.log('📤 fetchPostAsync 호출 시작:', post.id)
       await dispatch(fetchPostAsync(post.id))
-      console.log('✅ fetchPostAsync 완료')
 
       handleCommentDeleteDialogClose()
-      console.log('✅ Dialog 닫기 완료')
+
     } catch (error) {
       console.error('❌ 댓글 삭제 실패:', error)
       console.error('❌ 에러 상세:', error.message, error.response)
@@ -690,11 +675,7 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           ) : (
             <List sx={{ p: 0 }}>
               {comments.map((commentItem, index) => {
-                console.log('💬 댓글 렌더링:', {
-                  id: commentItem.id,
-                  author: commentItem.author,
-                  content: commentItem.content?.substring(0, 20)
-                })
+
                 return (
                 <Box key={commentItem.id}>
                   <ListItem
@@ -758,8 +739,6 @@ function PostDetailPage({ postId, onBack, onEdit }) {
                       <IconButton
                         size="small"
                         onClick={() => {
-                          console.log('❌ X 버튼 클릭됨, commentItem:', commentItem)
-                          console.log('❌ commentItem.id:', commentItem.id)
                           handleCommentDeleteClick(commentItem.id)
                         }}
                         sx={{
@@ -909,7 +888,6 @@ function PostDetailPage({ postId, onBack, onEdit }) {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             onClick={() => {
-              console.log('🔘 취소 버튼 클릭됨')
               handleCommentDeleteDialogClose()
             }}
             sx={{ color: '#666' }}
@@ -918,7 +896,6 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           </Button>
           <Button
             onClick={() => {
-              console.log('🔘 삭제 버튼 클릭됨')
               handleCommentDeleteConfirm()
             }}
             variant="contained"
