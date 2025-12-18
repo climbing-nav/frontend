@@ -21,7 +21,7 @@ export const authService = {
   async refreshToken() {
     // REFRESH 토큰은 HttpOnly 쿠키로 관리되므로 withCredentials: true로 자동 전송됨
     try {
-      const response = await api.post('/api/token/refresh', {})
+      const response = await api.post('/token/refresh', {})
 
       // 새로운 ACCESS 토큰 저장
       if (response.data.token) {
