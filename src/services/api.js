@@ -69,7 +69,7 @@ api.interceptors.response.use(
         // 브라우저가 자동으로 REFRESH 쿠키를 전송함
         // 백엔드가 쿠키 없거나 만료되었으면 401 에러 반환
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://52.78.220.103:8080'}/api/token/refresh`,
+          `${import.meta.env.VITE_API_URL || 'http://52.78.220.103:8080/api'}/token/refresh`,
           {},
           {
             withCredentials: true // REFRESH 쿠키 자동 전송
