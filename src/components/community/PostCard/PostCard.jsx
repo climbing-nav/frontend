@@ -248,6 +248,144 @@ function PostCard({
           {truncateText(title, 60)}
         </Typography>
 
+        {/* 이미지 갤러리 (인스타그램 스타일) */}
+        {images && images.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            {images.length === 1 ? (
+              // 단일 이미지
+              <Box
+                component="img"
+                src={images[0]}
+                alt="Post image"
+                sx={{
+                  width: '100%',
+                  maxHeight: 350,
+                  borderRadius: 2,
+                  objectFit: 'cover',
+                  bgcolor: '#f5f5f5'
+                }}
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/350x350?text=Image+Not+Found'
+                }}
+              />
+            ) : images.length === 2 ? (
+              // 2개 이미지 - 좌우 배치
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 0.5,
+                borderRadius: 2,
+                overflow: 'hidden'
+              }}>
+                {images.map((img, idx) => (
+                  <Box
+                    key={idx}
+                    component="img"
+                    src={img}
+                    alt={`Image ${idx + 1}`}
+                    sx={{
+                      width: '100%',
+                      height: 180,
+                      objectFit: 'cover',
+                      bgcolor: '#f5f5f5'
+                    }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/180x180?text=Image+Not+Found'
+                    }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              // 3개 이상 이미지 - 인스타그램 스타일 (첫 번째 크게, 나머지 작게)
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gridTemplateRows: '1fr 1fr',
+                gap: 0.5,
+                height: 280,
+                borderRadius: 2,
+                overflow: 'hidden'
+              }}>
+                {/* 첫 번째 이미지 - 왼쪽 전체 */}
+                <Box
+                  component="img"
+                  src={images[0]}
+                  alt="Image 1"
+                  sx={{
+                    gridRow: '1 / 3',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    bgcolor: '#f5f5f5'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/280x280?text=Image+Not+Found'
+                  }}
+                />
+
+                {/* 두 번째 이미지 - 오른쪽 위 */}
+                <Box
+                  component="img"
+                  src={images[1]}
+                  alt="Image 2"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    bgcolor: '#f5f5f5'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/140x140?text=Image+Not+Found'
+                  }}
+                />
+
+                {/* 세 번째 이미지 - 오른쪽 아래 */}
+                <Box sx={{ position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={images[2]}
+                    alt="Image 3"
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      bgcolor: '#f5f5f5'
+                    }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/140x140?text=Image+Not+Found'
+                    }}
+                  />
+
+                  {/* 3개 이상일 때 +N 오버레이 */}
+                  {images.length > 3 && (
+                    <Box sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      bgcolor: 'rgba(0,0,0,0.6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        +{images.length - 3}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+
         {/* Content */}
         <Box>
           <Typography
