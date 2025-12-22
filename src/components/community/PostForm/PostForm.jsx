@@ -366,11 +366,11 @@ function PostForm({
         // Call parent onSubmit if provided
         onSubmit(updatedPost)
       } else {
-        // Redux Thunk를 통한 게시글 생성
-        const createdPost = await dispatch(createPostAsync(postData))
+        // 게시글 생성 - 이미지 파일 포함
+        const response = await communityService.createPost(postData, imageFiles)
 
-        // createdPost가 성공적으로 반환되면 처리
-        if (createdPost) {
+        // 성공 시 Redux store에 반영하기 위해 게시글 목록 다시 조회
+        if (response) {
           // Reset form after successful submission
           reset()
           setImageFiles([])
@@ -378,7 +378,7 @@ function PostForm({
           setTagInput('')
 
           // Call parent onSubmit if provided
-          onSubmit(createdPost)
+          onSubmit(response)
         } else {
           // 제출 실패 시 플래그 리셋 (다시 auto-save 활성화)
           setIsSubmitted(false)
@@ -389,7 +389,8 @@ function PostForm({
       console.error(isEditing ? '게시글 수정 실패:' : '게시글 작성 실패:', error)
       // 에러 발생 시 플래그 리셋 (다시 auto-save 활성화)
       setIsSubmitted(false)
-      // 에러는 Redux에서 처리됨
+      // 사용자에게 에러 메시지 표시
+      setUploadError(error.response?.data?.message || '게시글 작성에 실패했습니다')
     }
   }
 

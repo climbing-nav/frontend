@@ -51,6 +51,7 @@ import {
   toggleLikeAsync
 } from '../../store/slices/communitySlice'
 import { getBoardName } from '../../constants/boardCodes'
+import ImageCarousel from '../../components/common/ImageCarousel'
 
 // boardCode별 색상 (영문 코드 + 한글 이름 지원)
 const BOARD_CODE_COLORS = {
@@ -144,7 +145,8 @@ function PostDetailPage({ postId, onBack, onEdit }) {
     likeCount = 0,
     views = 0,
     isLiked = false,
-    isBookmarked = false
+    isBookmarked = false,
+    fileNames = []
   } = post
 
   // 날짜 포맷팅
@@ -512,6 +514,13 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           >
             {title}
           </Typography>
+
+          {/* 이미지 캐러셀 */}
+          {fileNames && fileNames.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <ImageCarousel images={fileNames} />
+            </Box>
+          )}
 
           {/* 본문 내용 */}
           <Typography
