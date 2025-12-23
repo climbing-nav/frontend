@@ -30,10 +30,10 @@ const communitySlice = createSlice({
       const responseData = action.payload.data || action.payload
       const posts = responseData.posts || []
 
-      // API 응답의 fileNames를 images로 매핑
+      // API 응답의 files 배열을 images 배열로 매핑
       const normalizedPosts = posts.map(post => ({
         ...post,
-        images: post.fileNames || post.images || []
+        images: post.files ? post.files.map(file => file.url) : (post.images || [])
       }))
 
       state.posts = Array.isArray(normalizedPosts) ? normalizedPosts : []
@@ -88,7 +88,7 @@ const communitySlice = createSlice({
         console.log('💬 첫 번째 댓글의 모든 키:', Object.keys(postData.comments[0]))
       }
 
-      // API 응답의 fileNames를 images로 매핑
+      // API 응답의 fileNames 배열을 images로 매핑 (상세 조회는 문자열 배열)
       state.selectedPost = {
         ...postData,
         images: postData?.fileNames || postData?.images || []
