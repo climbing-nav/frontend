@@ -43,7 +43,7 @@ function ImageCarousel({ images }) {
           display: 'block'
         }}
         onError={(e) => {
-          e.target.src = 'https://via.placeholder.com/450x450?text=Image+Not+Found'
+          e.target.style.display = 'none'
         }}
       />
 

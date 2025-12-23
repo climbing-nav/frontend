@@ -265,7 +265,7 @@ function PostCard({
                   bgcolor: '#f5f5f5'
                 }}
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/350x350?text=Image+Not+Found'
+                  e.target.style.display = 'none'
                 }}
               />
             ) : images.length === 2 ? (
@@ -290,7 +290,7 @@ function PostCard({
                       bgcolor: '#f5f5f5'
                     }}
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/180x180?text=Image+Not+Found'
+                      e.target.style.display = 'none'
                     }}
                   />
                 ))}
@@ -319,7 +319,7 @@ function PostCard({
                     bgcolor: '#f5f5f5'
                   }}
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/280x280?text=Image+Not+Found'
+                    e.target.style.display = 'none'
                   }}
                 />
 
@@ -335,7 +335,7 @@ function PostCard({
                     bgcolor: '#f5f5f5'
                   }}
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/140x140?text=Image+Not+Found'
+                    e.target.style.display = 'none'
                   }}
                 />
 
@@ -352,7 +352,7 @@ function PostCard({
                       bgcolor: '#f5f5f5'
                     }}
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/140x140?text=Image+Not+Found'
+                      e.target.style.display = 'none'
                     }}
                   />
 
