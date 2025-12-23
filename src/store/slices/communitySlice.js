@@ -29,6 +29,13 @@ const communitySlice = createSlice({
       // API 응답 구조: { data: { posts: [], hasNext, nextCursorId } }
       const responseData = action.payload.data || action.payload
       const posts = responseData.posts || []
+
+      // 이미지 URL 형식 확인 로그
+      console.log('📸 게시글 목록 조회 응답:', responseData)
+      if (posts.length > 0 && posts[0].images) {
+        console.log('📸 첫 번째 게시글의 이미지 URL:', posts[0].images)
+      }
+
       state.posts = Array.isArray(posts) ? posts : []
 
       // 페이지네이션 정보 업데이트
