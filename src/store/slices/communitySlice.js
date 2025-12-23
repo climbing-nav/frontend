@@ -30,13 +30,13 @@ const communitySlice = createSlice({
       const responseData = action.payload.data || action.payload
       const posts = responseData.posts || []
 
-      // 이미지 URL 형식 확인 로그
-      console.log('📸 게시글 목록 조회 응답:', responseData)
-      if (posts.length > 0 && posts[0].images) {
-        console.log('📸 첫 번째 게시글의 이미지 URL:', posts[0].images)
-      }
+      // API 응답의 fileNames를 images로 매핑
+      const normalizedPosts = posts.map(post => ({
+        ...post,
+        images: post.fileNames || post.images || []
+      }))
 
-      state.posts = Array.isArray(posts) ? posts : []
+      state.posts = Array.isArray(normalizedPosts) ? normalizedPosts : []
 
       // 페이지네이션 정보 업데이트
       if (responseData.hasNext !== undefined) {
@@ -87,7 +87,12 @@ const communitySlice = createSlice({
         console.log('💬 첫 번째 댓글:', postData.comments[0])
         console.log('💬 첫 번째 댓글의 모든 키:', Object.keys(postData.comments[0]))
       }
-      state.selectedPost = postData
+
+      // API 응답의 fileNames를 images로 매핑
+      state.selectedPost = {
+        ...postData,
+        images: postData?.fileNames || postData?.images || []
+      }
     },
     fetchPostFailure: (state, action) => {
       state.loading = false
