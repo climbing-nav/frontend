@@ -88,10 +88,10 @@ const communitySlice = createSlice({
         console.log('💬 첫 번째 댓글의 모든 키:', Object.keys(postData.comments[0]))
       }
 
-      // API 응답의 fileNames 배열을 images로 매핑 (상세 조회는 문자열 배열)
+      // API 응답의 files 배열을 images 배열로 매핑 (목록 조회와 동일)
       state.selectedPost = {
         ...postData,
-        images: postData?.fileNames || postData?.images || []
+        images: postData?.files ? postData.files.map(file => file.url) : (postData?.images || [])
       }
     },
     fetchPostFailure: (state, action) => {
