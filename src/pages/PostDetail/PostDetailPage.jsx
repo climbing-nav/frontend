@@ -146,7 +146,7 @@ function PostDetailPage({ postId, onBack, onEdit }) {
     views = 0,
     isLiked = false,
     isBookmarked = false,
-    fileNames = []
+    images = []
   } = post
 
   // 날짜 포맷팅
@@ -516,9 +516,9 @@ function PostDetailPage({ postId, onBack, onEdit }) {
           </Typography>
 
           {/* 이미지 캐러셀 */}
-          {fileNames && fileNames.length > 0 && (
+          {images && images.length > 0 && (
             <Box sx={{ mb: 3 }}>
-              <ImageCarousel images={fileNames} />
+              <ImageCarousel images={images} />
             </Box>
           )}
 
