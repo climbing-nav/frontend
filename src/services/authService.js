@@ -18,25 +18,6 @@ export const authService = {
     return response.data
   },
 
-  async refreshToken() {
-    // REFRESH 토큰은 HttpOnly 쿠키로 관리되므로 withCredentials: true로 자동 전송됨
-    try {
-      const response = await api.post('/token/refresh', {})
-
-      // 새로운 ACCESS 토큰 저장
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token)
-      }
-
-      return response.data
-    } catch (error) {
-      // Refresh 실패시 토큰 정리
-      localStorage.removeItem('token')
-      clearAuthCookies()
-      throw error
-    }
-  },
-
   // Google OAuth 콜백 처리 - 프론트엔드 주도 플로우
   async googleLogin(code, redirectUri) {
     try {
