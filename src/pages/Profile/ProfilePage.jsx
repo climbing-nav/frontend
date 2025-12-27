@@ -164,7 +164,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={3.8}>
+          <Grid item>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -185,7 +185,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={3.8}>
+          <Grid item>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
