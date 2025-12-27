@@ -142,7 +142,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
           </Box>
         </Box>
         
-        <Grid container sx={{ justifyContent: 'space-around' }}>
+        <Grid container spacing={2}>
           <Grid item sx={{ width: '30%' }}>
             <Box sx={{
               bgcolor: '#f8f9fa',

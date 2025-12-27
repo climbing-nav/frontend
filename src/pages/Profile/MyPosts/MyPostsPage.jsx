@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
   Typography,
@@ -11,7 +12,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material'
 import {
   FavoriteBorder,
@@ -22,6 +24,7 @@ import {
   ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
+import { fetchMyPostsAsync, deletePostAsync } from '../../../store/slices/communitySlice'
 
 // Category configurations with distinct colors
 const categories = {
@@ -33,57 +36,23 @@ const categories = {
   RECRUIT: { label: '메이트모집', color: '#ec4899', bgColor: '#fce7f3' }
 }
 
-// Mock data
-const mockPosts = [
-  {
-    id: 1,
-    category: 'REVIEW',
-    title: '더클라임 강남점 후기 - 초보자도 즐기기 좋아요!',
-    content: '오늘 처음으로 더클라임 강남점에 다녀왔는데요, 시설도 깨끗하고 난이도별로 잘 구성되어 있어서 초보자인 저도 재밌게 즐겼습니다. 특히 직원분들이...',
-    date: '2024-01-15',
-    likes: 24,
-    comments: 12
-  },
-  {
-    id: 2,
-    category: 'TIP',
-    title: '볼더링 초보 탈출 팁 5가지',
-    content: '6개월간 꾸준히 볼더링을 하면서 느낀 점들을 공유합니다. 1. 발 사용법이 가장 중요 2. 과도한 악력 사용 자제...',
-    date: '2024-01-12',
-    likes: 156,
-    comments: 43
-  },
-  {
-    id: 3,
-    category: 'RECRUIT',
-    title: '주말 아침 클라이밍 메이트 구해요 (성수/홍대)',
-    content: '매주 토요일 오전 10시에 클라이밍 하실 분 구합니다. 현재 V4-V5 정도 등반 중이고, 같이 즐겁게...',
-    date: '2024-01-10',
-    likes: 8,
-    comments: 5
-  },
-  {
-    id: 4,
-    category: 'FREE',
-    title: '오늘 첫 V6 완등했어요!',
-    content: '1년간의 노력 끝에 드디어 V6를 완등했습니다 🎉 너무 기쁘네요. 다들 포기하지 말고 화이팅!',
-    date: '2024-01-08',
-    likes: 89,
-    comments: 28
-  }
-]
-
 function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
+  const dispatch = useDispatch()
+  const { myPosts, loading, error } = useSelector(state => state.community)
   const [activeTab, setActiveTab] = useState(0)
-  const [posts, setPosts] = useState(mockPosts)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
 
   const tabs = ['ALL', 'FREE', 'REVIEW', 'TIP', 'TRADE', 'RECRUIT']
 
-  const filteredPosts = activeTab === 0
-    ? posts
-    : posts.filter(post => post.category === tabs[activeTab])
+  // 내 게시글 목록 로드 (탭 변경 시마다 재요청)
+  useEffect(() => {
+    const selectedBoardCode = activeTab === 0 ? null : tabs[activeTab]
+    dispatch(fetchMyPostsAsync(selectedBoardCode))
+  }, [dispatch, activeTab])
+
+  // 서버 사이드 필터링이므로 클라이언트 필터링 불필요
+  const posts = Array.isArray(myPosts) ? myPosts : []
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -95,10 +64,17 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
     setDeleteDialogOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    setPosts(prev => prev.filter(p => p.id !== selectedPost.id))
-    setDeleteDialogOpen(false)
-    setSelectedPost(null)
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deletePostAsync(selectedPost.id))
+      setDeleteDialogOpen(false)
+      setSelectedPost(null)
+      // 삭제 후 목록 새로고침
+      const selectedBoardCode = activeTab === 0 ? null : tabs[activeTab]
+      dispatch(fetchMyPostsAsync(selectedBoardCode))
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error)
+    }
   }
 
   const handlePostClick = (post) => {
@@ -112,6 +88,29 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
     const month = date.getMonth() + 1
     const day = date.getDate()
     return `${month}월 ${day}일`
+  }
+
+  // 로딩 상태
+  if (loading && posts.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '393px' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // 에러 상태
+  if (error && posts.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '393px', p: 3 }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          게시글을 불러올 수 없습니다
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {error}
+        </Typography>
+      </Box>
+    )
   }
 
   return (
@@ -210,7 +209,7 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
 
       {/* Posts List */}
       <Box sx={{ p: 2 }}>
-        {filteredPosts.length === 0 ? (
+        {posts.length === 0 ? (
           // Empty State - Magazine inspired
           <Paper
             elevation={0}
@@ -272,8 +271,8 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
           </Paper>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {filteredPosts.map((post, index) => {
-              const categoryConfig = categories[post.category]
+            {posts.map((post, index) => {
+              const categoryConfig = categories[post.boardCode || 'ALL']
               return (
                 <Paper
                   key={post.id}
@@ -345,7 +344,7 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
                           letterSpacing: '0.02em'
                         }}
                       >
-                        {formatDate(post.date)}
+                        {formatDate(post.createdAt || post.date)}
                       </Typography>
                     </Box>
 
@@ -414,7 +413,7 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
                               fontSize: 14
                             }}
                           >
-                            {post.likes}
+                            {post.likeCount || post.likes || 0}
                           </Typography>
                         </Box>
                         <Box
@@ -438,7 +437,7 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
                               fontSize: 14
                             }}
                           >
-                            {post.comments}
+                            {post.commentCount || post.comments || 0}
                           </Typography>
                         </Box>
                       </Box>
