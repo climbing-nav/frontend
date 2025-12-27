@@ -118,7 +118,45 @@ function CustomerSupportPage({ onNavigateToInquiry, onBack }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1,
+                  bgcolor: '#667eea',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <HelpOutline sx={{ fontSize: 26, color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 800,
+                    color: '#1f2937',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.2
+                  }}
+                >
+                  고객센터
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#6b7280',
+                    fontWeight: 500,
+                    fontSize: 13
+                  }}
+                >
+                  무엇을 도와드릴까요?
+                </Typography>
+              </Box>
+            </Box>
             <IconButton
               onClick={onBack}
               sx={{
@@ -130,42 +168,6 @@ function CustomerSupportPage({ onNavigateToInquiry, onBack }) {
             >
               <ArrowBack sx={{ fontSize: 20 }} />
             </IconButton>
-            <Box
-              sx={{
-                width: 44,
-                height: 44,
-                borderRadius: 1,
-                bgcolor: '#667eea',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <HelpOutline sx={{ fontSize: 26, color: 'white' }} />
-            </Box>
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: '#1f2937',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2
-                }}
-              >
-                고객센터
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#6b7280',
-                  fontWeight: 500,
-                  fontSize: 13
-                }}
-              >
-                무엇을 도와드릴까요?
-              </Typography>
-            </Box>
           </Box>
         </Box>
       </Box>

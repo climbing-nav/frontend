@@ -91,7 +91,17 @@ function FavoriteGymsPage({ onNavigateToGym, onBack }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: '#1f2937',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              즐겨찾는 암장
+            </Typography>
             <IconButton
               onClick={onBack}
               sx={{
@@ -103,16 +113,6 @@ function FavoriteGymsPage({ onNavigateToGym, onBack }) {
             >
               <ArrowBack sx={{ fontSize: 20 }} />
             </IconButton>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                color: '#1f2937',
-                letterSpacing: '-0.02em'
-              }}
-            >
-              즐겨찾는 암장
-            </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Chip

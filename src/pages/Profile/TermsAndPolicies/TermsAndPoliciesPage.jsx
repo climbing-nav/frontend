@@ -103,18 +103,7 @@ function TermsAndPoliciesPage({ onNavigateToPolicy, onBack }) {
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
           {/* Back button and Legal label */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-            <IconButton
-              onClick={onBack}
-              sx={{
-                width: 36,
-                height: 36,
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
-              }}
-            >
-              <ArrowBack sx={{ fontSize: 20 }} />
-            </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
             <Box
               sx={{
                 display: 'inline-flex',
@@ -147,6 +136,17 @@ function TermsAndPoliciesPage({ onNavigateToPolicy, onBack }) {
                 LEGAL DOCUMENTS
               </Typography>
             </Box>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
           </Box>
           <Typography
             variant="h4"

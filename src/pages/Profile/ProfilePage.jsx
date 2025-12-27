@@ -142,8 +142,8 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
           </Box>
         </Box>
         
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
+        <Grid container spacing={2} sx={{ justifyContent: 'space-between' }}>
+          <Grid item xs={3.8}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -164,7 +164,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3.8}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -185,7 +185,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3.8}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
