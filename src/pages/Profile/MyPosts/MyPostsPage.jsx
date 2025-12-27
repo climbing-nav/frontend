@@ -36,6 +36,16 @@ const categories = {
   RECRUIT: { label: '메이트모집', color: '#ec4899', bgColor: '#fce7f3' }
 }
 
+// categoryName을 boardCode로 매핑
+const categoryNameToBoardCode = {
+  '자유게시판': 'FREE',
+  '후기': 'REVIEW',
+  '팁&노하우': 'TIP',
+  '중고거래': 'TRADE',
+  '메이트 모집': 'RECRUIT',
+  '메이트모집': 'RECRUIT'
+}
+
 function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
   const dispatch = useDispatch()
   const { myPosts, loading, error } = useSelector(state => state.community)
@@ -272,7 +282,9 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {posts.map((post, index) => {
-              const categoryConfig = categories[post.boardCode || 'ALL']
+              // categoryName을 boardCode로 변환 (API 응답에 boardCode가 없는 경우)
+              const boardCode = post.boardCode || categoryNameToBoardCode[post.categoryName]
+              const categoryConfig = categories[boardCode] || categories['ALL']
               return (
                 <Paper
                   key={post.id}
