@@ -143,7 +143,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
         </Box>
         
         <Grid container spacing={2}>
-          <Grid sx={{ width: '30%' }}>
+          <Grid item xs={4}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -164,7 +164,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid sx={{ width: '30%' }}>
+          <Grid item xs={4}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -185,7 +185,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
               </Typography>
             </Box>
           </Grid>
-          <Grid sx={{ width: '30%' }}>
+          <Grid item xs={4}>
             <Box sx={{
               bgcolor: '#f8f9fa',
               p: 1.5,
@@ -215,6 +215,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
           {menuItems.map((item, index) => (
             <ListItem
               key={index}
+              button
               onClick={() => onNavigateToSubPage && onNavigateToSubPage(item.page)}
               sx={{
                 borderBottom: index < menuItems.length - 1 ? '1px solid #f3f4f6' : 'none',
@@ -240,6 +241,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
           {settingsItems.map((item, index) => (
             <ListItem
               key={index}
+              button
               onClick={() => onNavigateToSubPage && onNavigateToSubPage(item.page)}
               sx={{
                 borderBottom: index < settingsItems.length - 1 ? '1px solid #f3f4f6' : 'none',
