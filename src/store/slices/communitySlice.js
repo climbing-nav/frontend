@@ -187,14 +187,6 @@ const communitySlice = createSlice({
       // API 응답 구조: { code, message, data }
       // data 부분만 저장
       const postData = action.payload.data || action.payload
-      console.log('📄 게시글 상세 조회 응답:', postData)
-      console.log('📋 boardCode:', postData?.boardCode)
-      console.log('📋 category:', postData?.category)
-      console.log('💬 댓글 목록 구조:', postData?.comments)
-      if (postData?.comments && postData.comments.length > 0) {
-        console.log('💬 첫 번째 댓글:', postData.comments[0])
-        console.log('💬 첫 번째 댓글의 모든 키:', Object.keys(postData.comments[0]))
-      }
 
       // API 응답의 files 배열을 images 배열로 매핑 (목록 조회와 동일)
       state.selectedPost = {
@@ -478,20 +470,11 @@ export const createCommentAsync = (commentData) => async (dispatch) => {
  * @param {number|string} commentId - 댓글 ID
  */
 export const deleteCommentAsync = (commentId) => async (dispatch) => {
-  console.log('🔧 deleteCommentAsync Thunk 시작, commentId:', commentId)
   try {
-    console.log('📡 communityService.deleteComment 호출 중...')
     const response = await communityService.deleteComment(commentId)
-    console.log('✅ API 응답:', response)
-
     dispatch(deleteComment(commentId))
-    console.log('✅ Redux deleteComment action dispatched')
-
     return commentId
   } catch (error) {
-    console.error('❌ deleteCommentAsync 에러:', error)
-    console.error('❌ error.response:', error.response)
-    console.error('❌ error.message:', error.message)
     const errorMessage = error.response?.data?.message || '댓글 삭제에 실패했습니다'
     throw new Error(errorMessage)
   }
@@ -505,23 +488,14 @@ export const toggleLikeAsync = (postId) => async (dispatch) => {
   try {
     const response = await communityService.likePost(postId)
 
-    console.log('🔍 toggleLikeAsync - 전체 응답:', response)
-    console.log('📦 response.data:', response.data)
-    console.log('📦 response.data.data:', response.data?.data)
-
     // API 응답 구조: { code: "OK", message: "success", data: { liked, likeCount } }
     const responseData = response.data?.data || response.data
     const { liked, likeCount } = responseData
-
-    console.log('✅ 추출된 데이터:', { liked, likeCount })
 
     // liked를 isLiked로 매핑하여 Redux 상태 업데이트
     dispatch(toggleLike({ postId, isLiked: liked, likeCount }))
     return responseData
   } catch (error) {
-    console.error('❌ toggleLikeAsync 에러:', error)
-    console.error('❌ error.response:', error.response)
-    console.error('❌ error.response?.data:', error.response?.data)
     const errorMessage = error.response?.data?.message || '좋아요 처리에 실패했습니다'
     throw new Error(errorMessage)
   }

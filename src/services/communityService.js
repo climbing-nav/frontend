@@ -29,10 +29,6 @@ export const communityService = {
    */
   async getPostById(postId) {
     const response = await api.get(`/posts/${postId}`)
-    console.log('📋 getPostById 전체 응답:', response)
-    console.log('📋 response.data:', response.data)
-    console.log('📋 response.data.data:', response.data?.data)
-    console.log('📋 댓글 목록:', response.data?.data?.comments || response.data?.comments)
     return response.data
   },
 
@@ -89,9 +85,6 @@ export const communityService = {
       author,
       content
     })
-    console.log('✍️ 댓글 생성 응답:', response)
-    console.log('✍️ response.data:', response.data)
-    console.log('✍️ response.data.data:', response.data?.data)
     return response.data
   },
 
@@ -100,17 +93,8 @@ export const communityService = {
    * @param {number|string} commentId - 댓글 ID
    */
   async deleteComment(commentId) {
-    console.log('🌐 API 호출: DELETE /comments/' + commentId)
-    try {
-      const response = await api.delete(`/comments/${commentId}`)
-      console.log('✅ API 응답 성공:', response)
-      return response.data
-    } catch (error) {
-      console.error('❌ API 호출 실패:', error)
-      console.error('❌ error.response:', error.response)
-      console.error('❌ URL:', `/comments/${commentId}`)
-      throw error
-    }
+    const response = await api.delete(`/comments/${commentId}`)
+    return response.data
   },
 
   /**
