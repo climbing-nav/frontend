@@ -205,3 +205,8 @@ docker-compose.override.yml
 .taskmaster/tasks/tasks.json
 
 .taskmaster
+
+# ===================================
+# 마크다운 파일
+# =====================================
+docs/

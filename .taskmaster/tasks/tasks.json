@@ -899,7 +899,7 @@
         "testStrategy": "모바일/데스크톱에서 사이드바 토글 테스트, 메뉴 클릭 시 라우팅 작동 확인, 현재 페이지 하이라이트 표시 검증",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -940,7 +940,7 @@
               3
             ],
             "details": "useLocation hook을 사용하여 현재 경로를 감지하고 해당 메뉴 아이템을 selected 상태로 표시. 헤더 우측에 Avatar와 Menu 컴포넌트로 사용자 프로필 드롭다운 구현. 드롭다운 메뉴에는 '설정', '로그아웃' 옵션 포함. 임시 사용자 정보(이름, 아바타) 표시",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "현재 페이지에 해당하는 메뉴가 하이라이트되는지 확인, 프로필 드롭다운이 정상 작동하는지 테스트"
           },
           {
@@ -951,7 +951,7 @@
               4
             ],
             "details": "Material-UI Breadcrumbs 컴포넌트를 사용하여 현재 경로 기반의 브레드크럼 네비게이션 구현. 메인 컨텐츠 영역에 적절한 padding과 margin 적용. Outlet 컴포넌트로 하위 라우트 렌더링. 전체 레이아웃의 반응형 스타일링 완성",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "브레드크럼이 현재 경로를 올바르게 표시하는지 확인, 메인 컨텐츠 영역이 적절하게 표시되는지 테스트, 전체 레이아웃의 반응형 동작 검증"
           }
         ]
@@ -967,7 +967,63 @@
           21
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ProtectedRoute component for authentication and authorization",
+            "description": "Implement a reusable ProtectedRoute wrapper component that handles authentication checks and role-based access control",
+            "dependencies": [],
+            "details": "Create src/components/ProtectedRoute.jsx component that wraps routes requiring authentication/authorization. Check if user is logged in, redirect to login page if not authenticated. Implement role checking for SUPER_ADMIN permissions. Use React Router's Navigate component for redirects. Accept props: children, requiredRole (optional), redirectTo (default '/login'). Import auth state from Redux store.\n<info added on 2025-12-27T17:14:17.270Z>\n인증/권한 체크가 필요한 라우트를 감싸는 src/components/ProtectedRoute.jsx 컴포넌트 생성. 사용자 로그인 여부 확인, 인증되지 않은 경우 로그인 페이지로 리다이렉트. SUPER_ADMIN 권한 체크 구현. React Router의 Navigate 컴포넌트를 리다이렉트에 사용. props: children, requiredRole (선택), redirectTo (기본값 '/login'). Redux store에서 auth 상태 가져오기.\n</info added on 2025-12-27T17:14:17.270Z>",
+            "status": "pending",
+            "testStrategy": "Unit tests for authenticated/unauthenticated states, role permission checks, redirect behavior verification"
+          },
+          {
+            "id": 2,
+            "title": "Create backoffice route definitions and configuration",
+            "description": "Set up comprehensive route structure for all backoffice pages with proper nesting and path definitions",
+            "dependencies": [
+              1
+            ],
+            "details": "Create src/routes/backofficeRoutes.jsx file. Define route objects for: /backoffice/dashboard, /backoffice/gyms (list), /backoffice/gyms/new (SUPER_ADMIN only), /backoffice/gyms/:id/edit, /backoffice/users (SUPER_ADMIN only), /backoffice/settings. Use React Router v6 syntax with element and path properties. Import and reference corresponding page components. Wrap protected routes with ProtectedRoute component.\n<info added on 2025-12-27T17:14:33.921Z>\nsrc/routes/backofficeRoutes.jsx 파일 생성. 다음 라우트 객체 정의: /backoffice/dashboard, /backoffice/gyms (목록), /backoffice/gyms/new (SUPER_ADMIN 전용), /backoffice/gyms/:id/edit, /backoffice/users (SUPER_ADMIN 전용), /backoffice/settings. React Router v6 문법 사용 (element 및 path 속성). 해당 페이지 컴포넌트 import 및 참조. ProtectedRoute 컴포넌트로 보호된 라우트 래핑.\n</info added on 2025-12-27T17:14:33.921Z>",
+            "status": "pending",
+            "testStrategy": "Route configuration validation, proper nesting verification, path matching tests"
+          },
+          {
+            "id": 3,
+            "title": "Implement role-based access control for SUPER_ADMIN routes",
+            "description": "Apply SUPER_ADMIN permission checks to restricted routes like gym creation and user management",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Wrap /backoffice/gyms/new and /backoffice/users routes with ProtectedRoute component requiring SUPER_ADMIN role. Implement role checking logic that compares current user's role with required permission. Show appropriate error message or redirect for unauthorized access. Ensure non-SUPER_ADMIN users are redirected to accessible backoffice pages.\n<info added on 2025-12-27T17:14:51.755Z>\n타이틀을 'SUPER_ADMIN 라우트를 위한 역할 기반 접근 제어 구현'으로 업데이트. 설명을 '암장 생성 및 사용자 관리와 같은 제한된 라우트에 SUPER_ADMIN 권한 체크 적용'으로 업데이트. 구현 세부사항을 한국어로 변경: /backoffice/gyms/new 및 /backoffice/users 라우트를 SUPER_ADMIN 역할이 필요한 ProtectedRoute 컴포넌트로 래핑. 현재 사용자의 역할과 필요한 권한을 비교하는 역할 체크 로직 구현. 무단 접근에 대한 적절한 에러 메시지 표시 또는 리다이렉트. SUPER_ADMIN이 아닌 사용자는 접근 가능한 백오피스 페이지로 리다이렉트.\n</info added on 2025-12-27T17:14:51.755Z>",
+            "status": "pending",
+            "testStrategy": "Permission validation for SUPER_ADMIN routes, unauthorized access redirect tests, role hierarchy verification"
+          },
+          {
+            "id": 4,
+            "title": "Integrate backoffice routes into main application router",
+            "description": "Connect backoffice routing configuration with the main App.jsx router structure",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Import backofficeRoutes from src/routes/backofficeRoutes.jsx into App.jsx. Add backoffice routes to the main Routes component using nested routing pattern. Ensure /backoffice/* paths are properly handled. Maintain existing route structure while adding new backoffice functionality. Test route precedence and matching order.\n<info added on 2025-12-27T17:15:12.854Z>\ntitle: 백오피스 라우트를 메인 애플리케이션 라우터에 통합\n\ndescription: 백오피스 라우팅 구성을 메인 App.jsx 라우터 구조와 연결\n\ndetails: src/routes/backofficeRoutes.jsx를 App.jsx로 import. 중첩 라우팅 패턴을 사용하여 메인 Routes 컴포넌트에 백오피스 라우트 추가. /backoffice/* 경로가 적절히 처리되도록 보장. 새 백오피스 기능 추가하면서 기존 라우트 구조 유지. 라우트 우선순위 및 매칭 순서 테스트.\n</info added on 2025-12-27T17:15:12.854Z>",
+            "status": "pending",
+            "testStrategy": "Main router integration tests, route precedence verification, nested routing functionality validation"
+          },
+          {
+            "id": 5,
+            "title": "Implement 404 error page and unauthorized access handling",
+            "description": "Create error handling for invalid backoffice routes and unauthorized access attempts",
+            "dependencies": [
+              4
+            ],
+            "details": "Create 404 error page component for invalid /backoffice/* routes. Add catch-all route (*) at the end of backoffice routes. Implement unauthorized access page for users without proper permissions. Add error boundary for route-level error handling. Include navigation options to return to accessible areas. Style error pages consistently with backoffice theme.\n<info added on 2025-12-27T17:15:31.702Z>\n타이틀이 '404 에러 페이지 및 무단 접근 처리 구현'으로 변경되었습니다. 설명이 '잘못된 백오피스 라우트 및 무단 접근 시도에 대한 에러 처리 생성'으로 업데이트되었습니다. 구현 세부사항이 한국어로 번역되어 다음과 같이 변경되었습니다: 잘못된 /backoffice/* 라우트를 위한 404 에러 페이지 컴포넌트 생성. 백오피스 라우트 끝에 catch-all 라우트(*) 추가. 적절한 권한이 없는 사용자를 위한 무단 접근 페이지 구현. 라우트 레벨 에러 처리를 위한 에러 바운더리 추가. 접근 가능한 영역으로 돌아가는 네비게이션 옵션 포함. 백오피스 테마와 일관된 에러 페이지 스타일링.\n</info added on 2025-12-27T17:15:31.702Z>",
+            "status": "pending",
+            "testStrategy": "404 page display for invalid routes, unauthorized access error handling, error boundary functionality verification"
+          }
+        ]
       },
       {
         "id": 23,
@@ -1076,7 +1132,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-12-27T16:30:02.169Z",
+      "updated": "2025-12-27T17:10:30.767Z",
       "description": "Tasks for master context"
     }
   }
