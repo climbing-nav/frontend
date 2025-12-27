@@ -3,6 +3,7 @@ import { communityService } from '../../services/communityService'
 
 const initialState = {
   posts: [],
+  myPosts: [],
   selectedPost: null,
   comments: [],
   loading: false,
@@ -13,6 +14,10 @@ const initialState = {
     totalPages: 1,
     totalPosts: 0,
     hasNextPage: false
+  },
+  myPostsPagination: {
+    hasNextPage: false,
+    nextCursorId: null
   }
 }
 
@@ -48,6 +53,38 @@ const communitySlice = createSlice({
       }
     },
     fetchPostsFailure: (state, action) => {
+      state.loading = false
+      state.error = action.payload
+    },
+
+    // 내 게시글 조회 액션
+    fetchMyPostsStart: (state) => {
+      state.loading = true
+      state.error = null
+    },
+    fetchMyPostsSuccess: (state, action) => {
+      state.loading = false
+      // API 응답 구조: { data: { posts: [], hasNext, nextCursorId } }
+      const responseData = action.payload.data || action.payload
+      const posts = responseData.posts || []
+
+      // API 응답의 files 배열을 images 배열로 매핑
+      const normalizedPosts = posts.map(post => ({
+        ...post,
+        images: post.files ? post.files.map(file => file.url) : (post.images || [])
+      }))
+
+      state.myPosts = Array.isArray(normalizedPosts) ? normalizedPosts : []
+
+      // 페이지네이션 정보 업데이트
+      if (responseData.hasNext !== undefined) {
+        state.myPostsPagination = {
+          hasNextPage: responseData.hasNext,
+          nextCursorId: responseData.nextCursorId
+        }
+      }
+    },
+    fetchMyPostsFailure: (state, action) => {
       state.loading = false
       state.error = action.payload
     },
@@ -184,6 +221,9 @@ export const {
   fetchPostsStart,
   fetchPostsSuccess,
   fetchPostsFailure,
+  fetchMyPostsStart,
+  fetchMyPostsSuccess,
+  fetchMyPostsFailure,
   createPostStart,
   createPostSuccess,
   createPostFailure,
@@ -221,6 +261,24 @@ export const fetchPostsAsync = (boardCode = null) => async (dispatch) => {
   } catch (error) {
     const errorMessage = error.response?.data?.message || '게시글 목록을 불러오는데 실패했습니다'
     dispatch(fetchPostsFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * 내 게시글 목록 조회 Thunk
+ * @param {string} boardCode - 게시판 코드 (null이면 전체 조회)
+ * @param {number} cursorId - 커서 ID (페이지네이션)
+ */
+export const fetchMyPostsAsync = (boardCode = null, cursorId = null) => async (dispatch) => {
+  try {
+    dispatch(fetchMyPostsStart())
+    const data = await communityService.getMyPosts(boardCode, cursorId)
+    dispatch(fetchMyPostsSuccess(data))
+    return data
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '내 게시글을 불러오는데 실패했습니다'
+    dispatch(fetchMyPostsFailure(errorMessage))
     throw error
   }
 }
