@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline, Box } from '@mui/material'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { initializeAuthAsync, kakaoLoginAsync, googleLoginAsync, selectIsAuthInitialized, selectIsAuthenticated, setAuthError } from './store/slices/authSlice'
 import { fetchPostsAsync, fetchPostAsync } from './store/slices/communitySlice'
 import Header from './components/common/Header/Header'
@@ -25,6 +26,11 @@ import VisitHistoryPage from './pages/Profile/VisitHistory/VisitHistoryPage'
 import SettingsPage from './pages/Profile/Settings/SettingsPage'
 import CustomerSupportPage from './pages/Profile/CustomerSupport/CustomerSupportPage'
 import TermsAndPoliciesPage from './pages/Profile/TermsAndPolicies/TermsAndPoliciesPage'
+import BackofficeLayout from './pages/Backoffice/Layout/BackofficeLayout'
+import BackofficeDashboard from './pages/Backoffice/Dashboard/BackofficeDashboard'
+import BackofficeGyms from './pages/Backoffice/Gyms/BackofficeGyms'
+import BackofficeCongestion from './pages/Backoffice/Congestion/BackofficeCongestion'
+import BackofficeSettings from './pages/Backoffice/Settings/BackofficeSettings'
 
 const theme = createTheme({
   palette: {
@@ -49,6 +55,11 @@ const getInitialPageFromURL = () => {
   // OAuth 콜백 처리 중이면 landing
   if (path.includes('/auth/kakao/callback') || path.includes('/auth/google/callback')) {
     return 'landing'
+  }
+
+  // 백오피스 경로 확인
+  if (path.includes('/backoffice')) {
+    return 'backoffice'
   }
 
   // URL 경로에서 페이지 결정
@@ -285,6 +296,19 @@ function App() {
         return <GymListPage onNavigateToGymDetail={handleNavigateToGymDetail} onBack={handleBackFromGymList} />
       case 'postDetail':
         return <PostDetailPage postId={selectedPostId} onBack={handleBackFromPostDetail} onEdit={handleNavigateToPostEdit} />
+      case 'backoffice':
+        return (
+          <BrowserRouter>
+            <Routes>
+              <Route path="/backoffice" element={<BackofficeLayout />}>
+                <Route index element={<BackofficeDashboard />} />
+                <Route path="gyms" element={<BackofficeGyms />} />
+                <Route path="congestion" element={<BackofficeCongestion />} />
+                <Route path="settings" element={<BackofficeSettings />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        )
       default:
         return <HomePage onNavigateToGymList={handleNavigateToGymList} />
     }
@@ -453,6 +477,8 @@ function App() {
         ) : currentPage === 'auth' ? (
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : currentPage === 'landing' ? (
+          renderCurrentPage()
+        ) : currentPage === 'backoffice' ? (
           renderCurrentPage()
         ) : (
           <>

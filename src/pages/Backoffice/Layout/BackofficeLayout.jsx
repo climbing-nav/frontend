@@ -15,6 +15,8 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Breadcrumbs,
+  Link,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -23,8 +25,10 @@ import {
   BarChart as CongestionIcon,
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
+  Home as HomeIcon,
+  NavigateNext,
 } from '@mui/icons-material';
-import { Outlet, useNavigate, NavLink } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
 
 const DRAWER_WIDTH = 280;
 const MOBILE_WIDTH = '393px';
@@ -33,6 +37,45 @@ const BackofficeLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Breadcrumb route mapping
+  const routeMap = {
+    '/backoffice': '대시보드',
+    '/backoffice/gyms': '암장 관리',
+    '/backoffice/congestion': '혼잡도 관리',
+    '/backoffice/settings': '설정',
+  };
+
+  // Generate breadcrumb trail
+  const getBreadcrumbs = () => {
+    const pathnames = location.pathname.split('/').filter((x) => x);
+    const breadcrumbs = [];
+
+    // Always start with dashboard
+    breadcrumbs.push({
+      path: '/backoffice',
+      label: '대시보드',
+      isHome: true,
+    });
+
+    // Build path incrementally
+    let currentPath = '';
+    pathnames.forEach((value, index) => {
+      currentPath += `/${value}`;
+      if (currentPath !== '/backoffice' && routeMap[currentPath]) {
+        breadcrumbs.push({
+          path: currentPath,
+          label: routeMap[currentPath],
+          isHome: false,
+        });
+      }
+    });
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -212,17 +255,28 @@ const BackofficeLayout = () => {
   );
 
   return (
-    <Box sx={{ width: MOBILE_WIDTH, display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* AppBar */}
-      <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          width: MOBILE_WIDTH,
-          background: '#ffffff',
-          borderBottom: '1px solid #e8eaed',
-        }}
-      >
+    <Box
+      sx={{
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        background: '#f8f9fa',
+      }}
+    >
+      <Box sx={{ width: MOBILE_WIDTH, display: 'flex', minHeight: '100vh', position: 'relative' }}>
+        {/* AppBar */}
+        <AppBar
+          position="fixed"
+          elevation={0}
+          sx={{
+            width: MOBILE_WIDTH,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#ffffff',
+            borderBottom: '1px solid #e8eaed',
+          }}
+        >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Mobile Menu Button */}
           <IconButton
@@ -365,6 +419,123 @@ const BackofficeLayout = () => {
         {/* Toolbar spacer */}
         <Toolbar />
 
+        {/* Breadcrumbs Navigation */}
+        <Box
+          sx={{
+            px: 2,
+            pt: 2,
+            pb: 1,
+          }}
+        >
+          <Breadcrumbs
+            separator={
+              <NavigateNext
+                sx={{
+                  fontSize: 18,
+                  color: '#9ca3af',
+                }}
+              />
+            }
+            sx={{
+              '& .MuiBreadcrumbs-separator': {
+                mx: 0.5,
+              },
+            }}
+          >
+            {breadcrumbs.map((crumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const isFirst = index === 0;
+
+              if (isLast) {
+                // Current page - not clickable
+                return (
+                  <Box
+                    key={crumb.path}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      px: 1.5,
+                      py: 0.75,
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 143, 102, 0.08) 100%)',
+                      border: '1px solid rgba(255, 107, 53, 0.2)',
+                    }}
+                  >
+                    {isFirst && (
+                      <HomeIcon
+                        sx={{
+                          fontSize: 16,
+                          color: '#ff6b35',
+                        }}
+                      />
+                    )}
+                    <Typography
+                      sx={{
+                        fontFamily: '"DM Sans", sans-serif',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: '#ff6b35',
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      {crumb.label}
+                    </Typography>
+                  </Box>
+                );
+              }
+
+              // Previous pages - clickable
+              return (
+                <Link
+                  key={crumb.path}
+                  onClick={() => navigate(crumb.path)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      background: 'rgba(255, 107, 53, 0.06)',
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  {isFirst && (
+                    <HomeIcon
+                      sx={{
+                        fontSize: 16,
+                        color: '#6b7280',
+                        transition: 'color 0.2s ease',
+                      }}
+                    />
+                  )}
+                  <Typography
+                    sx={{
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#6b7280',
+                      letterSpacing: '-0.01em',
+                      transition: 'color 0.2s ease',
+                      '&:hover': {
+                        color: '#ff6b35',
+                      },
+                    }}
+                  >
+                    {crumb.label}
+                  </Typography>
+                </Link>
+              );
+            })}
+          </Breadcrumbs>
+        </Box>
+
         {/* Page Content */}
         <Box
           sx={{
@@ -373,6 +544,7 @@ const BackofficeLayout = () => {
         >
           <Outlet />
         </Box>
+      </Box>
       </Box>
     </Box>
   );
