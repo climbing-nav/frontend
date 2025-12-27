@@ -763,11 +763,320 @@
             "testStrategy": "Integration tests for pull-to-refresh functionality, touch interaction testing, performance validation for smooth scrolling, and cross-device compatibility testing"
           }
         ]
+      },
+      {
+        "id": 11,
+        "title": "API 클라이언트 인프라 설정",
+        "description": "API 통신을 위한 Axios 인스턴스, React Query, 환경 변수 구성",
+        "details": "axios와 @tanstack/react-query 패키지 설치. baseURL과 인터셉터를 포함한 Axios 인스턴스로 src/api/client.js 생성. React Query 설정을 위한 src/api/queryClient.js 생성. App.jsx에 QueryClientProvider 추가. VITE_API_BASE_URL이 포함된 .env 파일 설정. API 응답 타입 정의를 위한 src/types/api.ts 생성. 에러 처리 및 토큰 관리를 위한 request/response 인터셉터 구성.",
+        "testStrategy": "Axios 인스턴스가 테스트 엔드포인트에 성공적으로 요청하는지 확인. React Query DevTools가 쿼리 상태를 올바르게 표시하는지 확인. 환경 변수가 제대로 로드되고 API base URL이 올바르게 구성되었는지 검증.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "사용자 위치 서비스 구현",
+        "description": "에러 처리 및 대체 위치가 포함된 Geolocation API 통합 구현",
+        "details": "src/hooks/useUserLocation.js 커스텀 훅 생성. enableHighAccuracy: true 및 5초 타임아웃으로 navigator.geolocation.getCurrentPosition 사용. 위치 상태(좌표, 에러, 로딩) 관리. 권한이 거부되었을 때 서울 시청(37.5665, 126.9780)을 대체 위치로 설정. 모든 geolocation 에러 케이스를 우아하게 처리.",
+        "testStrategy": "위치 권한 요청 플로우 테스트. 권한이 허용되었을 때 정확한 위치 검색 확인. 권한이 거부되었을 때 서울 좌표로 대체되는지 확인. 로딩 상태와 에러 처리가 올바르게 작동하는지 검증.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "암장 API 서비스 레이어",
+        "description": "적절한 에러 처리가 포함된 암장 관련 API 호출을 위한 서비스 레이어 생성",
+        "details": "GET /api/gyms/nearby를 호출하는 getNearbyGyms 함수(lat, lng, radius, limit 파라미터)로 src/services/gymService.js 생성. GET /api/gyms/{id}를 위한 getGymById 함수 구현. 백엔드 형식에서 프론트엔드 형식으로 데이터 변환 및 적절한 에러 처리 추가. 모든 함수에 대한 JSDoc 문서화 포함.",
+        "testStrategy": "Mock API 응답을 사용하여 서비스 함수가 올바르게 포맷된 데이터를 반환하는지 확인. 네트워크 장애 및 API 에러에 대한 에러 처리 테스트. 파라미터 전달 및 응답 변환 로직 검증.",
+        "priority": "high",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Redux 암장 슬라이스 API 통합",
+        "description": "Mock 데이터 대신 실제 API 호출을 사용하도록 Redux gymSlice 업데이트",
+        "details": "src/store/slices/gymSlice.js를 수정하여 mock 데이터 import 제거. gymService를 사용하여 fetchNearbyGyms를 위한 createAsyncThunk 액션 구현. 리듀서에 로딩, 성공, 에러 상태 관리 추가. mockGyms.js 파일 완전히 제거. 사용자 피드백을 위한 에러 메시지 상태 추가.",
+        "testStrategy": "Redux DevTools를 사용하여 비동기 액션이 올바르게 디스패치되는지 확인. API 호출 중 로딩 상태가 제대로 업데이트되는지 확인. 성공적인 API 응답 후 스토어에 암장 데이터가 채워지는지 검증. Mock 데이터가 완전히 제거되었는지 확인.",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "홈페이지 컴포넌트 API 통합",
+        "description": "React Query를 사용하여 사용자 위치 기반 주변 암장을 가져오도록 HomePage 업데이트",
+        "details": "src/pages/Home/HomePage.jsx를 수정하여 useUserLocation 훅 사용. gymService.getNearbyGyms와 함께 useQuery 구현, 위치를 사용할 수 있을 때만 쿼리 활성화. 캐싱을 위해 5분 staleTime 설정. 로딩 스피너 및 에러 메시지 컴포넌트 추가. 권한이 거부되었을 때 위치 권한 안내 표시.",
+        "testStrategy": "페이지 마운트 시 위치 기반 암장 로딩 확인. API 호출 중 로딩 스피너 표시 테스트. API 실패 시 에러 메시지 표시 확인. 위치 권한 거부 시나리오가 적절한 메시징을 표시하는지 검증.",
+        "priority": "high",
+        "dependencies": [
+          12,
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "동적 지도 마커 업데이트",
+        "description": "API 데이터에서 마커를 렌더링하고 동적 업데이트를 지원하도록 KakaoMap 컴포넌트 업데이트",
+        "details": "KakaoMap 컴포넌트를 수정하여 정적 데이터 대신 API 암장 데이터로 마커 생성. 중심 좌표를 캡처하기 위한 지도 dragend 이벤트 핸들러 추가. 500ms 지연으로 useDebouncedValue 훅 구현. 지도 중심이 변경될 때 API 재요청 트리거. 암장 상세 정보 표시를 위한 마커 클릭 핸들러 업데이트.",
+        "testStrategy": "마커가 올바른 암장 위치에 표시되는지 확인. 지도 드래그가 새로운 중심 좌표로 디바운스된 API 호출을 트리거하는지 테스트. 과도한 API 호출이 방지되는지 확인. 마커 클릭 이벤트가 올바른 암장 상세 정보를 표시하는지 검증.",
+        "priority": "medium",
+        "dependencies": [
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "암장 상세 페이지 API 통합",
+        "description": "API에서 실시간 암장 정보를 가져와 표시하도록 GymDetail 페이지 업데이트",
+        "details": "src/pages/GymDetail/GymDetailPage.jsx를 수정하여 gymId에 useParams 사용. gymService.getGymById로 useQuery 구현. 운영 시간 JSON 파싱 및 표시. 색상 코딩으로 실시간 혼잡도 상태 표시. 혼잡도 업데이트 시간을 상대적 형식으로 표시. 존재하지 않는 암장에 대한 404 에러 처리.",
+        "testStrategy": "유효한 암장 ID로 암장 상세 정보 로딩 테스트. 혼잡도 상태가 적절한 색상으로 표시되는지 확인. 운영 시간이 올바르게 파싱되고 포맷되는지 확인. 유효하지 않은 암장 ID에 대한 404 처리 테스트.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "무한 스크롤 암장 목록",
+        "description": "useInfiniteQuery를 사용하여 암장 목록에 무한 스크롤 페이지네이션 구현",
+        "details": "src/pages/GymList/GymListPage.jsx를 수정하여 page 파라미터와 함께 useInfiniteQuery 사용. 스크롤 감지를 위한 Intersection Observer 설정. 로딩 스켈레톤 컴포넌트 구현. 불필요한 요청을 방지하기 위한 hasNextPage 감지 추가. 검색/필터 변경 시 페이지네이션 리셋.",
+        "testStrategy": "무한 스크롤이 다음 페이지 로딩을 트리거하는지 테스트. 데이터 가져오는 동안 로딩 스켈레톤이 표시되는지 확인. 검색 변경 시 페이지네이션이 리셋되는지 확인. 마지막 페이지 감지가 추가 로딩을 중지하는지 검증.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "에러 바운더리 및 전역 에러 처리",
+        "description": "Error Boundary와 사용자 친화적인 에러 메시지로 포괄적인 에러 처리 구현",
+        "details": "componentDidCatch를 포함한 src/components/ErrorBoundary.jsx 생성. API 에러 코드 매핑을 포함한 src/utils/errorHandler.js 구축. 실패한 요청에 대한 재시도 기능 구현. 에러 알림을 위한 react-toastify 추가. 네트워크 오프라인 감지 및 메시징 포함.",
+        "testStrategy": "에러 바운더리가 앱 크래시 없이 런타임 에러를 캐치하는지 테스트. API 에러 코드가 사용자 친화적인 메시지로 매핑되는지 확인. 재시도 버튼이 API 재호출을 트리거하는지 확인. 오프라인 감지가 적절한 메시징을 표시하는지 테스트.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "로딩 상태 최적화 및 스켈레톤 UI",
+        "description": "더 나은 사용자 경험을 위한 스켈레톤 UI 컴포넌트 및 낙관적 업데이트 구현",
+        "details": "GymCardSkeleton 및 GymDetailSkeleton 컴포넌트가 포함된 src/components/Skeleton/ 디렉토리 생성. 더 부드러운 전환을 위한 React Query placeholderData 구현. 좋아요/북마크 액션에 대한 낙관적 업데이트 추가. 코드 분할 컴포넌트에 React Suspense 적용. 통합 로딩 상태 관리를 위한 useLoading 훅 생성.",
+        "testStrategy": "로딩 상태 중 스켈레톤 컴포넌트가 표시되는지 확인. 낙관적 업데이트가 사용자 액션을 즉시 반영하는지 테스트. 실패한 낙관적 업데이트가 올바르게 롤백되는지 확인. Suspense가 부드러운 페이지 전환을 제공하는지 검증.",
+        "priority": "low",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "백오피스 기본 레이아웃 구조 구현",
+        "description": "반응형 사이드바, 헤더, 컨텐츠 영역을 포함한 백오피스 전체 레이아웃 구조를 Material-UI로 구현",
+        "details": "src/pages/Backoffice/Layout/BackofficeLayout.jsx 생성하여 Material-UI Drawer로 반응형 사이드바 구현 (모바일 768px 이하에서 토글), AppBar로 상단 헤더 구현, 메뉴 아이템 (대시보드, 암장 관리, 혼잡도 관리, 설정) 구성, 현재 경로 활성화 표시, 사용자 프로필 드롭다운 (로그아웃, 설정), 브레드크럼 네비게이션 포함",
+        "testStrategy": "모바일/데스크톱에서 사이드바 토글 테스트, 메뉴 클릭 시 라우팅 작동 확인, 현재 페이지 하이라이트 표시 검증",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "기본 레이아웃 컴포넌트 구조 생성",
+            "description": "BackofficeLayout 컴포넌트의 기본 파일 구조와 Material-UI 기본 레이아웃을 설정",
+            "dependencies": [],
+            "details": "src/pages/Backoffice/Layout/BackofficeLayout.jsx 파일을 생성하고, Material-UI의 Box, AppBar, Drawer를 사용한 기본 레이아웃 구조를 구현. useState로 사이드바 열림/닫힘 상태 관리, useTheme과 useMediaQuery로 반응형 처리 기반 마련",
+            "status": "done",
+            "testStrategy": "컴포넌트가 정상적으로 렌더링되는지 확인, 기본 레이아웃 구조가 올바르게 표시되는지 테스트"
+          },
+          {
+            "id": 2,
+            "title": "반응형 사이드바 구현",
+            "description": "Material-UI Drawer를 사용하여 데스크톱에서는 permanent, 모바일에서는 temporary 형태의 반응형 사이드바 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "Material-UI Drawer 컴포넌트로 사이드바 구현. 768px 이하에서는 temporary variant로 토글 방식, 이상에서는 persistent variant로 고정. 햄버거 메뉴 버튼을 헤더에 추가하여 모바일에서 사이드바 토글 가능하도록 구현",
+            "status": "done",
+            "testStrategy": "모바일과 데스크톱 화면에서 사이드바가 올바르게 동작하는지 확인, 토글 버튼 클릭 시 사이드바 열림/닫힘 테스트"
+          },
+          {
+            "id": 3,
+            "title": "상단 헤더와 네비게이션 메뉴 구현",
+            "description": "AppBar를 사용한 상단 헤더와 사이드바 내부의 메뉴 아이템들을 구현",
+            "dependencies": [
+              2
+            ],
+            "details": "Material-UI AppBar로 상단 헤더 구현. 제목, 햄버거 메뉴 버튼, 사용자 프로필 아이콘 배치. 사이드바 내부에 List와 ListItem으로 메뉴 구현: 대시보드(/backoffice), 암장 관리(/backoffice/gyms), 혼잡도 관리(/backoffice/congestion), 설정(/backoffice/settings). react-router-dom의 NavLink 사용",
+            "status": "done",
+            "testStrategy": "헤더가 올바르게 표시되는지 확인, 메뉴 아이템 클릭 시 라우팅이 정상 작동하는지 테스트"
+          },
+          {
+            "id": 4,
+            "title": "현재 경로 활성화 표시 및 사용자 프로필 드롭다운 구현",
+            "description": "현재 활성 메뉴 하이라이트 표시와 사용자 프로필 드롭다운 메뉴 구현",
+            "dependencies": [
+              3
+            ],
+            "details": "useLocation hook을 사용하여 현재 경로를 감지하고 해당 메뉴 아이템을 selected 상태로 표시. 헤더 우측에 Avatar와 Menu 컴포넌트로 사용자 프로필 드롭다운 구현. 드롭다운 메뉴에는 '설정', '로그아웃' 옵션 포함. 임시 사용자 정보(이름, 아바타) 표시",
+            "status": "in-progress",
+            "testStrategy": "현재 페이지에 해당하는 메뉴가 하이라이트되는지 확인, 프로필 드롭다운이 정상 작동하는지 테스트"
+          },
+          {
+            "id": 5,
+            "title": "브레드크럼 네비게이션 및 메인 컨텐츠 영역 완성",
+            "description": "브레드크럼 네비게이션과 메인 컨텐츠 영역을 구현하여 레이아웃을 완성",
+            "dependencies": [
+              4
+            ],
+            "details": "Material-UI Breadcrumbs 컴포넌트를 사용하여 현재 경로 기반의 브레드크럼 네비게이션 구현. 메인 컨텐츠 영역에 적절한 padding과 margin 적용. Outlet 컴포넌트로 하위 라우트 렌더링. 전체 레이아웃의 반응형 스타일링 완성",
+            "status": "pending",
+            "testStrategy": "브레드크럼이 현재 경로를 올바르게 표시하는지 확인, 메인 컨텐츠 영역이 적절하게 표시되는지 테스트, 전체 레이아웃의 반응형 동작 검증"
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "백오피스 라우팅 및 권한 체크 설정",
+        "description": "React Router v6를 사용하여 /backoffice/* 경로 설정 및 권한별 접근 제어 구현",
+        "details": "src/routes/backofficeRoutes.jsx 생성, 라우트 정의: /backoffice/dashboard, /backoffice/gyms, /backoffice/gyms/new (SUPER_ADMIN만), /backoffice/gyms/:id/edit, /backoffice/users (SUPER_ADMIN만), /backoffice/settings, ProtectedRoute 컴포넌트로 권한 체크, 비로그인 시 로그인 페이지 리다이렉트, 404 페이지 구현",
+        "testStrategy": "모든 라우트 접근 테스트, 권한 없는 사용자 리다이렉트 확인, SUPER_ADMIN 전용 페이지 접근 제어 검증",
+        "priority": "high",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "관리자 로그인 페이지 UI 구현",
+        "description": "백오피스 관리자용 로그인 페이지를 React Hook Form과 Material-UI로 구현",
+        "details": "src/pages/Backoffice/Auth/LoginPage.jsx 생성, React Hook Form으로 이메일/비밀번호 폼 관리, 이메일 형식 검증, 비밀번호 최소 8자 검증, Material-UI TextField 사용, 로딩 상태 스피너, Alert 컴포넌트로 에러 메시지 표시, Mock 로그인 함수 구현하여 성공 시 대시보드로 리다이렉트",
+        "testStrategy": "폼 유효성 검사 실시간 동작 확인, 에러 메시지 표시 검증, 로딩 상태 표시 테스트, Mock 로그인 성공 후 리다이렉트 확인",
+        "priority": "high",
+        "dependencies": [
+          22
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "대시보드 메인 페이지 구현",
+        "description": "통계 카드, 혼잡도 차트, 최근 활동을 표시하는 백오피스 메인 대시보드 구현",
+        "details": "src/pages/Backoffice/Dashboard/DashboardPage.jsx 생성, Grid 레이아웃으로 4개 통계 카드 (총 암장 수, 오늘 업데이트 횟수, 관리 암장 수, 평균 평점), Recharts Bar Chart로 혼잡도 분포 차트, 최근 혼잡도 업데이트 목록 Table, 빠른 작업 버튼 ('혼잡도 업데이트', '암장 추가'), GYM_ADMIN과 SUPER_ADMIN 권한별 다른 정보 표시, Mock 데이터로 차트 및 통계 구현",
+        "testStrategy": "통계 카드 정상 표시 확인, Recharts 차트 렌더링 테스트, 최근 활동 테이블 표시 검증, 권한별 다른 정보 표시 확인",
+        "priority": "medium",
+        "dependencies": [
+          23
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "암장 목록 관리 페이지 구현",
+        "description": "검색, 필터링, 정렬, 페이지네이션이 포함된 암장 목록 관리 페이지 구현",
+        "details": "src/pages/Backoffice/Gyms/GymListPage.jsx 생성, Material-UI Table 또는 DataGrid 사용, 컬럼: 암장명, 브랜드, 주소, 혼잡도, 업데이트 시각, 작업 버튼, 상단 검색바 (TextField with SearchIcon), 브랜드/혼잡도 필터 드롭다운, 컬럼 헤더 클릭 정렬, 하단 페이지네이션, 작업 버튼 ('수정', '혼잡도 업데이트'), Mock 암장 데이터 10-20개 생성, GYM_ADMIN은 자기 암장만, SUPER_ADMIN은 전체 표시",
+        "testStrategy": "검색 실시간 필터링 테스트, 필터 선택 시 목록 업데이트 확인, 정렬 기능 동작 검증, 페이지네이션 정상 작동 테스트, 권한별 암장 표시 확인",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "암장 등록 폼 구현 (SUPER_ADMIN 전용)",
+        "description": "Stepper UI와 카카오맵 연동을 포함한 새 암장 등록 폼을 구현",
+        "details": "src/pages/Backoffice/Gyms/GymCreatePage.jsx 생성, Material-UI Stepper로 3단계 구성 (기본 정보, 상세 정보, 확인), React Hook Form으로 폼 관리, Step 1: 브랜드명, 지점명, 주소, 연락처, Step 2: 운영시간(요일별), 시설 체크박스, Step 3: 입력 정보 확인, Daum Postcode API로 주소 검색 후 좌표 자동 입력, 이미지 업로드 및 미리보기, 유효성 검사 (필수 필드), SUPER_ADMIN 권한 체크",
+        "testStrategy": "Stepper 3단계 진행 테스트, 필드 유효성 검사 확인, 주소 검색 후 좌표 자동 입력 테스트, 이미지 업로드 미리보기 확인, SUPER_ADMIN 권한 체크 검증",
+        "priority": "medium",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "암장 수정 폼 구현",
+        "description": "기존 암장 데이터를 로드하여 수정할 수 있는 폼을 구현하고 권한 체크 적용",
+        "details": "src/pages/Backoffice/Gyms/GymEditPage.jsx 생성, useParams로 암장 ID 가져와 Mock 데이터 로드, React Hook Form의 defaultValues로 기존 데이터 설정, 등록 폼과 동일한 필드 구성, 변경된 필드 하이라이트 표시, '저장' 버튼 (변경 사항 있을 때만 활성화), '취소' 버튼 (확인 다이얼로그), GYM_ADMIN은 자기 암장만 수정 가능한 권한 체크, 권한 없는 접근 시 403 에러 페이지",
+        "testStrategy": "암장 ID로 데이터 로드 확인, 기존 값 폼에 채워지는지 테스트, 변경 사항 추적 기능 검증, 권한 체크 동작 확인",
+        "priority": "medium",
+        "dependencies": [
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "혼잡도 빠른 업데이트 UI 컴포넌트 구현",
+        "description": "3개 버튼으로 혼잡도를 즉시 업데이트할 수 있는 UI 컴포넌트 구현",
+        "details": "src/components/Backoffice/CongestionQuickUpdate.jsx 생성, Material-UI ButtonGroup으로 3개 버튼 (쾌적-green, 보통-orange, 혼잡-red), 현재 혼잡도는 contained variant, 나머지는 outlined, 클릭 시 Mock 업데이트 수행, react-toastify로 '혼잡도가 업데이트되었습니다' 알림, 업데이트 시각 '방금 전', '10분 전' 형식 표시, 로딩 중 버튼 disabled 상태",
+        "testStrategy": "버튼 클릭 시 혼잡도 변경 확인, UI 즉시 업데이트 테스트, 토스트 알림 표시 검증, 로딩 상태 버튼 비활성화 확인",
+        "priority": "high",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "혼잡도 관리 전용 페이지 구현",
+        "description": "관리 암장들의 혼잡도를 카드 형태로 한 화면에서 관리할 수 있는 페이지 구현",
+        "details": "src/pages/Backoffice/Congestion/CongestionManagePage.jsx 생성, Grid 레이아웃으로 암장 카드 3-4열 표시, 각 카드: 암장명, 현재 혼잡도, 업데이트 시각, CongestionQuickUpdate 컴포넌트 재사용, 1시간 이상 업데이트 안 된 암장 Warning icon 표시, '전체 쾌적으로 설정' 일괄 업데이트 버튼, 암장명/브랜드로 검색/필터 기능",
+        "testStrategy": "관리 암장 카드 표시 확인, 각 카드에서 혼잡도 업데이트 테스트, 오래된 업데이트 경고 표시 검증, 일괄 업데이트 기능 동작 확인",
+        "priority": "high",
+        "dependencies": [
+          28
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "사용자 관리 페이지 구현 (SUPER_ADMIN 전용)",
+        "description": "SUPER_ADMIN이 GYM_ADMIN 권한을 부여하고 암장을 할당하는 사용자 관리 페이지 구현",
+        "details": "src/pages/Backoffice/Users/UserManagePage.jsx 생성, 사용자 목록 테이블 (이메일, 역할, 관리 암장, 가입일, 작업), 권한별 필터 드롭다운 (SUPER_ADMIN, GYM_ADMIN, USER), 이메일/이름으로 검색, '권한 부여' 버튼 클릭 시 다이얼로그 열기, 권한 부여 다이얼로그: 사용자 선택(이메일 검색), 암장 다중 선택, 역할 선택(GYM_ADMIN), 권한 취소 버튼, Mock 사용자 데이터, SUPER_ADMIN만 접근 가능",
+        "testStrategy": "사용자 목록 테이블 표시 확인, 검색 및 필터링 동작 테스트, 권한 부여 다이얼로그 정상 작동 검증, SUPER_ADMIN 권한 체크 확인",
+        "priority": "medium",
+        "dependencies": [
+          27
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-09-13T00:44:22.616Z",
+      "updated": "2025-12-27T16:30:02.169Z",
       "description": "Tasks for master context"
     }
   }
