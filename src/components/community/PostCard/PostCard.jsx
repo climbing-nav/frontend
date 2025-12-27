@@ -28,12 +28,12 @@ import { toggleLikeAsync, bookmarkPost, unbookmarkPost } from '../../../store/sl
 
 // categoryName별 색상 매핑
 const CATEGORY_COLORS = {
-  '자유게시판': '#667eea',
-  '후기': '#4facfe',
-  '팁&노하우': '#f093fb',
-  '중고거래': '#fa709a',
-  '메이트 모집': '#43e97b',
-  '메이트모집': '#43e97b'
+  '자유게시판': '#10b981',
+  '후기': '#f59e0b',
+  '팁&노하우': '#8b5cf6',
+  '중고거래': '#06b6d4',
+  '메이트 모집': '#ec4899',
+  '메이트모집': '#ec4899'
 }
 
 function PostCard({ 
