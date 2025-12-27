@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Box, Typography, Paper, List, ListItem, ListItemText, ListItemIcon, Grid, Avatar, Button } from '@mui/material'
 import {
@@ -12,6 +13,7 @@ import {
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 import { selectUser, selectIsAuthenticated, selectAuthProvider } from '../../store/slices/authSlice'
+import { userService } from '../../services/userService'
 
 const menuItems = [
   { icon: LocationOn, text: '즐겨찾는 암장', page: 'favoriteGyms' },
@@ -29,6 +31,25 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
   const user = useSelector(selectUser)
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const authProvider = useSelector(selectAuthProvider)
+  const [postCount, setPostCount] = useState(0)
+
+  // 작성 글 개수 조회
+  useEffect(() => {
+    const fetchPostCount = async () => {
+      if (!isAuthenticated) return
+
+      try {
+        const data = await userService.getPostCount()
+        // API 응답 구조에 따라 조정 필요 (data.data 또는 data.count 등)
+        setPostCount(data?.data || data?.count || data || 0)
+      } catch (error) {
+        console.error('작성 글 개수 조회 실패:', error)
+        setPostCount(0)
+      }
+    }
+
+    fetchPostCount()
+  }, [isAuthenticated])
 
   // 비로그인 상태 UI
   if (!isAuthenticated) {
@@ -176,7 +197,7 @@ function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
                 color: '#667eea',
                 mb: 0.5
               }}>
-                23
+                {postCount}
               </Typography>
               <Typography variant="caption" sx={{
                 color: '#6b7280'
