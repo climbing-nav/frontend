@@ -4,13 +4,19 @@ export const communityService = {
   /**
    * 게시글 목록 조회
    * @param {string} boardCode - 게시판 코드 (FREE, REVIEW, TIP, TRADE, RECRUIT) - null이면 전체 조회
+   * @param {number} cursorId - 커서 ID (페이지네이션)
    */
-  async getPosts(boardCode = null) {
+  async getPosts(boardCode = null, cursorId = null) {
     const params = {}
 
     // boardCode가 있으면 파라미터에 추가
     if (boardCode) {
       params.boardCode = boardCode
+    }
+
+    // cursorId가 있으면 파라미터에 추가
+    if (cursorId) {
+      params.cursorId = cursorId
     }
 
     const response = await api.get('/posts', { params })

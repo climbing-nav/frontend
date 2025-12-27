@@ -89,6 +89,77 @@ const communitySlice = createSlice({
       state.error = action.payload
     },
 
+    // 더보기용 액션 (기존 posts에 append)
+    appendPostsSuccess: (state, action) => {
+      state.loading = false
+      const responseData = action.payload.data || action.payload
+      const newPosts = responseData.posts || []
+
+      // API 응답의 files 배열을 images 배열로 매핑
+      const normalizedPosts = newPosts.map(post => ({
+        ...post,
+        images: post.files ? post.files.map(file => file.url) : (post.images || [])
+      }))
+
+      // 기존 posts에 추가 (중복 제거)
+      const existingIds = new Set(state.posts.map(p => p.id))
+      const uniqueNewPosts = normalizedPosts.filter(p => !existingIds.has(p.id))
+      state.posts = [...state.posts, ...uniqueNewPosts]
+
+      // 페이지네이션 정보 업데이트
+      if (responseData.hasNext !== undefined) {
+        state.pagination = {
+          ...state.pagination,
+          hasNextPage: responseData.hasNext,
+          nextCursorId: responseData.nextCursorId
+        }
+      }
+    },
+
+    // 내 게시글 더보기용
+    appendMyPostsSuccess: (state, action) => {
+      state.loading = false
+      const responseData = action.payload.data || action.payload
+      const newPosts = responseData.posts || []
+
+      // API 응답의 files 배열을 images 배열로 매핑
+      const normalizedPosts = newPosts.map(post => ({
+        ...post,
+        images: post.files ? post.files.map(file => file.url) : (post.images || [])
+      }))
+
+      // 기존 myPosts에 추가 (중복 제거)
+      const existingIds = new Set(state.myPosts.map(p => p.id))
+      const uniqueNewPosts = normalizedPosts.filter(p => !existingIds.has(p.id))
+      state.myPosts = [...state.myPosts, ...uniqueNewPosts]
+
+      // 페이지네이션 정보 업데이트
+      if (responseData.hasNext !== undefined) {
+        state.myPostsPagination = {
+          hasNextPage: responseData.hasNext,
+          nextCursorId: responseData.nextCursorId
+        }
+      }
+    },
+
+    // posts 초기화 액션
+    resetPosts: (state) => {
+      state.posts = []
+      state.pagination = {
+        hasNextPage: false,
+        nextCursorId: null
+      }
+    },
+
+    // myPosts 초기화 액션
+    resetMyPosts: (state) => {
+      state.myPosts = []
+      state.myPostsPagination = {
+        hasNextPage: false,
+        nextCursorId: null
+      }
+    },
+
     // 게시글 생성 액션
     createPostStart: (state) => {
       state.loading = true
@@ -224,6 +295,10 @@ export const {
   fetchMyPostsStart,
   fetchMyPostsSuccess,
   fetchMyPostsFailure,
+  appendPostsSuccess,
+  appendMyPostsSuccess,
+  resetPosts,
+  resetMyPosts,
   createPostStart,
   createPostSuccess,
   createPostFailure,
@@ -275,6 +350,54 @@ export const fetchMyPostsAsync = (boardCode = null, cursorId = null) => async (d
     dispatch(fetchMyPostsStart())
     const data = await communityService.getMyPosts(boardCode, cursorId)
     dispatch(fetchMyPostsSuccess(data))
+    return data
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '내 게시글을 불러오는데 실패했습니다'
+    dispatch(fetchMyPostsFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * 게시글 더보기 Thunk (무한 스크롤용)
+ * @param {string} boardCode - 게시판 코드 (null이면 전체 조회)
+ */
+export const fetchMorePostsAsync = (boardCode = null) => async (dispatch, getState) => {
+  const { pagination } = getState().community
+
+  // 더 이상 로드할 데이터가 없으면 early return
+  if (!pagination.hasNextPage || !pagination.nextCursorId) {
+    return
+  }
+
+  try {
+    dispatch(fetchPostsStart())
+    const data = await communityService.getPosts(boardCode, pagination.nextCursorId)
+    dispatch(appendPostsSuccess(data))
+    return data
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || '게시글을 불러오는데 실패했습니다'
+    dispatch(fetchPostsFailure(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * 내 게시글 더보기 Thunk (무한 스크롤용)
+ * @param {string} boardCode - 게시판 코드 (null이면 전체 조회)
+ */
+export const fetchMoreMyPostsAsync = (boardCode = null) => async (dispatch, getState) => {
+  const { myPostsPagination } = getState().community
+
+  // 더 이상 로드할 데이터가 없으면 early return
+  if (!myPostsPagination.hasNextPage || !myPostsPagination.nextCursorId) {
+    return
+  }
+
+  try {
+    dispatch(fetchMyPostsStart())
+    const data = await communityService.getMyPosts(boardCode, myPostsPagination.nextCursorId)
+    dispatch(appendMyPostsSuccess(data))
     return data
   } catch (error) {
     const errorMessage = error.response?.data?.message || '내 게시글을 불러오는데 실패했습니다'

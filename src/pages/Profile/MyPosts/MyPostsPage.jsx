@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
@@ -24,7 +24,8 @@ import {
   ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
-import { fetchMyPostsAsync, deletePostAsync } from '../../../store/slices/communitySlice'
+import { fetchMyPostsAsync, fetchMoreMyPostsAsync, resetMyPosts, deletePostAsync } from '../../../store/slices/communitySlice'
+import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll'
 
 // Category configurations with distinct colors
 const categories = {
@@ -48,18 +49,34 @@ const categoryNameToBoardCode = {
 
 function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
   const dispatch = useDispatch()
-  const { myPosts, loading, error } = useSelector(state => state.community)
+  const { myPosts, loading, error, myPostsPagination } = useSelector(state => state.community)
   const [activeTab, setActiveTab] = useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
 
   const tabs = ['ALL', 'FREE', 'REVIEW', 'TIP', 'TRADE', 'RECRUIT']
 
-  // 내 게시글 목록 로드 (탭 변경 시마다 재요청)
+  // 탭 변경 시 초기화 후 재로드
   useEffect(() => {
     const selectedBoardCode = activeTab === 0 ? null : tabs[activeTab]
-    dispatch(fetchMyPostsAsync(selectedBoardCode))
+    dispatch(resetMyPosts()) // 기존 myPosts 초기화
+    dispatch(fetchMyPostsAsync(selectedBoardCode)) // 첫 20개 로드
   }, [dispatch, activeTab])
+
+  // 더 로드하기 핸들러
+  const handleLoadMore = useCallback(() => {
+    if (!loading && myPostsPagination.hasNextPage) {
+      const selectedBoardCode = activeTab === 0 ? null : tabs[activeTab]
+      dispatch(fetchMoreMyPostsAsync(selectedBoardCode))
+    }
+  }, [dispatch, activeTab, loading, myPostsPagination.hasNextPage])
+
+  // 무한 스크롤 훅 사용
+  const lastPostRef = useInfiniteScroll(
+    handleLoadMore,
+    myPostsPagination.hasNextPage,
+    loading
+  )
 
   // 서버 사이드 필터링이므로 클라이언트 필터링 불필요
   const posts = Array.isArray(myPosts) ? myPosts : []
@@ -79,8 +96,9 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
       await dispatch(deletePostAsync(selectedPost.id))
       setDeleteDialogOpen(false)
       setSelectedPost(null)
-      // 삭제 후 목록 새로고침
+      // 삭제 후 목록 새로고침 (초기화 후 재로드)
       const selectedBoardCode = activeTab === 0 ? null : tabs[activeTab]
+      dispatch(resetMyPosts())
       dispatch(fetchMyPostsAsync(selectedBoardCode))
     } catch (error) {
       console.error('게시글 삭제 실패:', error)
@@ -285,9 +303,11 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
               // categoryName을 boardCode로 변환 (API 응답에 boardCode가 없는 경우)
               const boardCode = post.boardCode || categoryNameToBoardCode[post.categoryName]
               const categoryConfig = categories[boardCode] || categories['ALL']
+              // 마지막 요소에 ref 추가
+              const isLast = index === posts.length - 1
               return (
-                <Paper
-                  key={post.id}
+                <div key={post.id} ref={isLast ? lastPostRef : null}>
+                  <Paper
                   elevation={0}
                   onClick={() => handlePostClick(post)}
                   sx={{
@@ -501,8 +521,25 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
                     </Box>
                   </Box>
                 </Paper>
+                </div>
               )
             })}
+
+            {/* 추가 로딩 인디케이터 */}
+            {loading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={32} />
+              </Box>
+            )}
+
+            {/* 더 이상 데이터 없음 표시 */}
+            {!myPostsPagination.hasNextPage && posts.length > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  모든 게시글을 불러왔습니다
+                </Typography>
+              </Box>
+            )}
           </Box>
         )}
       </Box>
