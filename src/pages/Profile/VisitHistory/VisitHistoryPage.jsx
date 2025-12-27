@@ -4,14 +4,16 @@ import {
   Typography,
   Paper,
   Chip,
-  Divider
+  Divider,
+  IconButton
 } from '@mui/material'
 import {
   CalendarToday,
   LocationOn,
   AccessTime,
   EmojiEvents,
-  TrendingUp
+  TrendingUp,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
@@ -65,7 +67,7 @@ const stats = {
   mostVisited: '더클라임 강남'
 }
 
-function VisitHistoryPage({ onNavigateToGym }) {
+function VisitHistoryPage({ onNavigateToGym, onBack }) {
   const [visits] = useState(mockVisits)
 
   // Group visits by month
@@ -123,6 +125,17 @@ function VisitHistoryPage({ onNavigateToGym }) {
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: '#1f2937',
+                '&:hover': { bgcolor: '#f3f4f6' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
             <Box
               sx={{
                 width: 48,
@@ -572,7 +585,8 @@ function VisitHistoryPage({ onNavigateToGym }) {
 }
 
 VisitHistoryPage.propTypes = {
-  onNavigateToGym: PropTypes.func
+  onNavigateToGym: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default VisitHistoryPage

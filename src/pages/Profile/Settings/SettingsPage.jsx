@@ -14,7 +14,8 @@ import {
   DialogActions,
   Button,
   Divider,
-  Chip
+  Chip,
+  IconButton
 } from '@mui/material'
 import {
   Person,
@@ -30,11 +31,12 @@ import {
   DeleteSweep,
   Logout,
   PersonRemove,
-  ChevronRight
+  ChevronRight,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
-function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount }) {
+function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount, onBack }) {
   // Notification settings state
   const [pushNotifications, setPushNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(false)
@@ -93,26 +95,38 @@ function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box
-            sx={{
-              display: 'inline-block',
-              px: 1.5,
-              py: 0.5,
-              bgcolor: '#667eea',
-              mb: 1
-            }}
-          >
-            <Typography
-              variant="caption"
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+            <IconButton
+              onClick={onBack}
               sx={{
-                fontWeight: 800,
-                fontSize: 10,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase'
+                width: 36,
+                height: 36,
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
               }}
             >
-              CONFIGURATION
-            </Typography>
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
+            <Box
+              sx={{
+                display: 'inline-block',
+                px: 1.5,
+                py: 0.5,
+                bgcolor: '#667eea'
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: 10,
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                CONFIGURATION
+              </Typography>
+            </Box>
           </Box>
           <Typography
             variant="h4"
@@ -747,7 +761,8 @@ function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount }) {
 SettingsPage.propTypes = {
   onNavigateToProfile: PropTypes.func,
   onLogout: PropTypes.func,
-  onDeleteAccount: PropTypes.func
+  onDeleteAccount: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default SettingsPage

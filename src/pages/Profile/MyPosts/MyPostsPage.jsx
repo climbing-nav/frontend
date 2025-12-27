@@ -18,7 +18,8 @@ import {
   ChatBubbleOutline,
   MoreVert,
   DeleteOutline,
-  Edit
+  Edit,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
@@ -72,7 +73,7 @@ const mockPosts = [
   }
 ]
 
-function MyPostsPage({ onNavigateToPost, onNavigateToEdit }) {
+function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
   const [activeTab, setActiveTab] = useState(0)
   const [posts, setPosts] = useState(mockPosts)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -126,6 +127,17 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit }) {
       >
         <Box sx={{ p: 3, pb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1 }}>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: '#1f2937',
+                '&:hover': { bgcolor: '#f3f4f6' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
             <Typography
               variant="h4"
               sx={{
@@ -549,7 +561,8 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit }) {
 
 MyPostsPage.propTypes = {
   onNavigateToPost: PropTypes.func,
-  onNavigateToEdit: PropTypes.func
+  onNavigateToEdit: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default MyPostsPage

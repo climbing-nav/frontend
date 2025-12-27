@@ -23,7 +23,8 @@ import {
   Payment,
   MoreHoriz,
   CheckCircle,
-  Schedule
+  Schedule,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
@@ -74,7 +75,7 @@ const categories = [
   { id: 'other', label: '기타', icon: MoreHoriz, color: '#8b5cf6' }
 ]
 
-function CustomerSupportPage({ onNavigateToInquiry }) {
+function CustomerSupportPage({ onNavigateToInquiry, onBack }) {
   const [selectedCategory, setSelectedCategory] = useState('account')
   const [expandedFaq, setExpandedFaq] = useState(false)
   const [snackbarOpen, setSnackbarOpen] = useState(false)
@@ -118,6 +119,17 @@ function CustomerSupportPage({ onNavigateToInquiry }) {
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: '#1f2937',
+                '&:hover': { bgcolor: '#f3f4f6' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
             <Box
               sx={{
                 width: 44,
@@ -592,7 +604,8 @@ function CustomerSupportPage({ onNavigateToInquiry }) {
 }
 
 CustomerSupportPage.propTypes = {
-  onNavigateToInquiry: PropTypes.func
+  onNavigateToInquiry: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default CustomerSupportPage

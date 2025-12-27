@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Chip } from '@mui/material'
+import { Box, Typography, Paper, Chip, IconButton } from '@mui/material'
 import {
   Description,
   Security,
@@ -6,7 +6,8 @@ import {
   Forum,
   Code,
   ChevronRight,
-  Update
+  Update,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
@@ -63,7 +64,7 @@ const policies = [
   }
 ]
 
-function TermsAndPoliciesPage({ onNavigateToPolicy }) {
+function TermsAndPoliciesPage({ onNavigateToPolicy, onBack }) {
   const handlePolicyClick = (policy) => {
     if (onNavigateToPolicy) {
       onNavigateToPolicy(policy)
@@ -101,39 +102,51 @@ function TermsAndPoliciesPage({ onNavigateToPolicy }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          {/* Legal label */}
-          <Box
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 1.5,
-              py: 0.5,
-              bgcolor: 'rgba(102, 126, 234, 0.2)',
-              border: '1px solid rgba(102, 126, 234, 0.5)',
-              mb: 1.5
-            }}
-          >
-            <Box
+          {/* Back button and Legal label */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+            <IconButton
+              onClick={onBack}
               sx={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                bgcolor: '#667eea'
-              }}
-            />
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 800,
-                fontSize: 10,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontFamily: 'monospace'
+                width: 36,
+                height: 36,
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
               }}
             >
-              LEGAL DOCUMENTS
-            </Typography>
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.5,
+                py: 0.5,
+                bgcolor: 'rgba(102, 126, 234, 0.2)',
+                border: '1px solid rgba(102, 126, 234, 0.5)'
+              }}
+            >
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: '#667eea'
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: 10,
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'monospace'
+                }}
+              >
+                LEGAL DOCUMENTS
+              </Typography>
+            </Box>
           </Box>
           <Typography
             variant="h4"
@@ -416,7 +429,8 @@ function TermsAndPoliciesPage({ onNavigateToPolicy }) {
 }
 
 TermsAndPoliciesPage.propTypes = {
-  onNavigateToPolicy: PropTypes.func
+  onNavigateToPolicy: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default TermsAndPoliciesPage
