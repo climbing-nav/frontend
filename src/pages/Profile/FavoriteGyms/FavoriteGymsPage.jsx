@@ -10,7 +10,8 @@ import {
   Favorite,
   FavoriteBorder,
   LocationOn,
-  Straighten
+  Straighten,
+  ArrowBack
 } from '@mui/icons-material'
 import PropTypes from 'prop-types'
 
@@ -42,7 +43,7 @@ const mockGyms = [
   }
 ]
 
-function FavoriteGymsPage({ onNavigateToGym }) {
+function FavoriteGymsPage({ onNavigateToGym, onBack }) {
   const [favorites, setFavorites] = useState(mockGyms)
   const [removingId, setRemovingId] = useState(null)
 
@@ -90,17 +91,29 @@ function FavoriteGymsPage({ onNavigateToGym }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 700,
-              color: '#1f2937',
-              mb: 0.5,
-              letterSpacing: '-0.02em'
-            }}
-          >
-            즐겨찾는 암장
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: '#1f2937',
+                '&:hover': { bgcolor: '#f3f4f6' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: '#1f2937',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              즐겨찾는 암장
+            </Typography>
+          </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Chip
               icon={<Favorite sx={{ fontSize: 16, color: '#667eea' }} />}
@@ -394,7 +407,8 @@ function FavoriteGymsPage({ onNavigateToGym }) {
 }
 
 FavoriteGymsPage.propTypes = {
-  onNavigateToGym: PropTypes.func
+  onNavigateToGym: PropTypes.func,
+  onBack: PropTypes.func
 }
 
 export default FavoriteGymsPage
