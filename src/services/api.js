@@ -76,8 +76,13 @@ api.interceptors.response.use(
           }
         )
 
-        // 응답에서 새 ACCESS 토큰 추출하여 localStorage에 저장
-        const newAccessToken = response.data?.token
+        // 응답 헤더에서 새 ACCESS 토큰 추출하여 localStorage에 저장
+        const authHeader = response.headers['authorization'] || response.headers['Authorization']
+        let newAccessToken = null
+
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          newAccessToken = authHeader.substring(7) // "Bearer " 제거
+        }
 
         if (newAccessToken) {
           localStorage.setItem('token', newAccessToken)
