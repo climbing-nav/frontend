@@ -371,6 +371,21 @@ const BackofficeLayout = () => {
             </MenuItem>
             <Divider />
             <MenuItem
+              onClick={() => {
+                window.location.href = '/';
+              }}
+              sx={{
+                fontFamily: '"DM Sans", sans-serif',
+                py: 1.5,
+              }}
+            >
+              <ListItemIcon>
+                <HomeIcon fontSize="small" />
+              </ListItemIcon>
+              클밍여지도
+            </MenuItem>
+            <Divider />
+            <MenuItem
               onClick={handleLogout}
               sx={{
                 fontFamily: '"DM Sans", sans-serif',
