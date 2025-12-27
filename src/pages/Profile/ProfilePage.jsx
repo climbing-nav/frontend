@@ -10,21 +10,22 @@ import {
   ChevronRight,
   Login
 } from '@mui/icons-material'
+import PropTypes from 'prop-types'
 import { selectUser, selectIsAuthenticated, selectAuthProvider } from '../../store/slices/authSlice'
 
 const menuItems = [
-  { icon: LocationOn, text: '즐겨찾는 암장' },
-  { icon: Edit, text: '작성한 글' },
-  { icon: TrendingUp, text: '방문 기록' }
+  { icon: LocationOn, text: '즐겨찾는 암장', page: 'favoriteGyms' },
+  { icon: Edit, text: '작성한 글', page: 'myPosts' },
+  { icon: TrendingUp, text: '방문 기록', page: 'visitHistory' }
 ]
 
 const settingsItems = [
-  { icon: Settings, text: '설정' },
-  { icon: Help, text: '고객센터' },
-  { icon: Description, text: '약관 및 정책' }
+  { icon: Settings, text: '설정', page: 'settings' },
+  { icon: Help, text: '고객센터', page: 'customerSupport' },
+  { icon: Description, text: '약관 및 정책', page: 'termsAndPolicies' }
 ]
 
-function ProfilePage({ onNavigateToAuth }) {
+function ProfilePage({ onNavigateToAuth, onNavigateToSubPage }) {
   const user = useSelector(selectUser)
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const authProvider = useSelector(selectAuthProvider)
@@ -212,9 +213,10 @@ function ProfilePage({ onNavigateToAuth }) {
       <Paper sx={{ mb: 1, borderRadius: 0 }}>
         <List sx={{ py: 0 }}>
           {menuItems.map((item, index) => (
-            <ListItem 
+            <ListItem
               key={index}
-              sx={{ 
+              onClick={() => onNavigateToSubPage && onNavigateToSubPage(item.page)}
+              sx={{
                 borderBottom: index < menuItems.length - 1 ? '1px solid #f3f4f6' : 'none',
                 cursor: 'pointer',
                 '&:hover': {
@@ -236,9 +238,10 @@ function ProfilePage({ onNavigateToAuth }) {
       <Paper sx={{ borderRadius: 0 }}>
         <List sx={{ py: 0 }}>
           {settingsItems.map((item, index) => (
-            <ListItem 
+            <ListItem
               key={index}
-              sx={{ 
+              onClick={() => onNavigateToSubPage && onNavigateToSubPage(item.page)}
+              sx={{
                 borderBottom: index < settingsItems.length - 1 ? '1px solid #f3f4f6' : 'none',
                 cursor: 'pointer',
                 '&:hover': {
@@ -257,6 +260,11 @@ function ProfilePage({ onNavigateToAuth }) {
       </Paper>
     </Box>
   )
+}
+
+ProfilePage.propTypes = {
+  onNavigateToAuth: PropTypes.func,
+  onNavigateToSubPage: PropTypes.func
 }
 
 export default ProfilePage

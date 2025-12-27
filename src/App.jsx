@@ -19,6 +19,12 @@ import PostCreatePage from './pages/PostCreate/PostCreatePage'
 import GymListPage from './pages/GymList/GymListPage'
 import PostDetailPage from './pages/PostDetail/PostDetailPage'
 import LandingPage from './pages/LandingPage'
+import FavoriteGymsPage from './pages/Profile/FavoriteGyms/FavoriteGymsPage'
+import MyPostsPage from './pages/Profile/MyPosts/MyPostsPage'
+import VisitHistoryPage from './pages/Profile/VisitHistory/VisitHistoryPage'
+import SettingsPage from './pages/Profile/Settings/SettingsPage'
+import CustomerSupportPage from './pages/Profile/CustomerSupport/CustomerSupportPage'
+import TermsAndPoliciesPage from './pages/Profile/TermsAndPolicies/TermsAndPoliciesPage'
 
 const theme = createTheme({
   palette: {
@@ -71,7 +77,7 @@ function App() {
     const initialPage = getInitialPageFromURL()
     return ['home', 'map', 'community', 'mypage'].includes(initialPage) ? initialPage : 'home'
   })
-  const [currentPage, setCurrentPage] = useState(getInitialPageFromURL) // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit'
+  const [currentPage, setCurrentPage] = useState(getInitialPageFromURL) // 'landing', 'home', 'map', 'community', 'mypage', 'auth', 'gymDetail', 'postCreate', 'gymList', 'postDetail', 'postEdit', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'
   const [selectedGym, setSelectedGym] = useState(null)
   const [selectedPostId, setSelectedPostId] = useState(null)
   const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
@@ -254,7 +260,19 @@ function App() {
       case 'community':
         return <CommunityPage onNavigateToPostDetail={handleNavigateToPostDetail} />
       case 'mypage':
-        return <ProfilePage onNavigateToAuth={handleNavigateToAuth} />
+        return <ProfilePage onNavigateToAuth={handleNavigateToAuth} onNavigateToSubPage={handleNavigateToProfileSubPage} />
+      case 'favoriteGyms':
+        return <FavoriteGymsPage onNavigateToGym={handleNavigateToGymDetail} onBack={handleBackFromProfileSubPage} />
+      case 'myPosts':
+        return <MyPostsPage onNavigateToPost={handleNavigateToPostDetail} onNavigateToEdit={handleNavigateToPostEdit} onBack={handleBackFromProfileSubPage} />
+      case 'visitHistory':
+        return <VisitHistoryPage onNavigateToGym={handleNavigateToGymDetail} onBack={handleBackFromProfileSubPage} />
+      case 'settings':
+        return <SettingsPage onNavigateToProfile={handleNavigateToProfile} onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} onBack={handleBackFromProfileSubPage} />
+      case 'customerSupport':
+        return <CustomerSupportPage onNavigateToInquiry={() => console.log('Navigate to inquiry')} onBack={handleBackFromProfileSubPage} />
+      case 'termsAndPolicies':
+        return <TermsAndPoliciesPage onNavigateToPolicy={(policy) => console.log('Navigate to policy:', policy)} onBack={handleBackFromProfileSubPage} />
       case 'auth':
         return <AuthPage />
       case 'gymDetail':
@@ -390,6 +408,33 @@ function App() {
     setCurrentPage('postDetail')
   }
 
+  const handleNavigateToProfileSubPage = (page) => {
+    setCurrentPage(page)
+    window.history.pushState({}, '', `/profile/${page}`)
+  }
+
+  const handleLogout = () => {
+    // 로그아웃 처리
+    localStorage.removeItem('token')
+    setCurrentPage('landing')
+    setCurrentTab('home')
+    window.history.pushState({}, '', '/')
+  }
+
+  const handleDeleteAccount = () => {
+    // 회원 탈퇴 처리
+    localStorage.removeItem('token')
+    setCurrentPage('landing')
+    setCurrentTab('home')
+    window.history.pushState({}, '', '/')
+  }
+
+  const handleBackFromProfileSubPage = () => {
+    setCurrentPage('mypage')
+    setCurrentTab('mypage')
+    window.history.pushState({}, '', '/mypage')
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -411,17 +456,17 @@ function App() {
           renderCurrentPage()
         ) : (
           <>
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'postEdit' && currentPage !== 'gymList' && currentPage !== 'postDetail' && (
+            {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'].includes(currentPage) && (
               <Header
                 onNavigateToAuth={handleNavigateToAuth}
                 onNavigateToProfile={handleNavigateToProfile}
               />
             )}
-            <Box sx={{ pb: (currentPage === 'gymDetail' || currentPage === 'postCreate' || currentPage === 'postEdit' || currentPage === 'gymList' || currentPage === 'postDetail') ? 0 : 10 }}>
+            <Box sx={{ pb: ['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'].includes(currentPage) ? 0 : 10 }}>
               {renderCurrentPage()}
             </Box>
-            {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'home', 'map', 'mypage'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
-            {currentPage !== 'gymDetail' && currentPage !== 'postCreate' && currentPage !== 'postEdit' && currentPage !== 'gymList' && currentPage !== 'postDetail' && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
+            {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'home', 'map', 'mypage', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'].includes(currentPage) && <FloatingActionButton onClick={handleNavigateToPostCreate} />}
+            {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'].includes(currentPage) && <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />}
           </>
         )}
         {/* 전역 Snackbar */}
