@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   AppBar,
@@ -29,15 +29,23 @@ import {
   NavigateNext,
 } from '@mui/icons-material';
 import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const DRAWER_WIDTH = 280;
 const MOBILE_WIDTH = '393px';
 
-const BackofficeLayout = () => {
+const BackofficeLayout = ({ onReady }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 컴포넌트 마운트 시 로딩 완료 알림
+  useEffect(() => {
+    if (onReady) {
+      onReady();
+    }
+  }, [onReady]);
 
   // Breadcrumb route mapping
   const routeMap = {
@@ -563,6 +571,10 @@ const BackofficeLayout = () => {
       </Box>
     </Box>
   );
+};
+
+BackofficeLayout.propTypes = {
+  onReady: PropTypes.func,
 };
 
 export default BackofficeLayout;

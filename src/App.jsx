@@ -82,6 +82,7 @@ const getInitialPageFromURL = () => {
 function App() {
   const dispatch = useDispatch()
   const processRef = useRef(false)
+  const prevPageRef = useRef(null) // 이전 페이지 추적
   const isAuthInitialized = useSelector(selectIsAuthInitialized)
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
@@ -120,15 +121,16 @@ function App() {
 
   // 백오피스 페이지 전환 시 로딩 화면 표시
   useEffect(() => {
-    if (currentPage === 'backoffice') {
+    if (currentPage === 'backoffice' && prevPageRef.current !== 'backoffice') {
       setIsBackofficeLoading(true)
-      // 로딩 화면을 1초간 표시
-      const timer = setTimeout(() => {
-        setIsBackofficeLoading(false)
-      }, 1000)
-      return () => clearTimeout(timer)
     }
+    prevPageRef.current = currentPage
   }, [currentPage])
+
+  // 백오피스 로딩 완료 핸들러
+  const handleBackofficeReady = () => {
+    setIsBackofficeLoading(false)
+  }
 
   // 카카오 OAuth 콜백 처리 - 프론트엔드 주도 플로우
   useEffect(() => {
@@ -314,7 +316,7 @@ function App() {
         return (
           <BrowserRouter>
             <Routes>
-              <Route path="/backoffice" element={<BackofficeLayout />}>
+              <Route path="/backoffice" element={<BackofficeLayout onReady={handleBackofficeReady} />}>
                 <Route index element={<BackofficeDashboard />} />
                 <Route path="gyms" element={<BackofficeGyms />} />
                 <Route path="congestion" element={<BackofficeCongestion />} />
@@ -488,14 +490,12 @@ function App() {
         {/* OAuth 콜백 처리 중 로딩 페이지 */}
         {isOAuthProcessing ? (
           <OAuthCallbackLoading provider={oauthProvider} />
-        ) : isBackofficeLoading ? (
-          <BackofficeLoadingScreen />
         ) : currentPage === 'auth' ? (
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : currentPage === 'landing' ? (
           renderCurrentPage()
         ) : currentPage === 'backoffice' ? (
-          renderCurrentPage()
+          (isBackofficeLoading || prevPageRef.current !== 'backoffice') ? <BackofficeLoadingScreen /> : renderCurrentPage()
         ) : (
           <>
             {!['gymDetail', 'postCreate', 'postEdit', 'gymList', 'postDetail', 'favoriteGyms', 'myPosts', 'visitHistory', 'settings', 'customerSupport', 'termsAndPolicies'].includes(currentPage) && (
