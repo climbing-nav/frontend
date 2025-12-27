@@ -126,7 +126,30 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
         }}
       >
         <Box sx={{ p: 3, pb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  color: '#1f2937',
+                  letterSpacing: '-0.03em'
+                }}
+              >
+                작성한 글
+              </Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 900,
+                  color: '#667eea',
+                  letterSpacing: '-0.04em',
+                  lineHeight: 1
+                }}
+              >
+                {posts.length}
+              </Typography>
+            </Box>
             <IconButton
               onClick={onBack}
               sx={{
@@ -138,27 +161,6 @@ function MyPostsPage({ onNavigateToPost, onNavigateToEdit, onBack }) {
             >
               <ArrowBack sx={{ fontSize: 20 }} />
             </IconButton>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                color: '#1f2937',
-                letterSpacing: '-0.03em'
-              }}
-            >
-              작성한 글
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 900,
-                color: '#667eea',
-                letterSpacing: '-0.04em',
-                lineHeight: 1
-              }}
-            >
-              {posts.length}
-            </Typography>
           </Box>
           <Typography
             variant="body2"

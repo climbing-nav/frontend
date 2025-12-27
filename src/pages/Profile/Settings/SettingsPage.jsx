@@ -95,18 +95,7 @@ function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount, onBack }
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-            <IconButton
-              onClick={onBack}
-              sx={{
-                width: 36,
-                height: 36,
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
-              }}
-            >
-              <ArrowBack sx={{ fontSize: 20 }} />
-            </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
             <Box
               sx={{
                 display: 'inline-block',
@@ -127,6 +116,17 @@ function SettingsPage({ onNavigateToProfile, onLogout, onDeleteAccount, onBack }
                 CONFIGURATION
               </Typography>
             </Box>
+            <IconButton
+              onClick={onBack}
+              sx={{
+                width: 36,
+                height: 36,
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+              }}
+            >
+              <ArrowBack sx={{ fontSize: 20 }} />
+            </IconButton>
           </Box>
           <Typography
             variant="h4"

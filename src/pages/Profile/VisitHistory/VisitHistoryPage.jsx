@@ -124,7 +124,44 @@ function VisitHistoryPage({ onNavigateToGym, onBack }) {
         }}
       >
         <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 1,
+                  bgcolor: '#667eea',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <TrendingUp sx={{ fontSize: 28, color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 800,
+                    color: '#1f2937',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.2
+                  }}
+                >
+                  방문 기록
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#6b7280',
+                    fontWeight: 500
+                  }}
+                >
+                  나의 클라이밍 여정
+                </Typography>
+              </Box>
+            </Box>
             <IconButton
               onClick={onBack}
               sx={{
@@ -136,41 +173,6 @@ function VisitHistoryPage({ onNavigateToGym, onBack }) {
             >
               <ArrowBack sx={{ fontSize: 20 }} />
             </IconButton>
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 1,
-                bgcolor: '#667eea',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <TrendingUp sx={{ fontSize: 28, color: 'white' }} />
-            </Box>
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: '#1f2937',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2
-                }}
-              >
-                방문 기록
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#6b7280',
-                  fontWeight: 500
-                }}
-              >
-                나의 클라이밍 여정
-              </Typography>
-            </Box>
           </Box>
 
           {/* Statistics Cards */}
