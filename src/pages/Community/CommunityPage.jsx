@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Box, Tabs, Tab, CircularProgress, Typography } from '@mui/material'
 import PropTypes from 'prop-types'
 import PostCard from '../../components/community/PostCard/PostCard'
-import { fetchPostsAsync } from '../../store/slices/communitySlice'
+import { fetchPostsAsync, fetchMorePostsAsync, resetPosts } from '../../store/slices/communitySlice'
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll'
 import { getBoardName } from '../../constants/boardCodes'
 
 const tabs = [
@@ -17,14 +18,30 @@ const tabs = [
 
 function CommunityPage({ onNavigateToPostDetail }) {
   const dispatch = useDispatch()
-  const { posts, loading, error } = useSelector(state => state.community)
+  const { posts, loading, error, pagination } = useSelector(state => state.community)
   const [activeTab, setActiveTab] = useState(0)
 
-  // 게시글 목록 로드 (탭 변경 시마다 재요청)
+  // 탭 변경 시 초기화 후 재로드
   useEffect(() => {
     const selectedBoardCode = tabs[activeTab].boardCode
-    dispatch(fetchPostsAsync(selectedBoardCode))
+    dispatch(resetPosts()) // 기존 posts 초기화
+    dispatch(fetchPostsAsync(selectedBoardCode)) // 첫 20개 로드
   }, [dispatch, activeTab])
+
+  // 더 로드하기 핸들러
+  const handleLoadMore = useCallback(() => {
+    if (!loading && pagination.hasNextPage) {
+      const selectedBoardCode = tabs[activeTab].boardCode
+      dispatch(fetchMorePostsAsync(selectedBoardCode))
+    }
+  }, [dispatch, activeTab, loading, pagination.hasNextPage])
+
+  // 무한 스크롤 훅 사용
+  const lastPostRef = useInfiniteScroll(
+    handleLoadMore,
+    pagination.hasNextPage,
+    loading
+  )
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -98,13 +115,36 @@ function CommunityPage({ onNavigateToPostDetail }) {
 
       <Box sx={{ py: 2, px: 2.5 }}>
         {postsArray.length > 0 ? (
-          postsArray.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onCardClick={handlePostClick}
-            />
-          ))
+          <>
+            {postsArray.map((post, index) => {
+              // 마지막 요소에 ref 추가
+              const isLast = index === postsArray.length - 1
+              return (
+                <div key={post.id} ref={isLast ? lastPostRef : null}>
+                  <PostCard
+                    post={post}
+                    onCardClick={handlePostClick}
+                  />
+                </div>
+              )
+            })}
+
+            {/* 추가 로딩 인디케이터 */}
+            {loading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={32} />
+              </Box>
+            )}
+
+            {/* 더 이상 데이터 없음 표시 */}
+            {!pagination.hasNextPage && postsArray.length > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  모든 게시글을 불러왔습니다
+                </Typography>
+              </Box>
+            )}
+          </>
         ) : (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
             <Typography variant="body1" color="text.secondary">

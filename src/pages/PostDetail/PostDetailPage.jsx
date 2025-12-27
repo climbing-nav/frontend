@@ -56,16 +56,16 @@ import ImageCarousel from '../../components/common/ImageCarousel'
 // boardCode별 색상 (영문 코드 + 한글 이름 지원)
 const BOARD_CODE_COLORS = {
   'FREE': '#667eea',
-  '자유게시판': '#667eea',
-  'REVIEW': '#4facfe',
-  '후기': '#4facfe',
-  'TIP': '#f093fb',
-  '팁&노하우': '#f093fb',
-  'TRADE': '#fa709a',
-  '중고거래': '#fa709a',
-  'RECRUIT': '#43e97b',
-  '메이트 모집': '#43e97b',
-  '메이트모집': '#43e97b'
+  '자유게시판': '#10b981',
+  'REVIEW': '#f59e0b',
+  '후기': '#f59e0b',
+  'TIP': '#8b5cf6',
+  '팁&노하우': '#8b5cf6',
+  'TRADE': '#06b6d4',
+  '중고거래': '#06b6d4',
+  'RECRUIT': '#ec4899',
+  '메이트 모집': '#ec4899',
+  '메이트모집': '#ec4899'
 }
 
 function PostDetailPage({ postId, onBack, onEdit }) {
