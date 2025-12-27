@@ -9,6 +9,7 @@ import Header from './components/common/Header/Header'
 import BottomNavigation from './components/common/BottomNavigation/BottomNavigation'
 import FloatingActionButton from './components/common/FAB/FAB'
 import OAuthCallbackLoading from './components/common/OAuthCallbackLoading/OAuthCallbackLoading'
+import BackofficeLoadingScreen from './components/common/BackofficeLoadingScreen/BackofficeLoadingScreen'
 import GlobalSnackbar from './components/common/Snackbar/GlobalSnackbar'
 import HomePage from './pages/Home/HomePage'
 import CommunityPage from './pages/Community/CommunityPage'
@@ -94,6 +95,7 @@ function App() {
   const [editingPost, setEditingPost] = useState(null) // 수정 중인 게시글
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false) // OAuth 콜백 처리 중 상태
   const [oauthProvider, setOauthProvider] = useState(null) // 'kakao' | 'google'
+  const [isBackofficeLoading, setIsBackofficeLoading] = useState(false) // 백오피스 로딩 상태
 
   // 앱 시작 시 localStorage 기반 인증 상태 확인
   useEffect(() => {
@@ -115,6 +117,18 @@ function App() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
+
+  // 백오피스 페이지 전환 시 로딩 화면 표시
+  useEffect(() => {
+    if (currentPage === 'backoffice') {
+      setIsBackofficeLoading(true)
+      // 로딩 화면을 1초간 표시
+      const timer = setTimeout(() => {
+        setIsBackofficeLoading(false)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [currentPage])
 
   // 카카오 OAuth 콜백 처리 - 프론트엔드 주도 플로우
   useEffect(() => {
@@ -474,6 +488,8 @@ function App() {
         {/* OAuth 콜백 처리 중 로딩 페이지 */}
         {isOAuthProcessing ? (
           <OAuthCallbackLoading provider={oauthProvider} />
+        ) : isBackofficeLoading ? (
+          <BackofficeLoadingScreen />
         ) : currentPage === 'auth' ? (
           <AuthPage onNavigateToHome={handleNavigateToHome} />
         ) : currentPage === 'landing' ? (
