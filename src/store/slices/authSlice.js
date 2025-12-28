@@ -2,6 +2,19 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '../../services/authService'
 import { authStorage } from '../../utils/authStorage'
 
+// Async thunk for email login (관리자용)
+export const loginAsync = createAsyncThunk(
+  'auth/loginAsync',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await authService.login(credentials)
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message || '로그인에 실패했습니다.')
+    }
+  }
+)
+
 // Async thunk for logout
 export const logoutAsync = createAsyncThunk(
   'auth/logoutAsync',
@@ -150,6 +163,31 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Email login cases (관리자용)
+      .addCase(loginAsync.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(loginAsync.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.authProvider = 'email'
+        state.error = null
+
+        // 로컬 스토리지에 저장
+        authStorage.setToken(action.payload.token)
+        authStorage.setUserData(action.payload.user)
+        authStorage.setAuthProvider('email')
+      })
+      .addCase(loginAsync.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+      })
       // Logout cases
       .addCase(logoutAsync.pending, (state) => {
         state.loading = true

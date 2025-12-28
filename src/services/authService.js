@@ -3,6 +3,12 @@ import axios from 'axios'
 import { clearAuthCookies } from '../utils/cookieUtils'
 
 export const authService = {
+  // 이메일 로그인 (관리자용)
+  async login(credentials) {
+    const response = await api.post('/auth/login', credentials)
+    return response.data
+  },
+
   async logout() {
     const response = await api.post('/token/logout')
 
