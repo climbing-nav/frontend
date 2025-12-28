@@ -351,8 +351,8 @@ function PostForm({
       }
 
       if (isEditing) {
-        // 게시글 수정
-        const updatedPost = await communityService.updatePost(post.id, postData)
+        // 게시글 수정 - 이미지 파일 포함
+        const updatedPost = await communityService.updatePost(post.id, postData, imageFiles)
 
         // Redux store 업데이트는 하지 않음 (App.jsx에서 fetchPostAsync로 다시 조회)
         // dispatch(updatePost(updatedPost))

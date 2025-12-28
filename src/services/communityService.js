@@ -62,8 +62,34 @@ export const communityService = {
     return response.data
   },
 
-  async updatePost(id, postData) {
-    const response = await api.patch(`/posts/${id}`, postData)
+  /**
+   * 게시글 수정
+   * @param {number|string} id - 게시글 ID
+   * @param {Object} postData
+   * @param {string} postData.title - 제목
+   * @param {string} postData.content - 내용
+   * @param {string} postData.boardCode - 게시판 코드
+   * @param {File[]} files - 이미지 파일 배열 (optional, 최대 3개)
+   */
+  async updatePost(id, { title, content, boardCode }, files = []) {
+    const formData = new FormData()
+
+    // JSON 데이터를 Blob으로 변환하여 'post' 파트로 전송
+    const postData = { title, content, boardCode }
+    formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }))
+
+    // 이미지 파일들을 'files' 파트로 전송
+    if (files && files.length > 0) {
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+    }
+
+    const response = await api.patch(`/posts/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     return response.data
   },
 
