@@ -74,9 +74,9 @@ export const communityService = {
   async updatePost(id, { title, content, boardCode }, files = []) {
     const formData = new FormData()
 
-    // JSON 데이터를 Blob으로 변환하여 'post' 파트로 전송
+    // JSON 데이터를 Blob으로 변환하여 'postUpdateRequest' 파트로 전송
     const postData = { title, content, boardCode }
-    formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }))
+    formData.append('postUpdateRequest', new Blob([JSON.stringify(postData)], { type: 'application/json' }))
 
     // 이미지 파일들을 'files' 파트로 전송
     if (files && files.length > 0) {
