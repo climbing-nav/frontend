@@ -966,7 +966,7 @@
         "dependencies": [
           21
         ],
-        "status": "pending",
+        "status": "deferred",
         "subtasks": [
           {
             "id": 1,
@@ -1035,7 +1035,7 @@
         "dependencies": [
           22
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -1049,7 +1049,63 @@
           23
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "대시보드 메인 페이지 기본 구조 및 라우팅 설정",
+            "description": "DashboardPage 컴포넌트 생성 및 백오피스 메인 경로 설정",
+            "dependencies": [],
+            "details": "src/pages/Backoffice/Dashboard/DashboardPage.jsx 파일 생성, Material-UI Container 및 Grid 레이아웃 기본 구조 작성, 백오피스 라우터에 /backoffice/dashboard 경로 추가, 기본 헤더 및 페이지 제목 설정, 권한별 접근 제어 (GYM_ADMIN, SUPER_ADMIN) 구현",
+            "status": "done",
+            "testStrategy": "대시보드 페이지 라우팅 정상 동작 확인, 권한별 접근 제어 테스트, 기본 레이아웃 렌더링 검증"
+          },
+          {
+            "id": 2,
+            "title": "통계 카드 컴포넌트 구현",
+            "description": "4개 주요 통계를 표시하는 카드형 UI 컴포넌트 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "Grid 레이아웃으로 4개 통계 카드 배치 (총 암장 수, 오늘 업데이트 횟수, 관리 암장 수, 평균 평점), Material-UI Card 및 CardContent 사용, 각 카드에 아이콘, 수치, 레이블 표시, GYM_ADMIN과 SUPER_ADMIN 권한별 다른 통계 정보 표시 로직 구현, Mock 데이터로 통계 수치 생성",
+            "status": "pending",
+            "testStrategy": "각 통계 카드 정상 렌더링 확인, 권한별 다른 정보 표시 검증, Mock 데이터 정상 표시 테스트"
+          },
+          {
+            "id": 3,
+            "title": "혼잡도 분포 차트 컴포넌트 구현",
+            "description": "Recharts Bar Chart를 활용한 혼잡도 분포 시각화 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "Recharts BarChart 컴포넌트 설치 및 설정, 혼잡도별(쾌적, 보통, 혼잡) 암장 수 분포 차트 구현, X축: 혼잡도 레벨, Y축: 암장 수, 색상 코딩 (쾌적-green, 보통-orange, 혼잡-red), 반응형 차트 크기 설정, Mock 데이터로 혼잡도 분포 생성",
+            "status": "pending",
+            "testStrategy": "Recharts 차트 정상 렌더링 확인, 혼잡도별 색상 표시 검증, 반응형 동작 테스트"
+          },
+          {
+            "id": 4,
+            "title": "최근 활동 테이블 구현",
+            "description": "최근 혼잡도 업데이트 내역을 표시하는 테이블 컴포넌트 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "Material-UI Table 컴포넌트로 최근 혼잡도 업데이트 목록 표시, 컬럼: 암장명, 이전 혼잡도, 현재 혼잡도, 업데이트 시각, 관리자, 혼잡도 변경은 색상으로 표시, 시간 표시는 '방금 전', '10분 전' 형식, Mock 데이터로 최근 10개 업데이트 내역 생성, 테이블 페이지네이션 설정",
+            "status": "pending",
+            "testStrategy": "최근 활동 테이블 정상 표시 확인, 혼잡도 변경 색상 표시 검증, 시간 형식 표시 테스트"
+          },
+          {
+            "id": 5,
+            "title": "빠른 작업 버튼 및 전체 레이아웃 완성",
+            "description": "빠른 작업 버튼 구현 및 대시보드 전체 레이아웃 최종 완성",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "페이지 상단에 빠른 작업 버튼 그룹 추가 ('혼잡도 업데이트', '암장 추가'), 버튼 클릭 시 해당 페이지로 라우팅 또는 다이얼로그 열기, 전체 대시보드 컴포넌트들 Grid 레이아웃으로 배치 및 정렬, 모바일 반응형 레이아웃 조정, 로딩 상태 및 에러 처리 추가",
+            "status": "pending",
+            "testStrategy": "빠른 작업 버튼 동작 확인, 전체 레이아웃 반응형 테스트, 로딩 및 에러 상태 처리 검증"
+          }
+        ]
       },
       {
         "id": 25,
@@ -1132,7 +1188,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T14:17:41.807Z",
-      "updated": "2025-12-27T17:10:30.767Z",
+      "updated": "2026-01-03T01:56:35.325Z",
       "description": "Tasks for master context"
     }
   }
