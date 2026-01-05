@@ -88,36 +88,50 @@ const CongestionChart = () => {
         />
       </Box>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={congestionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorToday" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ff6b35" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#ff6b35" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorYesterday" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#667eea" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" />
-          <XAxis
-            dataKey="time"
-            tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 12 }}
-            tickLine={false}
-            axisLine={{ stroke: '#e8eaed' }}
-          />
-          <YAxis
-            tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 12 }}
-            tickLine={false}
-            axisLine={{ stroke: '#e8eaed' }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine x={currentTimeLabel} stroke="#48bb78" strokeWidth={2} strokeDasharray="5 5" />
-          <Area type="monotone" dataKey="yesterday" stroke="#667eea" strokeWidth={2} fill="url(#colorYesterday)" animationDuration={1500} />
-          <Area type="monotone" dataKey="today" stroke="#ff6b35" strokeWidth={3} fill="url(#colorToday)" animationDuration={1500} />
-        </AreaChart>
-      </ResponsiveContainer>
+      <Box
+        sx={{
+          '& *': {
+            outline: 'none !important',
+          },
+          '& *:focus': {
+            outline: 'none !important',
+          },
+          '& *:focus-visible': {
+            outline: 'none !important',
+          },
+        }}
+      >
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={congestionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorToday" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#ff6b35" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#ff6b35" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorYesterday" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#667eea" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" />
+            <XAxis
+              dataKey="time"
+              tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 12 }}
+              tickLine={false}
+              axisLine={{ stroke: '#e8eaed' }}
+            />
+            <YAxis
+              tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 12 }}
+              tickLine={false}
+              axisLine={{ stroke: '#e8eaed' }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <ReferenceLine x={currentTimeLabel} stroke="#48bb78" strokeWidth={2} strokeDasharray="5 5" />
+            <Area type="monotone" dataKey="yesterday" stroke="#667eea" strokeWidth={2} fill="url(#colorYesterday)" animationDuration={1500} />
+            <Area type="monotone" dataKey="today" stroke="#ff6b35" strokeWidth={3} fill="url(#colorToday)" animationDuration={1500} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Box>
     </Paper>
   );
 };

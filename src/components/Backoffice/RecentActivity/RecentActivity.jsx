@@ -219,6 +219,12 @@ const RecentActivity = () => {
                 textTransform: 'none',
                 minHeight: '48px',
                 '&.Mui-selected': { color: '#ff6b35' },
+                '&:focus': {
+                  outline: 'none',
+                },
+                '&:focus-visible': {
+                  outline: 'none',
+                },
               }}
             />
           )

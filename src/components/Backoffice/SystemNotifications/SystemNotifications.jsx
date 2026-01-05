@@ -245,6 +245,12 @@ const SystemNotifications = () => {
                           height: 28,
                           background: `${typeConfig.color}10`,
                           '&:hover': { background: `${typeConfig.color}20` },
+                          '&:focus': {
+                            outline: 'none',
+                          },
+                          '&:focus-visible': {
+                            outline: 'none',
+                          },
                         }}
                       >
                         <ArrowForward sx={{ fontSize: 14, color: typeConfig.color }} />
