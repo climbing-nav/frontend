@@ -65,6 +65,12 @@ const PopularGymsRanking = () => {
                   border: '1px solid transparent',
                   '&:hover': { background: 'linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%)' },
                 },
+                '&:focus': {
+                  outline: 'none',
+                },
+                '&:focus-visible': {
+                  outline: 'none',
+                },
               },
             }}
           >

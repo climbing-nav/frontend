@@ -100,11 +100,25 @@ const ReviewsFeedback = () => {
           <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '12px', fontWeight: 600, color: '#6b7280', mb: 1 }}>
             평균 평점 추이 (최근 7일)
           </Typography>
-          <ResponsiveContainer width="100%" height={60}>
-            <LineChart data={ratingTrendData}>
-              <Line type="monotone" dataKey="rating" stroke="#667eea" strokeWidth={2} dot={{ fill: '#667eea', r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <Box
+            sx={{
+              '& *': {
+                outline: 'none !important',
+              },
+              '& *:focus': {
+                outline: 'none !important',
+              },
+              '& *:focus-visible': {
+                outline: 'none !important',
+              },
+            }}
+          >
+            <ResponsiveContainer width="100%" height={60}>
+              <LineChart data={ratingTrendData}>
+                <Line type="monotone" dataKey="rating" stroke="#667eea" strokeWidth={2} dot={{ fill: '#667eea', r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
         </Box>
 
         {/* Recent Reviews */}

@@ -95,7 +95,23 @@ const MemberActivityAnalysis = () => {
           }}
         >
           {['일간', '주간', '월간'].map((label, index) => (
-            <Tab key={index} label={label} sx={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 600, fontSize: '13px', textTransform: 'none', '&.Mui-selected': { color: '#667eea' } }} />
+            <Tab
+              key={index}
+              label={label}
+              sx={{
+                fontFamily: '"DM Sans", sans-serif',
+                fontWeight: 600,
+                fontSize: '13px',
+                textTransform: 'none',
+                '&.Mui-selected': { color: '#667eea' },
+                '&:focus': {
+                  outline: 'none',
+                },
+                '&:focus-visible': {
+                  outline: 'none',
+                },
+              }}
+            />
           ))}
         </Tabs>
 
@@ -110,21 +126,49 @@ const MemberActivityAnalysis = () => {
               <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '12px', color: '#6b7280' }}>신규 가입</Typography>
             </Box>
           </Box>
-          <ResponsiveContainer width="100%" height={200}>
-            <ComposedChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
-              <YAxis yAxisId="left" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar yAxisId="right" dataKey="newSignups" fill="#48bb78" radius={[4, 4, 0, 0]} barSize={20} />
-              <Line yAxisId="left" type="monotone" dataKey="active" stroke="#667eea" strokeWidth={3} dot={{ fill: '#667eea', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <Box
+            sx={{
+              '& *': {
+                outline: 'none !important',
+              },
+              '& *:focus': {
+                outline: 'none !important',
+              },
+              '& *:focus-visible': {
+                outline: 'none !important',
+              },
+            }}
+          >
+            <ResponsiveContainer width="100%" height={200}>
+              <ComposedChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" />
+                <XAxis dataKey="date" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
+                <YAxis yAxisId="left" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fill: '#6b7280', fontFamily: '"DM Sans", sans-serif', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e8eaed' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar yAxisId="right" dataKey="newSignups" fill="#48bb78" radius={[4, 4, 0, 0]} barSize={20} />
+                <Line yAxisId="left" type="monotone" dataKey="active" stroke="#667eea" strokeWidth={3} dot={{ fill: '#667eea', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Box sx={{ width: 100, height: 100 }}>
+          <Box
+            sx={{
+              width: 100,
+              height: 100,
+              '& *': {
+                outline: 'none !important',
+              },
+              '& *:focus': {
+                outline: 'none !important',
+              },
+              '& *:focus-visible': {
+                outline: 'none !important',
+              },
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={retentionData} cx="50%" cy="50%" innerRadius={30} outerRadius={45} paddingAngle={2} dataKey="value">
