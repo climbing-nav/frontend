@@ -120,7 +120,7 @@ const BackofficeGyms = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%' }}>
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -274,7 +274,15 @@ const BackofficeGyms = () => {
         </motion.div>
       ) : (
         /* Gyms Card Grid */
-        <Grid container spacing={3}>
+        <Grid
+          container
+          spacing={3}
+          sx={{
+            width: '100%',
+            mx: 'auto',
+            justifyContent: 'flex-start',
+          }}
+        >
           <AnimatePresence mode="popLayout">
             {gyms.map((gym, index) => {
               const congestion =
