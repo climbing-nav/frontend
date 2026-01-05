@@ -280,7 +280,7 @@ const BackofficeGyms = () => {
           sx={{
             width: '100%',
             mx: 'auto',
-            justifyContent: 'flex-start',
+            justifyContent: 'center',
           }}
         >
           <AnimatePresence mode="popLayout">
@@ -658,10 +658,21 @@ const BackofficeGyms = () => {
                                         ? config.color
                                         : '#9ca3af',
                                     position: 'relative',
+                                    outline: 'none',
                                     '&:hover': {
                                       backgroundColor: config.bg,
                                       borderColor: config.color,
                                       color: config.color,
+                                      outline: 'none',
+                                    },
+                                    '&:focus': {
+                                      outline: 'none',
+                                    },
+                                    '&:focus-visible': {
+                                      outline: 'none',
+                                    },
+                                    '&:active': {
+                                      outline: 'none',
                                     },
                                     transition: 'all 0.2s ease',
                                     '&::before':
