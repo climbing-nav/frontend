@@ -53,7 +53,7 @@ const BackofficeCongestion = () => {
       </Box>
 
       {/* Dashboard Grid */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent="center">
         {/* Current Congestion Level - Full Width */}
         <Grid item xs={12}>
           <Box
