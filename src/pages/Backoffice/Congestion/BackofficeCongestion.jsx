@@ -1,4 +1,4 @@
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
 import CongestionLevelCard from '../../../components/Backoffice/Congestion/CongestionLevelCard';
 import CongestionChart from '../../../components/Backoffice/CongestionChart/CongestionChart';
@@ -52,83 +52,49 @@ const BackofficeCongestion = () => {
         </Typography>
       </Box>
 
-      {/* Dashboard Grid */}
-      <Grid container spacing={3} justifyContent="center">
-        {/* Current Congestion Level - Full Width */}
-        <Grid item xs={12}>
-          <Box
-            sx={{
-              animation: `${fadeInUp} 0.6s ease-out 0.1s backwards`,
-            }}
-          >
-            <CongestionLevelCard
-              currentLevel="high"
-              currentCount={156}
-              capacity={200}
-              trend="up"
-              trendValue="+12"
-              lastUpdated="방금 전"
-            />
-          </Box>
-        </Grid>
+      {/* Current Congestion Level */}
+      <Box sx={{ mb: 3, animation: `${fadeInUp} 0.6s ease-out 0.1s backwards` }}>
+        <CongestionLevelCard
+          currentLevel="high"
+          currentCount={156}
+          capacity={200}
+          trend="up"
+          trendValue="+12"
+          lastUpdated="방금 전"
+        />
+      </Box>
 
-        {/* Real-time Chart - 8 columns */}
-        <Grid item xs={12} lg={8}>
-          <Box
-            sx={{
-              animation: `${fadeInUp} 0.6s ease-out 0.2s backwards`,
-            }}
-          >
-            <CongestionChart />
-          </Box>
-        </Grid>
+      {/* Real-time Chart */}
+      <Box sx={{ mb: 3, animation: `${fadeInUp} 0.6s ease-out 0.2s backwards` }}>
+        <CongestionChart />
+      </Box>
 
-        {/* Peak Hours - 4 columns */}
-        <Grid item xs={12} lg={4}>
-          <Box
-            sx={{
-              animation: `${fadeInUp} 0.6s ease-out 0.3s backwards`,
-            }}
-          >
-            <PeakHoursCard
-              peakHours={[
-                { time: '18:00 - 20:00', count: 187, level: 'veryHigh' },
-                { time: '12:00 - 14:00', count: 165, level: 'high' },
-                { time: '20:00 - 22:00', count: 142, level: 'high' },
-              ]}
-              currentPeak="18:00 - 20:00"
-              isPeakNow={false}
-            />
-          </Box>
-        </Grid>
+      {/* Peak Hours */}
+      <Box sx={{ mb: 3, animation: `${fadeInUp} 0.6s ease-out 0.3s backwards` }}>
+        <PeakHoursCard
+          peakHours={[
+            { time: '18:00 - 20:00', count: 187, level: 'veryHigh' },
+            { time: '12:00 - 14:00', count: 165, level: 'high' },
+            { time: '20:00 - 22:00', count: 142, level: 'high' },
+          ]}
+          currentPeak="18:00 - 20:00"
+          isPeakNow={false}
+        />
+      </Box>
 
-        {/* Weekly Trend Chart - 8 columns */}
-        <Grid item xs={12} lg={8}>
-          <Box
-            sx={{
-              animation: `${fadeInUp} 0.6s ease-out 0.4s backwards`,
-            }}
-          >
-            <WeeklyTrendChart />
-          </Box>
-        </Grid>
+      {/* Weekly Trend Chart */}
+      <Box sx={{ mb: 3, animation: `${fadeInUp} 0.6s ease-out 0.4s backwards` }}>
+        <WeeklyTrendChart />
+      </Box>
 
-        {/* Alert Settings - 4 columns */}
-        <Grid item xs={12} lg={4}>
-          <Box
-            sx={{
-              animation: `${fadeInUp} 0.6s ease-out 0.5s backwards`,
-            }}
-          >
-            <AlertSettingsCard />
-          </Box>
-        </Grid>
-      </Grid>
+      {/* Alert Settings */}
+      <Box sx={{ mb: 3, animation: `${fadeInUp} 0.6s ease-out 0.5s backwards` }}>
+        <AlertSettingsCard />
+      </Box>
 
       {/* Footer Note */}
       <Box
         sx={{
-          mt: 4,
           p: 3,
           background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
           borderRadius: '16px',
